@@ -1,0 +1,366 @@
+{
+    "navigation": {
+        "dashboard": "ផ្ទាំងគ្រប់គ្រង",
+        "settings": "ការកំណត់"
+    },
+    "actions": {
+        "edit": "កែសម្រួល",
+        "delete": "លុប",
+        "save": "រក្សាទុក",
+        "confirm": "បញ្ជាក់",
+        "add": "បន្ថែម",
+        "cancel": "បោះបង់"
+    },
+    "common": {
+        "rank": "ល.រ",
+        "actions": "សកម្មភាព",
+        "revenueUsd": "ចំណូល (USD)",
+        "chartView": "មើលក្រាហ្វ",
+        "noData": "មិនមានទិន្នន័យ",
+        "loading": "កំពុងផ្ទុក...",
+        "search": "ស្វែងរក...",
+        "amount": "ចំនួនទឹកប្រាក់",
+        "items": "ចំនួន",
+        "export": "នាំចេញ"
+    },
+    "components": {
+        "search": "ច្រោះទិន្នន័យ...",
+        "clear": "លុបការស្វែងរក",
+        "rowsPerPage": "ចំនួនជួរដេកក្នុងមួយទំព័រ:",
+        "pickDate": "ជ្រើសរើសកាលបរិច្ឆេទ",
+        "confirmAction": "បញ្ជាក់សកម្មភាព",
+        "confirmDesc": "តើអ្នកប្រាកដថាចង់បន្តប្រតិបត្តិការនេះទេ?",
+        "proceed": "បន្ត",
+        "cancel": "បោះបង់",
+        "processData": "ដំណើរការទិន្នន័យ",
+        "saveChanges": "រក្សាទុកការផ្លាស់ប្តូរ",
+        "selectDate": "ជ្រើសរើសកាលបរិច្ឆេទ",
+        "select": "ជ្រើសរើស...",
+        "loadingMap": "កំពុងផ្ទុកទិន្នន័យផែនទីកម្ពុជា...",
+        "scale": "មាត្រដ្ឋាន",
+        "min": "តិចតួច",
+        "max": "ច្រើន",
+        "exportData": "នាំចេញទិន្នន័យ",
+        "exportDesc": "ជ្រើសរើសចន្លោះកាលបរិច្ឆេទ និងទម្រង់",
+        "dateRange": "ចន្លោះកាលបរិច្ឆេទ",
+        "exportFormat": "ទម្រង់",
+        "allDates": "កាលបរិច្ឆេទទាំងអស់",
+        "from": "ចាប់ពី",
+        "reset": "កំណត់ឡើងវិញ",
+        "exportNow": "នាំចេញ",
+        "formatCSV": "CSV (.csv)",
+        "stockAdjust": {
+            "titleAdd": "បន្ថែមស្តុកផលិតផល",
+            "titleDamaged": "បន្ថែមស្តុកខូច",
+            "productLabel": "ផលិតផល",
+            "qtyToAdd": "ចំនួនត្រូវបន្ថែម",
+            "qtyDamaged": "ចំនួនខូច"
+        }
+    },
+    "provinces": {
+        "Banteay Meanchey": "បន្ទាយមានជ័យ",
+        "Battambang": "បាត់ដំបង",
+        "Kampong Cham": "កំពង់ចាម",
+        "Kampong Chhnang": "កំពង់ឆ្នាំង",
+        "Kampong Speu": "កំពង់ស្ពឺ",
+        "Kampong Thom": "កំពង់ធំ",
+        "Kampot": "កំពត",
+        "Kandal": "កណ្តាល",
+        "Kep": "កែប",
+        "Koh Kong": "កោះកុង",
+        "Kratie": "ក្រចេះ",
+        "Mondul Kiri": "មណ្ឌលគីរី",
+        "Oddar Meanchey": "ឧត្តរមានជ័យ",
+        "Pailin": "ប៉ៃលិន",
+        "Phnom Penh": "ភ្នំពេញ",
+        "Preah Sihanouk": "ព្រះសីហនុ",
+        "Preah Vihear": "ព្រះវិហារ",
+        "Prey Veng": "ព្រៃវែង",
+        "Pursat": "ពោធិ៍សាត់",
+        "Ratanak Kiri": "រតនគីរី",
+        "Siemreap": "សៀមរាប",
+        "Stung Treng": "ស្ទឹងត្រែង",
+        "Svay Rieng": "ស្វាយរៀង",
+        "Takeo": "តាកែវ",
+        "Tboung Khmum": "ត្បូងឃ្មុំ"
+    },
+    "pages": {
+        "dashboard": {
+            "title": "ទិដ្ឋភាពទូទៅនៃផ្ទាំងគ្រប់គ្រង",
+            "moduleDistribution": "ការចែកចាយតាមកម្រៃជើងសា",
+            "monthlyDataQuick": "ទិន្នន័យតាមផលិតផល",
+            "revenueByRegion": "វិភាគចំនួនអ្នកទិញតាមខេត្ត",
+            "summary": {
+                "totalCategory": "ប្រភេទសរុប",
+                "totalProduct": "ផលិតផលសរុប",
+                "totalInStock": "ស្តុកនៅសល់សរុប",
+                "totalSold": "ផលិតផលបានលក់សរុប",
+                "totalReportAmount": "សរុបទឹកប្រាក់លក់"
+            }
+        },
+        "category": {
+            "title": "ប្រភេទផលិតផល"
+        },
+        "product": {
+            "title": "ផលិតផល"
+        },
+        "pos": {
+            "title": "កន្លែងលក់",
+            "steps": {
+                "addToCart": "បន្ថែមទៅកន្ត្រក",
+                "customerInfo": "ព័ត៌មានអតិថិជន",
+                "checkout": "ទូទាត់"
+            },
+            "customer": {
+                "title": "ព័ត៌មានអតិថិជន",
+                "description": "បញ្ចូលព័ត៌មានអតិថិជន",
+                "types": {
+                    "customer": "អតិថិជន",
+                    "walkIn": "ដើរចូល"
+                },
+                "form": {
+                    "name": "ឈ្មោះ",
+                    "namePlaceholder": "បញ្ចូលឈ្មោះ",
+                    "phone": "ទូរស័ព្ទ",
+                    "phonePlaceholder": "បញ្ចូលលេខទូរស័ព្ទ",
+                    "deliveryType": "ប្រភេទដឹកជញ្ជូន",
+                    "deliveryPrice": "តម្លៃដឹកជញ្ជូន",
+                    "address": "អាសយដ្ឋាន",
+                    "addressPlaceholder": "បញ្ចូលអាសយដ្ឋាន"
+                }
+            },
+            "productCard": {
+                "inStock": "មានស្តុក",
+                "sku": "SKU",
+                "addMore": "បន្ថែមទៀត",
+                "addToCart": "បន្ថែមទៅកន្ត្រក"
+            },
+            "cart": {
+                "title": "កន្ត្រក",
+                "clearAll": "លុបទាំងអស់",
+                "empty": "កន្ត្រករបស់អ្នកទទេ។",
+                "items": "ទំនិញ",
+                "subtotal": "សរុបរង",
+                "discount": "បញ្ចុះតម្លៃ%",
+                "total": "សរុប",
+                "next": "បន្ទាប់",
+                "finish": "បញ្ចប់"
+            },
+            "invoice": {
+                "title": "វិក្កយបត្រ",
+                "section": {
+                    "invoiceInfo": "ព័ត៌មានវិក្កយបត្រ",
+                    "customer": "អតិថិជន"
+                },
+                "fields": {
+                    "invoiceNo": "លេខវិក្កយបត្រ",
+                    "startDate": "កាលបរិច្ឆេទចាប់ផ្តើម",
+                    "endDate": "កាលបរិច្ឆេទបញ្ចប់",
+                    "registered": "បានចុះឈ្មោះ",
+                    "name": "ឈ្មោះ",
+                    "phone": "ទូរស័ព្ទ",
+                    "deliveryType": "ប្រភេទដឹកជញ្ជូន",
+                    "deliveryPrice": "តម្លៃដឹកជញ្ជូន"
+                },
+                "table": {
+                    "noKm": "ល.រ",
+                    "no": "No",
+                    "descriptionKm": "ពិពណ៌នា",
+                    "description": "Description",
+                    "priceKm": "តម្លៃ",
+                    "price": "Price",
+                    "qtyKm": "បរិមាណ",
+                    "qty": "Qty",
+                    "totalKm": "សរុប",
+                    "total": "Total"
+                },
+                "terms": {
+                    "title": "លក្ខខណ្ឌ",
+                    "km": "រាល់ការបង់ប្រាក់មិនអាចដកយកប្រាក់វិញបានទេ",
+                    "en": "All Payments Are Non-Refundable."
+                },
+                "summary": {
+                    "subtotal": "សរុប",
+                    "deliveryPrice": "តម្លៃដឹកជញ្ជូន",
+                    "discount": "បញ្ចុះតម្លៃ",
+                    "grandTotal": "សរុបចុងក្រោយ"
+                },
+                "footer": {
+                    "customer": "អតិថិជន",
+                    "seller": "អ្នកលក់"
+                }
+            }
+        },
+        "auth": {
+            "loginTitle": "ចូលគណនី",
+            "loginDesc": "សូមចូលគណនីដើម្បីបន្ត។",
+            "email": "អ៊ីមែល",
+            "emailPlaceholder": "បញ្ចូលអ៊ីមែលរបស់អ្នក",
+            "password": "ពាក្យសម្ងាត់",
+            "passwordPlaceholder": "បញ្ចូលពាក្យសម្ងាត់របស់អ្នក",
+            "remember": "ចងចាំខ្ញុំ",
+            "loginBtn": "ចូលគណនី",
+            "loginSuccessTitle": "ចូលគណនីបានជោគជ័យ",
+            "loginSuccessDesc": "សូមស្វាគមន៍ត្រឡប់មកវិញ, {name}",
+            "loginFailedTitle": "ចូលគណនីបរាជ័យ",
+            "loginFailedDesc": "អ៊ីមែល ឬពាក្យសម្ងាត់ដែលអ្នកបានបញ្ចូលមិនត្រឹមត្រូវ។",
+            "departmentLine": "រក្សាសិទ្ធិ​ ដំណាក់សិក្សា"
+        },
+        "dataEntry": {
+            "title": "បញ្ចូលទិន្នន័យ",
+            "tableTitle": "ទិន្នន័យប្រាក់ចំណូល",
+            "addBtn": "បន្ថែមការបញ្ចូល",
+            "formTitleNew": "ការបញ្ចូលប្រាក់ចំណូលថ្មី",
+            "formTitleEdit": "កែប្រែការបញ្ចូលប្រាក់ចំណូល",
+            "analyticsTotalUsd": "សរុបដុល្លារ",
+            "analyticsTotalRiel": "សរុបរៀល",
+            "analyticsEntries": "ការបញ្ចូលសរុប",
+            "analyticsAvg": "មធ្យមភាគដុល្លារ",
+            "columns": {}
+        },
+        "history": {
+            "title": "ប្រវត្តិសវនកម្មប្រព័ន្ធ",
+            "tableTitle": "សំណៅព្រឹត្តិការណ៍ប្រវត្តិ",
+            "detailTitle": "ព័ត៌មានលម្អិតប្រតិបត្តិការសវនកម្ម",
+            "closeDetails": "បិទព័ត៌មានលម្អិត",
+            "columns": {
+                "typeAction": "ប្រភេទសកម្មភាព",
+                "username": "ឈ្មោះអ្នកប្រើ",
+                "date": "កាលបរិច្ឆេទ",
+                "description": "ការពិពណ៌នា"
+            },
+            "actionTypes": {}
+        },
+        "userManagement": {
+            "title": "គ្រប់គ្រងអ្នកប្រើ",
+            "tableTitle": "ឯកសារអ្នកប្រើ",
+            "addBtn": "បន្ថែមអ្នកប្រើ",
+            "analyticsTitle": "ការយល់ដឹងអំពីអ្នកប្រើ",
+            "columns": {
+                "name": "ឈ្មោះ",
+                "role": "តួនាទី",
+                "email": "អ៊ីមែល",
+                "password": "ពាក្យសម្ងាត់",
+                "lastLogin": "ចូលប្រើចុងក្រោយ",
+                "commission": "កម្រៃជើងសា"
+            }
+        },
+        "finance": {
+            "title": "ហិរញ្ញវត្ថុ",
+            "tableTitle": "ហិរញ្ញវត្ថុ",
+            "columns": {
+                "productName": "ឈ្មោះផលិតផល",
+                "printPrice": "តម្លៃបោះពុម្ព",
+                "totalCommission": "កម្រៃជើងសាសរុប",
+                "facebook": "Facebook",
+                "other": "ផ្សេងៗ",
+                "inPriceForPos": "តម្លៃចូលសម្រាប់ POS",
+                "finalPrice": "តម្លៃចុងក្រោយ"
+            }
+        },
+        "commission": {
+            "title": "កម្រៃជើងសា",
+            "tableTitle": "កម្រៃជើងសា",
+            "columns": {
+                "seller": "អ្នកលក់",
+                "product": "ផលិតផល",
+                "customer": "អតិថិជន",
+                "source": "ប្រភព",
+                "date": "កាលបរិច្ឆេទ",
+                "amount": "ចំនួនទឹកប្រាក់",
+                "commission": "កម្រៃជើងសា"
+            }
+        },
+        "report": {
+            "title": "របាយការណ៍",
+            "tableTitle": "របាយការណ៍",
+            "columns": {
+                "no": "ល.រ",
+                "invoiceNo": "លេខវិក្កយបត្រ",
+                "date": "កាលបរិច្ឆេទ",
+                "product": "ផលិតផល",
+                "customer": "អតិថិជន",
+                "phoneCustomer": "ទូរស័ព្ទអតិថិជន",
+                "seller": "អ្នកលក់",
+                "phoneSaler": "ទូរស័ព្ទអ្នកលក់",
+                "source": "ប្រភព",
+                "address": "អាសយដ្ឋាន",
+                "amount": "ចំនួនទឹកប្រាក់"
+            }
+        },
+        "delivery": {
+            "title": "ដឹកជញ្ជូន",
+            "tableTitle": "បញ្ជីដឹកជញ្ជូន",
+            "columns": {
+                "no": "ល.រ",
+                "invoiceId": "លេខវិក្កយបត្រ",
+                "address": "អាសយដ្ឋាន",
+                "deliveryType": "ប្រភេទដឹកជញ្ជូន",
+                "deliveryPrice": "តម្លៃដឹកជញ្ជូន",
+                "date": "កាលបរិច្ឆេទ"
+            }
+        },
+        "roleManagement": {
+            "title": "គ្រប់គ្រងតួនាទី",
+            "tableTitle": "សិទ្ធិចូលប្រើប្រាស់ទំព័រ",
+            "addBtn": "បន្ថែមតួនាទី",
+            "analyticsRoles": "តួនាទីសរុប",
+            "analyticsPermissions": "ការអនុញ្ញាតសកម្មភាព",
+            "analyticsPolicies": "គោលការណ៍សកម្មភាព",
+            "analyticsSecurity": "សុវត្ថិភាពប្រព័ន្ធ",
+            "columns": {
+                "name": "ឈ្មោះ",
+                "pageAccess": "ការចូលដំណើរការទំព័រ"
+            }
+        }
+    },
+    "category": {
+        "tableTitle": "ប្រភេទផលិតផល",
+        "addTitle": "បន្ថែមប្រភេទថ្មី",
+        "id": "ល.រ",
+        "name": "ឈ្មោះ",
+        "description": "ការពិពណ៌នា",
+        "total": "ចំនួនផលិតផល",
+        "createdAt": "កាលបរិច្ឆេទការ",
+        "namePlaceholder": "ឧ. កុំព្យូទ័រយួរដៃ, គ្រឿងបន្លាស់",
+        "descriptionPlaceholder": "ការពិពណ៌នាអំពីប្រភេទនេះ"
+    },
+    "product": {
+        "id": "ល.រ",
+        "image": "រូបភាព",
+        "name": "ឈ្មោះផលិតផល",
+        "category": "ប្រភេទ",
+        "inPrice": "តម្លៃចូល",
+        "outPrice": "តម្លៃចេញ",
+        "commission": "កម្រៃជើងសា",
+        "totalStock": "ស្តុកសរុប",
+        "inStock": "ស្តុកនៅសល់",
+        "sold": "បានលក់សរុប",
+        "added": "បន្ថែមសរុប",
+        "damaged": "ខូចសរុប",
+        "status": "ស្ថានភាព",
+        "createdAt": "កាលបរិច្ឆេទការ",
+        "stockStatus": {
+            "aLot": "ស្តុកច្រើន",
+            "lower": "ស្តុកតិច",
+            "out": "អស់ពីស្តុក"
+        },
+        "qty": "បរិមាណ",
+        "note": "ចំណាំ",
+        "viewAddedStock": "មើលប្រវត្តិបន្ថែមស្តុក",
+        "viewDamagedStock": "មើលប្រវត្តិស្តុកខូច",
+        "historyTitleAdded": "ប្រវត្តិបន្ថែមស្តុក",
+        "historyTitleDamaged": "ប្រវត្តិស្តុកខូច"
+    },
+    "settings": {
+        "language": "ភាសា",
+        "theme": "រចនាប័ទ្ម",
+        "appearance": "រូបរាង",
+        "primary": "ពណ៌ចម្បង",
+        "neutral": "ពណ៌ព្រាល",
+        "light": "ភ្លឺ",
+        "dark": "ងងឹត",
+        "logout": "ចាកចេញ",
+        "history": "ប្រវត្តិប្រើប្រាស់"
+    }
+}

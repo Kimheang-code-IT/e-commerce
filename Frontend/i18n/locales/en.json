@@ -1,0 +1,366 @@
+{
+    "navigation": {
+        "dashboard": "Dashboard",
+        "settings": "Settings"
+    },
+    "actions": {
+        "edit": "Edit",
+        "delete": "Delete",
+        "save": "Save",
+        "confirm": "Confirm",
+        "add": "Add",
+        "cancel": "Cancel"
+    },
+    "common": {
+        "rank": "#",
+        "actions": "Actions",
+        "revenueUsd": "Revenue (USD)",
+        "chartView": "Chart View",
+        "noData": "No data records found",
+        "loading": "Loading...",
+        "search": "Search...",
+        "amount": "Amount",
+        "items": "items",
+        "export": "Export"
+    },
+    "components": {
+        "search": "Filter...",
+        "clear": "Clear input",
+        "rowsPerPage": "Rows per page:",
+        "pickDate": "Pick a date",
+        "confirmAction": "Confirm Action",
+        "confirmDesc": "Are you sure you want to proceed with this operation?",
+        "proceed": "Proceed",
+        "cancel": "Cancel",
+        "processData": "Process Data",
+        "saveChanges": "Save Changes",
+        "selectDate": "Select Date",
+        "select": "Select...",
+        "loadingMap": "Loading Cambodia Map Data...",
+        "scale": "Scale",
+        "min": "MIN",
+        "max": "MAX",
+        "exportData": "Export Data",
+        "exportDesc": "Select date range and format",
+        "dateRange": "Date Range",
+        "exportFormat": "Format",
+        "allDates": "All dates",
+        "from": "From",
+        "reset": "Reset",
+        "exportNow": "Export",
+        "formatCSV": "CSV (.csv)",
+        "stockAdjust": {
+            "titleAdd": "Add Product Stock",
+            "titleDamaged": "Add Damaged Stock",
+            "productLabel": "Product",
+            "qtyToAdd": "Quantity to add",
+            "qtyDamaged": "Damaged quantity"
+        }
+    },
+    "provinces": {
+        "Banteay Meanchey": "Banteay Meanchey",
+        "Battambang": "Battambang",
+        "Kampong Cham": "Kampong Cham",
+        "Kampong Chhnang": "Kampong Chhnang",
+        "Kampong Speu": "Kampong Speu",
+        "Kampong Thom": "Kampong Thom",
+        "Kampot": "Kampot",
+        "Kandal": "Kandal",
+        "Kep": "Kep",
+        "Koh Kong": "Koh Kong",
+        "Kratie": "Kratie",
+        "Mondul Kiri": "Mondul Kiri",
+        "Oddar Meanchey": "Oddar Meanchey",
+        "Pailin": "Pailin",
+        "Phnom Penh": "Phnom Penh",
+        "Preah Sihanouk": "Preah Sihanouk",
+        "Preah Vihear": "Preah Vihear",
+        "Prey Veng": "Prey Veng",
+        "Pursat": "Pursat",
+        "Ratanak Kiri": "Ratanak Kiri",
+        "Siemreap": "Siemreap",
+        "Stung Treng": "Stung Treng",
+        "Svay Rieng": "Svay Rieng",
+        "Takeo": "Takeo",
+        "Tboung Khmum": "Tboung Khmum"
+    },
+    "pages": {
+        "dashboard": {
+            "title": "Dashboard Overview",
+            "moduleDistribution": "Module Distribution",
+            "monthlyDataQuick": "Monthly Data (Quick View)",
+            "revenueByRegion": "Cambodia - Revenue by Region",
+            "summary": {
+                "totalCategory": "Total Category",
+                "totalProduct": "Total Product",
+                "totalInStock": "Total In Stock",
+                "totalSold": "Total Product Sold",
+                "totalReportAmount": "Total Amount"
+            }
+        },
+        "category": {
+            "title": "Category"
+        },
+        "product": {
+            "title": "Product"
+        },
+        "pos": {
+            "title": "POS System",
+            "steps": {
+                "addToCart": "Add to cart",
+                "customerInfo": "Customer Info",
+                "checkout": "Checkout"
+            },
+            "customer": {
+                "title": "Customer Info",
+                "description": "Enter Customer Details",
+                "types": {
+                    "customer": "Customer",
+                    "walkIn": "Walk-in"
+                },
+                "form": {
+                    "name": "Name",
+                    "namePlaceholder": "Enter name",
+                    "phone": "Phone",
+                    "phonePlaceholder": "Enter phone number",
+                    "deliveryType": "Delivery Type",
+                    "deliveryPrice": "Delivery Price",
+                    "address": "Address",
+                    "addressPlaceholder": "Enter address"
+                }
+            },
+            "productCard": {
+                "inStock": "In Stock",
+                "sku": "SKU",
+                "addMore": "Add More",
+                "addToCart": "Add to Cart"
+            },
+            "cart": {
+                "title": "Cart",
+                "clearAll": "Clear All",
+                "empty": "Your cart is empty.",
+                "items": "Items",
+                "subtotal": "Subtotal",
+                "discount": "Discount%",
+                "total": "Total",
+                "next": "Next",
+                "finish": "Finish"
+            },
+            "invoice": {
+                "title": "Invoice",
+                "section": {
+                    "invoiceInfo": "Invoice Info",
+                    "customer": "Customer"
+                },
+                "fields": {
+                    "invoiceNo": "Invoice No",
+                    "startDate": "Start Date",
+                    "endDate": "End Date",
+                    "registered": "Registered",
+                    "name": "Name",
+                    "phone": "Phone",
+                    "deliveryType": "Delivery Type",
+                    "deliveryPrice": "Delivery Price"
+                },
+                "table": {
+                    "noKm": "ល.រ",
+                    "no": "NO",
+                    "descriptionKm": "ការពិពណ៌នា",
+                    "description": "Description",
+                    "priceKm": "តម្លៃ",
+                    "price": "Price",
+                    "qtyKm": "បរិមាណ",
+                    "qty": "QTY",
+                    "totalKm": "សរុប",
+                    "total": "Total"
+                },
+                "terms": {
+                    "title": "Terms & Conditions",
+                    "km": "រាល់ការបង់ប្រាក់មិនអាចដកយកប្រាក់វិញបានទេ",
+                    "en": "All Payments Are Non-Refundable."
+                },
+                "summary": {
+                    "subtotal": "Subtotal",
+                    "deliveryPrice": "Delivery Price",
+                    "discount": "Discount",
+                    "grandTotal": "Grand Total"
+                },
+                "footer": {
+                    "customer": "Customer",
+                    "seller": "Seller"
+                }
+            }
+        },
+        "auth": {
+            "loginTitle": "Login",
+            "loginDesc": "Please log in to continue.",
+            "email": "Email",
+            "emailPlaceholder": "Enter your email",
+            "password": "Password",
+            "passwordPlaceholder": "Enter your password",
+            "remember": "Remember me",
+            "loginBtn": "Login",
+            "loginSuccessTitle": "Login Successful",
+            "loginSuccessDesc": "Welcome back, {name}",
+            "loginFailedTitle": "Login Failed",
+            "loginFailedDesc": "The email or password you entered is incorrect.",
+            "departmentLine": "Copyright © by Damnaksiksaa"
+        },
+        "dataEntry": {
+            "title": "Data Entry",
+            "tableTitle": "Revenue Data Entries",
+            "addBtn": "Add Entry",
+            "formTitleNew": "New Revenue Entry",
+            "formTitleEdit": "Edit Revenue Entry",
+            "analyticsTotalUsd": "Total USD",
+            "analyticsTotalRiel": "Total Riel",
+            "analyticsEntries": "Total Entries",
+            "analyticsAvg": "Avg USD Performance",
+            "columns": {}
+        },
+        "history": {
+            "title": "System Audit History",
+            "tableTitle": "Historical Event Stream",
+            "detailTitle": "Audit Transaction Details",
+            "closeDetails": "Close Details",
+            "columns": {
+                "typeAction": "Type Action",
+                "username": "Username",
+                "date": "Date",
+                "description": "Description"
+            },
+            "actionTypes": {}
+        },
+        "userManagement": {
+            "title": "User Management",
+            "tableTitle": "Platform User Directory",
+            "addBtn": "Add User",
+            "analyticsTitle": "User & Session Insights",
+            "columns": {
+                "name": "Name",
+                "role": "Role",
+                "email": "Email",
+                "password": "Password",
+                "lastLogin": "Last Login",
+                "commission": "Commission"
+            }
+        },
+        "finance": {
+            "title": "Finance",
+            "tableTitle": "Finance",
+            "columns": {
+                "productName": "Product Name",
+                "printPrice": "Print Price",
+                "totalCommission": "Total Commission",
+                "facebook": "Facebook",
+                "other": "Other",
+                "inPriceForPos": "In Price for POS",
+                "finalPrice": "Final Price"
+            }
+        },
+        "commission": {
+            "title": "Commission",
+            "tableTitle": "Commission",
+            "columns": {
+                "seller": "Seller",
+                "product": "Product",
+                "customer": "Customer",
+                "source": "Source",
+                "date": "Date",
+                "amount": "Amount",
+                "commission": "Commission"
+            }
+        },
+        "report": {
+            "title": "Report",
+            "tableTitle": "Report",
+            "columns": {
+                "no": "No",
+                "invoiceNo": "Invoice No",
+                "date": "Date",
+                "product": "Product",
+                "customer": "Customer",
+                "phoneCustomer": "Phone Customer",
+                "seller": "Seller",
+                "phoneSaler": "Phone Seller",
+                "source": "Source",
+                "address": "Address",
+                "amount": "Amount"
+            }
+        },
+        "delivery": {
+            "title": "Delivery",
+            "tableTitle": "Delivery List",
+            "columns": {
+                "no": "No.",
+                "invoiceId": "Invoice Id",
+                "address": "Address",
+                "deliveryType": "Delivery Type",
+                "deliveryPrice": "Delivery Price",
+                "date": "Date"
+            }
+        },
+        "roleManagement": {
+            "title": "Role Management",
+            "tableTitle": "Authorization Policies",
+            "addBtn": "Add Role",
+            "analyticsRoles": "Target Roles",
+            "analyticsPermissions": "Global Permissions",
+            "analyticsPolicies": "Active Policies",
+            "analyticsSecurity": "Security Compliance",
+            "columns": {
+                "name": "Name",
+                "pageAccess": "Page Access"
+            }
+        }
+    },
+    "category": {
+        "tableTitle": "Categories",
+        "addTitle": "Add New Category",
+        "id": "No",
+        "name": "Name",
+        "description": "Description",
+        "total": "Total",
+        "createdAt": "Created",
+        "namePlaceholder": "e.g. Laptops, Accessories",
+        "descriptionPlaceholder": "Optional description for this category"
+    },
+    "product": {
+        "id": "No",
+        "image": "Image",
+        "name": "Name",
+        "category": "Category",
+        "inPrice": "In Price",
+        "outPrice": "Out Price",
+        "commission": "Commission",
+        "totalStock": "Total Stock",
+        "inStock": "In Stock",
+        "sold": "Sold",
+        "added": "Added",
+        "damaged": "Damaged",
+        "status": "Status",
+        "createdAt": "Created At",
+        "stockStatus": {
+            "aLot": "A lot of stock",
+            "lower": "Lower stock",
+            "out": "Out of stock"
+        },
+        "qty": "Qty",
+        "note": "Note",
+        "viewAddedStock": "View Add",
+        "viewDamagedStock": "View Damaged",
+        "historyTitleAdded": "Stock Addition History",
+        "historyTitleDamaged": "Damaged Stock History"
+    },
+    "settings": {
+        "language": "Language",
+        "theme": "Theme",
+        "appearance": "Appearance",
+        "primary": "Primary",
+        "neutral": "Neutral",
+        "light": "Light",
+        "dark": "Dark",
+        "logout": "Log out",
+        "history": "History"
+    }
+}
