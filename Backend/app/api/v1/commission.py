@@ -8,6 +8,7 @@ from app.services.auth_service import get_current_user, require_permission
 from app.services.data_service import (
     apply_created_at_range,
     apply_sort,
+    export_payload,
     list_response,
     paginate_query,
     serialize_commission_row,
@@ -35,7 +36,7 @@ def list_commission_view(
     dateTo: str | None = None,
     sortBy: str | None = None,
     sortOrder: str | None = Query(None, pattern="^(asc|desc)$"),
-    _=Depends(require_permission("comission:view")),
+    _=Depends(require_permission("commission:view")),
     db: Session = Depends(get_db),
 ):
     q = _base_query()
@@ -57,3 +58,21 @@ def list_commission_view(
     rows, total = paginate_query(q, db, page, limit)
     data = [serialize_commission_row(ci, inv, seller, prod) for ci, inv, seller, prod in rows]
     return list_response(data, total)
+
+
+@router.get("/export")
+def export_commission_view(
+    search: str | None = None,
+    dateFrom: str | None = None,
+    dateTo: str | None = None,
+    _=Depends(require_permission("commission:view")),
+    db: Session = Depends(get_db),
+):
+    q = _base_query()
+    if search:
+        keyword = search.strip()
+        q = q.where(User.name.ilike(f"%{keyword}%") | Invoice.invoice_no.ilike(f"%{keyword}%"))
+    q = apply_created_at_range(q, dateFrom, dateTo, Invoice.created_at)
+    rows = db.execute(q).all()
+    data = [serialize_commission_row(ci, inv, seller, prod) for ci, inv, seller, prod in rows]
+    return export_payload(data, "commission-view")

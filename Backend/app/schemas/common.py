@@ -23,27 +23,6 @@ class ListResponse(BaseModel):
     total: int
     aggregates: dict | None = None
 
-
-class InvoiceLinePayload(BaseModel):
-    productId: int
-    qty: int = Field(default=1, ge=1)
-
-
-class PosCheckoutPayload(BaseModel):
-    customerName: str = ""
-    customerPhone: str = ""
-    customerAddress: str = ""
-    source: str = "other"
-    deliveryType: str = "delivery"
-    deliveryPrice: float = 0
-    deliveryDate: str = ""
-    discountPercent: float = 0
-    paymentMethod: str = "cash"
-    deliveryStatus: str = "pending"
-    sellerId: int | None = None
-    lines: list[InvoiceLinePayload] = Field(default_factory=list)
-
-
 class CategoryCreatePayload(BaseModel):
     model_config = ConfigDict(extra="forbid")
     name: str = Field(min_length=1, max_length=120)
@@ -126,6 +105,28 @@ class ProductUpdatePayload(BaseModel):
         return value.strip()
 
 
+class InvoiceLinePayload(BaseModel):
+    productId: int
+    qty: int = Field(default=1, ge=1)
+
+
+class PosCheckoutPayload(BaseModel):
+    customerName: str = ""
+    customerPhone: str = ""
+    customerAddress: str = ""
+    source: str = "other"
+    deliveryType: str = "delivery"
+    deliveryPrice: float = 0
+    deliveryDate: str = ""
+    discountPercent: float = 0
+    paymentMethod: str = "cash"
+    deliveryStatus: str = "pending"
+    sellerId: int | None = None
+    lines: list[InvoiceLinePayload] = Field(default_factory=list)
+
+
+
+
 class SystemUserCreatePayload(BaseModel):
     model_config = ConfigDict(extra="forbid")
     name: str = Field(min_length=1, max_length=120)
@@ -189,6 +190,27 @@ class AuthLoginPayload(BaseModel):
     @classmethod
     def normalize_email(cls, value: str) -> str:
         return value.strip()
+
+
+class AuthUserPayload(BaseModel):
+    id: int
+    name: str
+    email: str
+    avatar: str = ""
+    role: str = ""
+    pageAccess: list[str] = Field(default_factory=list)
+
+
+class AuthLoginData(BaseModel):
+    token: str
+    refreshToken: str
+    user: AuthUserPayload
+
+
+class AuthLoginResponse(BaseModel):
+    success: bool = True
+    message: str = "Login successful"
+    data: AuthLoginData
 
 
 class PosPreviewSessionCreatePayload(BaseModel):

@@ -11,6 +11,7 @@ from app.shared.api_response import error_response
 from app.services.data_service import (
     apply_created_at_range,
     apply_sort,
+    export_payload,
     list_response,
     paginate_query,
     serialize_finance_view,
@@ -55,6 +56,24 @@ def list_finance_view(
     )
     rows, total = paginate_query(q, db, page, limit)
     return list_response([serialize_finance_view(f, p) for f, p in rows], total)
+
+
+@router.get("/export")
+def export_finance_view(
+    search: str | None = None,
+    dateFrom: str | None = None,
+    dateTo: str | None = None,
+    _=Depends(require_permission("finance:view")),
+    db: Session = Depends(get_db),
+):
+    sync_finance_from_sold_products(db)
+    q = select(Finance, Product).join(Product, Finance.product_id == Product.id)
+    if search:
+        keyword = search.strip()
+        q = q.where(Product.name.ilike(f"%{keyword}%"))
+    q = apply_created_at_range(q, dateFrom, dateTo, Finance.created_at)
+    rows = db.execute(q).all()
+    return export_payload([serialize_finance_view(f, p) for f, p in rows], "finance-view")
 
 
 @router.put("/{item_id}")

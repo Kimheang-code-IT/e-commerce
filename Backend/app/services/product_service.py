@@ -1,7 +1,6 @@
 from fastapi import status
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
-
 from app.models import Product, ProductDamage, ProductStockAddition
 from app.repositories.product_repository import (
     adjust_category_product_count,
@@ -20,6 +19,7 @@ from app.services.data_service import (
     list_response,
     paginate_query,
     serialize_product,
+    record_history,
 )
 from app.services.product_image_service import delete_stored_file_if_local, normalize_stored_image
 from app.shared.api_response import error_response
@@ -72,7 +72,7 @@ def list_products_service(*, db: Session, query: ListQuery, category: str | None
     return list_response([serialize_product(row, added=amap.get(row.id, 0), damaged=dmap.get(row.id, 0)) for row in products], total)
 
 
-def create_product_service(*, db: Session, body: ProductCreatePayload):
+def create_product_service(*, db: Session, body: ProductCreatePayload, user_id: int):
     category_row = resolve_category_by_public_id(db, body.categoryId)
     if not category_row:
         return error_response(status.HTTP_400_BAD_REQUEST, "Invalid category", "BAD_REQUEST")
@@ -106,12 +106,16 @@ def create_product_service(*, db: Session, body: ProductCreatePayload):
     ensure_finance_for_product(db, row.id)
     db.commit()
     db.refresh(row)
+    
+    record_history(db, user_id, "Create", f"Created product '{row.name}'")
+    db.commit()
+    
     row_out = db.execute(select(Product).options(joinedload(Product.category_rel)).where(Product.id == row.id)).unique().scalar_one()
     amap, dmap = batch_stock_totals(db, [row_out.id])
     return {"data": serialize_product(row_out, added=amap.get(row_out.id, 0), damaged=dmap.get(row_out.id, 0))}
 
 
-def update_product_service(*, db: Session, item_id: int, body: ProductUpdatePayload):
+def update_product_service(*, db: Session, item_id: int, body: ProductUpdatePayload, user_id: int):
     row = db.get(Product, item_id)
     if not row:
         return error_response(status.HTTP_404_NOT_FOUND, "Not found", "NOT_FOUND")
@@ -157,18 +161,28 @@ def update_product_service(*, db: Session, item_id: int, body: ProductUpdatePayl
         adjust_category_product_count(db, next_category_id, 1)
     ensure_finance_for_product(db, row.id)
     db.commit()
+    db.refresh(row)
+    
+    record_history(db, user_id, "Update", f"Updated product '{row.name}'")
+    db.commit()
+    
     row_out = db.execute(select(Product).options(joinedload(Product.category_rel)).where(Product.id == item_id)).unique().scalar_one()
     amap, dmap = batch_stock_totals(db, [row_out.id])
     return {"data": serialize_product(row_out, added=amap.get(row_out.id, 0), damaged=dmap.get(row_out.id, 0))}
 
 
-def delete_product_service(*, db: Session, item_id: int):
+def delete_product_service(*, db: Session, item_id: int, user_id: int):
     row = db.get(Product, item_id)
     if not row:
         return error_response(status.HTTP_404_NOT_FOUND, "Not found", "NOT_FOUND")
+    
+    product_name = row.name
     delete_product_related_records(db, row.id)
     delete_stored_file_if_local(getattr(row, "image", None) or "")
     adjust_category_product_count(db, row.category_id, -1)
     db.delete(row)
+    db.commit()
+    
+    record_history(db, user_id, "Delete", f"Deleted product '{product_name}'")
     db.commit()
     return {"message": "Product deleted"}

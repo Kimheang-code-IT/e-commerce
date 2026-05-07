@@ -14,4 +14,5 @@ class Finance(Base):
     facebook: Mapped[float] = mapped_column(Float, default=0)
     other: Mapped[float] = mapped_column(Float, default=0)
     total_sold_product: Mapped[float] = mapped_column(Float, default=0)
+    total_sold_price: Mapped[float] = mapped_column(Float, default=0)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=cambodia_now)

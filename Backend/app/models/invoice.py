@@ -1,8 +1,14 @@
+from __future__ import annotations
 from datetime import datetime
+from typing import TYPE_CHECKING
 from sqlalchemy import DateTime, Float, ForeignKey, Integer, String, Text
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
 from app.utils.timezone import cambodia_now
+
+if TYPE_CHECKING:
+    from app.models.user import User
+    from app.models.product import Product
 
 
 class Invoice(Base):
@@ -27,6 +33,10 @@ class Invoice(Base):
     status: Mapped[str] = mapped_column(String(50), default="paid")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=cambodia_now)
 
+    # Relationships
+    user: Mapped[User] = relationship("User")
+    items: Mapped[list[CheckoutItem]] = relationship("CheckoutItem", back_populates="invoice")
+
 
 class CheckoutItem(Base):
     __tablename__ = "checkout_items"
@@ -38,3 +48,7 @@ class CheckoutItem(Base):
     quantity: Mapped[int] = mapped_column(Integer, default=1)
     price: Mapped[float] = mapped_column(Float, default=0)
     total: Mapped[float] = mapped_column(Float, default=0)
+
+    # Relationships
+    invoice: Mapped[Invoice] = relationship("Invoice", back_populates="items")
+    product: Mapped[Product | None] = relationship("Product")

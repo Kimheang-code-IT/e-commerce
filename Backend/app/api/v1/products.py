@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.models import Product, ProductDamage, ProductStockAddition, User
 from app.schemas.common import ListQuery, ProductCreatePayload, ProductUpdatePayload
-from app.services.auth_service import require_permission
+from app.services.auth_service import get_current_user, require_permission
 from app.services.data_service import (
     apply_created_at_range,
     list_response,
@@ -55,29 +55,32 @@ def list_products_view(
 @router.post("/products")
 def create_product(
     body: ProductCreatePayload,
+    current_user: User = Depends(get_current_user),
     _: User = Depends(require_permission("product:create")),
     db: Session = Depends(get_db),
 ):
-    return create_product_service(db=db, body=body)
+    return create_product_service(db=db, body=body, user_id=current_user.id)
 
 
 @router.put("/products/{item_id}")
 def update_product(
     item_id: int,
     body: ProductUpdatePayload,
+    current_user: User = Depends(get_current_user),
     _: User = Depends(require_permission("product:update")),
     db: Session = Depends(get_db),
 ):
-    return update_product_service(db=db, item_id=item_id, body=body)
+    return update_product_service(db=db, item_id=item_id, body=body, user_id=current_user.id)
 
 
 @router.delete("/products/{item_id}")
 def delete_product(
     item_id: int,
+    current_user: User = Depends(get_current_user),
     _: User = Depends(require_permission("product:delete")),
     db: Session = Depends(get_db),
 ):
-    return delete_product_service(db=db, item_id=item_id)
+    return delete_product_service(db=db, item_id=item_id, user_id=current_user.id)
 
 
 @router.get("/products/{item_id}/stock-additions")

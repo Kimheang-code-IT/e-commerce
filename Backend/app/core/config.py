@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     app_name: str = "E-Commerce Backend API"
     api_prefix: str = "/api/v1"
     secret_key: str = "change-me-in-env"
-    access_token_expire_minutes: int = 60
+    access_token_expire_minutes: int = 1440
     refresh_token_expire_days: int = 14
     jwt_issuer: str = "e-comerce-backend"
     jwt_audience: str = ""

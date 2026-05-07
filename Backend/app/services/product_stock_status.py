@@ -1,9 +1,10 @@
-"""Stock band rules; mirrored on `Product.stock_status`."""
+from __future__ import annotations
 
 
 def stock_status_tier(in_stock: int) -> str:
-    if in_stock > 15:
-        return "aLot"
-    if in_stock >= 1:
+    qty = max(0, int(in_stock or 0))
+    if qty == 0:
+        return "out"
+    if qty <= 10:
         return "lower"
-    return "out"
+    return "aLot"

@@ -8,7 +8,7 @@ from app.core.database import get_db
 from app.models import Role, User
 from app.schemas.common import SystemRoleCreatePayload, SystemRoleUpdatePayload
 from app.services.auth_service import get_current_user, require_permission
-from app.services.data_service import apply_sort, list_response, paginate_query, serialize_role
+from app.services.data_service import apply_sort, list_response, paginate_query, serialize_role, record_history
 from app.shared.api_response import error_response
 
 router = APIRouter(prefix="/roles", tags=["roles"], dependencies=[Depends(get_current_user)])
@@ -40,6 +40,7 @@ def list_roles(
 @router.post("")
 def create_role(
     payload: SystemRoleCreatePayload,
+    current_user: User = Depends(get_current_user),
     _: User = Depends(require_permission("role:create")),
     db: Session = Depends(get_db),
 ):
@@ -50,6 +51,8 @@ def create_role(
     db.add(row)
     db.commit()
     db.refresh(row)
+    record_history(db, current_user.id, "Create", f"Created role '{row.name}'")
+    db.commit()
     return {"data": serialize_role(row)}
 
 
@@ -57,6 +60,7 @@ def create_role(
 def update_role(
     role_id: int,
     payload: SystemRoleUpdatePayload,
+    current_user: User = Depends(get_current_user),
     _: User = Depends(require_permission("role:update")),
     db: Session = Depends(get_db),
 ):
@@ -72,12 +76,15 @@ def update_role(
         row.page_access = _page_access_json(payload.pageAccess)
     db.commit()
     db.refresh(row)
+    record_history(db, current_user.id, "Update", f"Updated role '{row.name}'")
+    db.commit()
     return {"data": serialize_role(row)}
 
 
 @router.delete("/{role_id}")
 def delete_role(
     role_id: int,
+    current_user: User = Depends(get_current_user),
     _: User = Depends(require_permission("role:delete")),
     db: Session = Depends(get_db),
 ):
@@ -87,6 +94,10 @@ def delete_role(
     role_in_use = db.scalar(select(User.id).where(User.role_id == row.id).limit(1))
     if role_in_use is not None:
         return error_response(status.HTTP_409_CONFLICT, "Role is assigned to users", "CONFLICT")
+    
+    role_name = row.name
     db.delete(row)
+    db.commit()
+    record_history(db, current_user.id, "Delete", f"Deleted role '{role_name}'")
     db.commit()
     return {"message": "Role deleted"}

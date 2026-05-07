@@ -1,15 +1,14 @@
 import base64
 import json
-
 from fastapi import status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
-
 from app.models import CheckoutItem, Invoice, User
 from app.repositories.pos_repository import get_products_by_ids, next_invoice_no
 from app.schemas.common import PosCheckoutPayload, PosPreviewSessionCreatePayload
 from app.shared.api_response import error_response
 from app.utils.timezone import cambodia_now
+from app.services.data_service import record_history
 
 
 def encode_preview(payload: PosPreviewSessionCreatePayload) -> dict:
@@ -108,6 +107,9 @@ def complete_checkout_service(*, db: Session, payload: PosCheckoutPayload, curre
         product.in_stock = max(0, int(product.in_stock or 0) - qty)
 
     db.commit()
+    db.refresh(invoice)
+    record_history(db, current_user.id, "Create", f"Checkout completed (Invoice: {invoice.invoice_no})")
+    db.commit()
     return {
         "data": {
             "invoiceNo": invoice_no,
@@ -128,8 +130,25 @@ def complete_checkout_service(*, db: Session, payload: PosCheckoutPayload, curre
     }
 
 
+from app.services.data_service import serialize_report_row
+
+
 def invoice_preview_by_no(*, db: Session, invoice_no: str):
-    invoice = db.execute(select(Invoice).where(Invoice.invoice_no == invoice_no)).scalar_one_or_none()
+    nos = [n.strip() for n in invoice_no.split(",") if n.strip()]
+    if not nos:
+        return error_response(status.HTTP_400_BAD_REQUEST, "Missing invoice number", "BAD_REQUEST")
+
+    if len(nos) > 1:
+        query = (
+            select(CheckoutItem, Invoice, User)
+            .join(Invoice, CheckoutItem.invoice_id == Invoice.id)
+            .outerjoin(User, Invoice.user_id == User.id)
+            .where(Invoice.invoice_no.in_(nos))
+        )
+        rows = db.execute(query).all()
+        return {"invoices": [serialize_report_row(ci, inv, seller) for ci, inv, seller in rows]}
+
+    invoice = db.execute(select(Invoice).where(Invoice.invoice_no == nos[0])).scalar_one_or_none()
     if not invoice:
         return error_response(status.HTTP_404_NOT_FOUND, "Invoice not found", "NOT_FOUND")
     items = db.execute(select(CheckoutItem).where(CheckoutItem.invoice_id == invoice.id)).scalars().all()
@@ -143,6 +162,9 @@ def invoice_preview_by_no(*, db: Session, invoice_no: str):
             "seller": user.name if user else "",
             "source": invoice.source or "",
             "address": invoice.customer_address or "",
+            "subtotal": float(invoice.subtotal or 0),
+            "discount": float(invoice.discount or 0),
+            "deliveryPrice": float(invoice.delivery_price or 0),
             "amount": float(invoice.total or 0),
         },
         "lines": [

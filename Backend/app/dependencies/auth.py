@@ -19,7 +19,10 @@ def get_current_user(
 ):
     if not credentials:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
-    payload = parse_bearer_token(credentials.credentials)
+    try:
+        payload = parse_bearer_token(credentials.credentials)
+    except ValueError:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired token")
     if payload.get("type") != TOKEN_TYPE_ACCESS:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid access token type")
     sub = payload.get("sub")

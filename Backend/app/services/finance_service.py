@@ -1,6 +1,5 @@
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
-
 from app.models import CheckoutItem, Finance, Invoice, Product
 
 
@@ -9,17 +8,20 @@ def sync_finance_from_sold_products(db: Session) -> None:
         select(
             CheckoutItem.product_id,
             func.coalesce(func.sum(CheckoutItem.quantity), 0).label("sold_qty"),
+            func.coalesce(func.sum(CheckoutItem.total), 0).label("sold_amount"),
         )
         .join(Invoice, CheckoutItem.invoice_id == Invoice.id)
         .where(CheckoutItem.product_id.is_not(None), Invoice.status == "paid")
         .group_by(CheckoutItem.product_id)
     ).all()
-    sold_map = {int(pid): float(qty or 0) for pid, qty in sales_rows if pid is not None}
+    sold_qty_map = {int(pid): float(qty or 0) for pid, qty, _ in sales_rows if pid is not None}
+    sold_amount_map = {int(pid): float(amt or 0) for pid, _, amt in sales_rows if pid is not None}
     existing_finance = {row.product_id: row for row in db.scalars(select(Finance)).all()}
     products = {p.id: p for p in db.scalars(select(Product)).all()}
     changed = False
     for product_id, product in products.items():
-        sold_qty = sold_map.get(product_id, 0.0)
+        sold_qty = sold_qty_map.get(product_id, 0.0)
+        sold_amount = sold_amount_map.get(product_id, 0.0)
         commission_total = sold_qty * float(product.commission or 0)
         finance_row = existing_finance.get(product_id)
         if finance_row is None:
@@ -28,13 +30,21 @@ def sync_finance_from_sold_products(db: Session) -> None:
                     product_id=product_id,
                     total_commission=commission_total,
                     total_sold_product=sold_qty,
+                    total_sold_price=sold_amount,
                 )
             )
             changed = True
             continue
-        if float(finance_row.total_sold_product or 0) != sold_qty or float(finance_row.total_commission or 0) != commission_total:
+
+        has_changed = (
+            float(finance_row.total_sold_product or 0) != sold_qty
+            or float(finance_row.total_commission or 0) != commission_total
+            or float(finance_row.total_sold_price or 0) != sold_amount
+        )
+        if has_changed:
             finance_row.total_sold_product = sold_qty
             finance_row.total_commission = commission_total
+            finance_row.total_sold_price = sold_amount
             changed = True
     if changed:
         db.commit()

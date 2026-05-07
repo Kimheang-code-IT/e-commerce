@@ -7,7 +7,7 @@ from app.core.security import get_password_hash
 from app.models import Role, User
 from app.schemas.common import SystemUserCreatePayload, SystemUserUpdatePayload
 from app.services.auth_service import get_current_user, require_permission
-from app.services.data_service import apply_sort, list_response, paginate_query, serialize_user
+from app.services.data_service import apply_sort, list_response, paginate_query, serialize_user, record_history
 from app.shared.api_response import error_response
 
 router = APIRouter(prefix="/users", tags=["users"], dependencies=[Depends(get_current_user)])
@@ -41,6 +41,7 @@ def list_users(
 @router.post("")
 def create_user(
     payload: SystemUserCreatePayload,
+    current_user: User = Depends(get_current_user),
     _: User = Depends(require_permission("user:create")),
     db: Session = Depends(get_db),
 ):
@@ -58,6 +59,9 @@ def create_user(
     )
     db.add(row)
     db.commit()
+    db.refresh(row)
+    record_history(db, current_user.id, "Create", f"Created user '{row.name}'")
+    db.commit()
     row_out = db.execute(select(User).options(joinedload(User.role_rel)).where(User.id == row.id)).scalar_one()
     return {"data": serialize_user(row_out)}
 
@@ -66,6 +70,7 @@ def create_user(
 def update_user(
     user_id: int,
     payload: SystemUserUpdatePayload,
+    current_user: User = Depends(get_current_user),
     _: User = Depends(require_permission("user:update")),
     db: Session = Depends(get_db),
 ):
@@ -88,6 +93,9 @@ def update_user(
     if payload.password:
         row.password_hash = get_password_hash(payload.password)
     db.commit()
+    db.refresh(row)
+    record_history(db, current_user.id, "Update", f"Updated user '{row.name}'")
+    db.commit()
     row_out = db.execute(select(User).options(joinedload(User.role_rel)).where(User.id == row.id)).scalar_one()
     return {"data": serialize_user(row_out)}
 
@@ -104,6 +112,10 @@ def delete_user(
         return error_response(status.HTTP_404_NOT_FOUND, "Not found", "NOT_FOUND")
     if row.id == current_user.id:
         return error_response(status.HTTP_409_CONFLICT, "Cannot delete current user", "CONFLICT")
+    
+    user_name = row.name
     db.delete(row)
+    db.commit()
+    record_history(db, current_user.id, "Delete", f"Deleted user '{user_name}'")
     db.commit()
     return {"message": "User deleted"}

@@ -3,14 +3,23 @@ import uuid
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
-
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
-
 from app.core.config import settings
-from app.models import Category, CheckoutItem, Finance, Invoice, Product, ProductDamage, ProductStockAddition, Role, User
+from app.models import Category, CheckoutItem, Finance, History, Invoice, Product, ProductDamage, ProductStockAddition, Role, User
 from app.services.product_image_service import public_image_url
 from app.services.product_stock_status import stock_status_tier
+
+
+def record_history(db: Session, user_id: int, type_action: str, description: str):
+    try:
+        row = History(user_id=user_id, type_action=type_action, description=description)
+        db.add(row)
+        # Flush to catch issues but let the parent commit
+        db.flush()
+    except Exception:
+        # Don't crash the main operation if history fails
+        pass
 
 
 def list_response(rows: list[dict[str, Any]], total: int, aggregates: dict[str, Any] | None = None):
@@ -128,27 +137,31 @@ def serialize_product(
     }
 
 
-def serialize_report_row(ci: CheckoutItem, inv: Invoice, u: User | None = None) -> dict[str, Any]:
+def serialize_report_row(ci: CheckoutItem | None, inv: Invoice, u: User | None = None) -> dict[str, Any]:
     return {
-        "id": ci.id,
+        "id": ci.id if ci else inv.id,
         "invoiceNo": inv.invoice_no,
         "date": to_iso(inv.created_at),
-        # One row = one checkout line product
-        "product": ci.product_name,
+        "product": ci.product_name if ci else (inv.product_name or ""),
+        "productId": ci.product_id if ci else 0,
+        "qty": int(ci.quantity or 0) if ci else 0,
+        "price": float(ci.price or 0) if ci else 0,
         "customer": inv.customer_name,
         "phoneCustomer": inv.customer_phone,
         "seller": u.name if u else "",
         "phoneSaler": "",
         "source": inv.source or "",
         "address": inv.customer_address or "",
-        "amount": float(ci.total),
+        "deliveryPrice": float(inv.delivery_price or 0),
+        "discount": float(inv.discount or 0),
+        "amount": float(ci.total) if ci else float(inv.total or 0),
     }
 
 
 def serialize_finance_view(row_f: Finance, row_p: Product) -> dict[str, Any]:
     sold_qty = float(row_f.total_sold_product or 0)
     in_cost = float(row_p.in_price or 0) * sold_qty
-    gross = float(row_p.out_price or 0) * sold_qty
+    gross = float(row_f.total_sold_price or 0)
     final_price = gross - float(row_f.total_commission or 0) - float(row_f.facebook or 0) - float(row_f.other or 0) - in_cost
     return {
         "id": row_f.id,
@@ -158,6 +171,8 @@ def serialize_finance_view(row_f: Finance, row_p: Product) -> dict[str, Any]:
         "facebook": row_f.facebook,
         "other": row_f.other,
         "inPriceForPos": in_cost,
+        "grossRevenue": gross,
+        "soldQty": sold_qty,
         "finalPrice": final_price,
         "createdAt": to_iso(row_f.created_at),
     }
@@ -211,7 +226,7 @@ def serialize_user(row: User, *, role_name: str | None = None) -> dict[str, Any]
         "name": row.name,
         "role": resolved_role,
         "email": row.email,
-        "lastLogin": "",
+        "lastLogin": to_iso(row.last_login),
         "commission": 0,
     }
 

@@ -2,7 +2,6 @@ import base64
 import re
 import uuid
 from pathlib import Path
-
 from app.core.config import settings
 
 DATA_URL_RE = re.compile(
