@@ -1,53 +1,18 @@
-# Python
+venv/
+.venv/
+env/
+ENV/
+
 __pycache__/
-*.py[cod]
+*.pyc
 *.pyo
 *.pyd
-*.env
-.env.*
-*.sqlite3
+
 *.db
-*.log
+*.sqlite3
+.env
 
-# Virtual environments
-venv/
-env/
-.venv/
-ENV/
-env.bak/
-venv.bak/
-
-# Pytest
-.pytest_cache/
-.coverage
-htmlcov/
-.tox/
-
-# FastAPI/Uploads
-uploads/
-*.bak
-
-# VSCode
-.vscode/
-*.code-workspace
-
-# Node/Nuxt/Frontend
 node_modules/
-dist/
-.nitro/
 .nuxt/
-pnpm-lock.yaml
-yarn.lock
-npm-debug.log*
-.DS_Store
-
-# OS
-Thumbs.db
-ehthumbs.db
-Desktop.ini
-
-# Others
-*.swp
-*.swo
-.idea/
-*.iml
+.output/
+dist/
