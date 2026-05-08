@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.models import Invoice
+from app.schemas.common import DeliveryUpdatePayload
 from app.services.auth_service import get_current_user, require_permission
 from app.services.data_service import (
     apply_created_at_range,
@@ -11,6 +12,7 @@ from app.services.data_service import (
     list_response,
     paginate_query,
     parse_csv,
+    record_history,
     serialize_delivery_invoice,
 )
 
@@ -24,6 +26,7 @@ def list_deliveries_view(
     search: str | None = None,
     address: str | None = None,
     deliveryType: str | None = None,
+    deliveryStatus: str | None = None,
     dateFrom: str | None = None,
     dateTo: str | None = None,
     sortBy: str | None = None,
@@ -45,6 +48,9 @@ def list_deliveries_view(
     delivery_types = parse_csv(deliveryType)
     if delivery_types:
         q = q.where(Invoice.delivery_type.in_(delivery_types))
+    statuses = parse_csv(deliveryStatus)
+    if statuses:
+        q = q.where(Invoice.delivery_status.in_(statuses))
     q = apply_created_at_range(q, dateFrom, dateTo, Invoice.created_at)
     q = apply_sort(
         q,
@@ -61,3 +67,30 @@ def list_deliveries_view(
     rows, total = paginate_query(q, db, page, limit)
     data = [serialize_delivery_invoice(row[0]) for row in rows]
     return list_response(data, total)
+
+
+@router.put("/{invoice_no}")
+def update_delivery_status(
+    invoice_no: str,
+    payload: DeliveryUpdatePayload,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+    _=Depends(require_permission("delivery:update")),
+):
+    inv = db.scalar(select(Invoice).where(Invoice.invoice_no == invoice_no))
+    if not inv:
+        raise HTTPException(status_code=404, detail="Invoice not found")
+
+    old_status = inv.delivery_status
+    inv.delivery_status = payload.deliveryStatus
+    db.commit()
+    db.refresh(inv)
+
+    record_history(
+        db,
+        current_user.id,
+        "Update",
+        f"Updated delivery status for invoice {invoice_no} from {old_status} to {payload.deliveryStatus}",
+    )
+
+    return serialize_delivery_invoice(inv)

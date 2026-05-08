@@ -69,7 +69,7 @@ const legendItems = computed(() => {
       <div
         class="absolute inset-4 rounded-full bg-white dark:bg-gray-950 grid place-items-center text-center"
       >
-        <p class="text-[10px] text-muted-foreground leading-tight">Total</p>
+        <p class="text-[10px] text-muted-foreground leading-tight">{{ $t('common.total') }}</p>
         <p class="text-xs font-bold">{{ total.toLocaleString() }}</p>
       </div>
     </div>
@@ -95,7 +95,7 @@ const legendItems = computed(() => {
             <span class="truncate text-muted-foreground">{{ item.name }}</span>
           </div>
           <span class="font-semibold whitespace-nowrap">
-            {{ item.percent }}%
+            {{ $t('common.percent', { value: item.percent }) }}
           </span>
         </div>
       </div>

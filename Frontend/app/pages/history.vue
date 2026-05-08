@@ -45,6 +45,7 @@ const localColumns = computed(() => [
                 v-model:pagination="pagination"
                 v-model:column-filters="columnFilters"
                 v-model:filter-value="selectedActions" 
+                v-model:global-filter="searchQuery"
                 :filter-items="actionItems"
                 :data="filteredLogs" 
                 :total-rows="totalRows"
@@ -52,11 +53,6 @@ const localColumns = computed(() => [
                 :selectable="true" 
                 :get-row-actions="getDropdownActions"
             >
-                <template #header>
-                    <div class="w-full max-w-[280px]">
-                        <CommonAppSearch v-model="searchQuery" />
-                    </div>
-                </template>
                 <template #typeAction-cell="{ row }">
                     <UBadge :color="getActionColor(row.original.typeAction)" size="sm" class="font-extrabold uppercase">
                         {{ row.original.typeAction }}

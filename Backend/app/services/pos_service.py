@@ -42,7 +42,7 @@ def calculate_totals_service(*, db: Session, payload: PosCheckoutPayload):
     return {"subtotal": subtotal, "discountAmount": discount_amount, "total": subtotal - discount_amount}
 
 
-def complete_checkout_service(*, db: Session, payload: PosCheckoutPayload, current_user):
+def complete_checkout_service(*, db: Session, payload: PosCheckoutPayload, current_user, background_tasks):
     invoice_no = next_invoice_no(db)
     if not str(invoice_no).startswith("DNS-"):
         raise RuntimeError("Invoice numbering must use DNS-* format")
@@ -108,6 +108,12 @@ def complete_checkout_service(*, db: Session, payload: PosCheckoutPayload, curre
 
     db.commit()
     db.refresh(invoice)
+    
+    # Send Telegram Notification via Background Task
+    from app.services.telegram_service import telegram_service
+    checkout_items = db.execute(select(CheckoutItem).where(CheckoutItem.invoice_id == invoice.id)).scalars().all()
+    background_tasks.add_task(telegram_service.notify_checkout, invoice, checkout_items)
+
     record_history(db, current_user.id, "Create", f"Checkout completed (Invoice: {invoice.invoice_no})")
     db.commit()
     return {

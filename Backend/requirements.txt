@@ -6,3 +6,7 @@ python-jose[cryptography]
 passlib[bcrypt]
 pytest
 httpx
+apscheduler==3.11.2
+httpx==0.28.1
+google-api-python-client==2.196.0
+google-auth==2.52.0

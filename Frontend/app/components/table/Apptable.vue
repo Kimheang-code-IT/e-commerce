@@ -17,11 +17,6 @@
       </div>
 
       <div class="flex flex-nowrap items-center gap-2 max-w-full overflow-hidden shrink-0">
-        <!-- Global Filter Input -->
-        <div v-if="globalFilter !== undefined" class="min-w-30 sm:min-w-50 flex-1">
-          <CommonAppSearch v-model="globalFilter" />
-        </div>
-
         <!-- Multi-Select Filters -->
         <CommonAppMutilSelect v-if="filterValue !== undefined && filterItems" v-model="filterValue" :items="filterItems"
           :placeholder="filterPlaceholder || $t('components.search')" />
@@ -31,7 +26,17 @@
           :items="filterItemsSecondary"
           :placeholder="filterPlaceholderSecondary || $t('components.search')"
         />
+        <CommonAppMutilSelect
+          v-if="filterValueThird !== undefined && filterItemsThird"
+          v-model="filterValueThird"
+          :items="filterItemsThird"
+          :placeholder="filterPlaceholderThird || $t('components.search')"
+        />
 
+        <!-- Global Filter Input -->
+        <div v-if="globalFilter !== undefined" class="w-52">
+          <CommonAppSearch v-model="globalFilter" />
+        </div>
       </div>
     </div>
 
@@ -131,6 +136,8 @@ const props = withDefaults(defineProps<{
   filterPlaceholder?: string
   filterItemsSecondary?: any[]
   filterPlaceholderSecondary?: string
+  filterItemsThird?: any[]
+  filterPlaceholderThird?: string
   title?: string
   selectable?: boolean
   totalRows?: number
@@ -143,6 +150,7 @@ const props = withDefaults(defineProps<{
 // V-Models for TanStack Table state
 const filterValue = defineModel<any[]>('filterValue')
 const filterValueSecondary = defineModel<any[]>('filterValueSecondary')
+const filterValueThird = defineModel<any[]>('filterValueThird')
 const sorting = defineModel<any>('sorting')
 const columnFilters = defineModel<any>('columnFilters')
 const globalFilter = defineModel<string>('globalFilter')

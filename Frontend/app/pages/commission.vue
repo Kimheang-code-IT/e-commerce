@@ -4,7 +4,7 @@ import { formatCurrency } from '~/utils/format/currency'
 import { formatDate } from '~/utils/format/date'
 import { useCommissionApi } from '~/utils/api'
 
-const { data, columns, groupingOptions, grouping, isLoading, sorting, searchQuery, columnFilters, pagination, totalRows } = useCommission()
+const { data, columns, groupingOptions, grouping, isLoading, sorting, searchQuery, columnFilters, pagination, totalRows, productItems, selectedProducts } = useCommission()
 const { t } = useI18n()
 const isExportOpen = ref(false)
 const commissionApi = useCommissionApi()
@@ -12,7 +12,8 @@ const commissionApi = useCommissionApi()
 async function fetchCommissionExportData(args: { startDate?: string; endDate?: string }) {
   const res = await commissionApi.exportCsv({
     ...((args.startDate || args.endDate) ? { dateFrom: args.startDate, dateTo: args.endDate } : {}),
-    search: searchQuery.value || undefined
+    search: searchQuery.value || undefined,
+    product: selectedProducts.value.length ? selectedProducts.value.join(',') : undefined
   })
   return res.data || data.value
 }
@@ -39,6 +40,10 @@ async function fetchCommissionExportData(args: { startDate?: string; endDate?: s
         v-model:sorting="sorting"
         v-model:column-filters="columnFilters"
         v-model:pagination="pagination"
+        v-model:global-filter="searchQuery"
+        v-model:filter-value="selectedProducts"
+        :filter-items="productItems"
+        :filter-placeholder="t('pages.commission.columns.product')"
         v-model:grouping="grouping"
         :grouping-options="groupingOptions"
         :selectable="false"
@@ -48,11 +53,6 @@ async function fetchCommissionExportData(args: { startDate?: string; endDate?: s
           td: 'empty:p-2'
         }"
       >
-        <template #header>
-          <div class="w-full max-w-[280px]">
-            <CommonAppSearch v-model="searchQuery" />
-          </div>
-        </template>
         <template #seller-cell="{ row }">
           <div v-if="row.getIsGrouped()" class="flex items-center gap-2 py-1">
             <span class="inline-block" :style="{ width: `calc(${row.depth} * 1rem)` }" />

@@ -70,14 +70,9 @@ async function fetchReportExportData(args: { startDate?: string; endDate?: strin
     <div class="flex-1 p-2 overflow-hidden">
       <TableApptable :title="t('pages.report.tableTitle')" v-model:row-selection="rowSelection"
         v-model:sorting="sorting" v-model:column-visibility="columnVisibility" v-model:pagination="pagination"
-        v-model:column-filters="columnFilters" v-model:filter-value="selectedProducts" :filter-items="productItems"
+        v-model:column-filters="columnFilters" v-model:filter-value="selectedProducts" v-model:global-filter="searchQuery" :filter-items="productItems"
         :filter-placeholder="$t('product.name')" :data="filteredReportRows" :total-rows="totalRows" :columns="columns"
         :selectable="true">
-        <template #header>
-          <div class="w-full max-w-[280px]">
-            <CommonAppSearch v-model="searchQuery" />
-          </div>
-        </template>
         <template #no-header>
           <div class="flex items-center gap-2">
             <UCheckbox :model-value="allFilteredSelected" :indeterminate="someFilteredSelected"

@@ -97,6 +97,7 @@ export interface DeliveryEntry {
   address: string
   deliveryType: 'VET' | 'Domnaksiiksa' | 'Grap' | 'J&T'
   deliveryPrice: number
+  deliveryStatus: string
   date: string
 }
 

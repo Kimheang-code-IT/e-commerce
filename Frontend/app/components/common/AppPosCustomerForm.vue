@@ -27,26 +27,35 @@ watch(
 const deliveryDatePart = ref('')
 const deliveryTimePart = ref('')
 
-const customerTypes = ['Customer', 'walkIn']
-const deliveryTypeItems = ['VET', 'Domnaksiiksa', 'Grap', 'J&T']
+const customerTypes = [t('pages.pos.customer.types.customer'), t('pages.pos.customer.types.walkIn')]
+const deliveryTypeItems = [
+  t('pages.pos.customer.form.deliveryTypeVET'),
+  t('pages.pos.customer.form.deliveryTypeDomnaksiiksa'),
+  t('pages.pos.customer.form.deliveryTypeGrap'),
+  t('pages.pos.customer.form.deliveryTypeJNT')
+]
 const paymentMethodItems = [
-  { label: 'Cash', value: 'cash' },
-  { label: 'ACLEDA Bank', value: 'acleda' },
-  { label: 'ABA Bank', value: 'aba' },
-  { label: 'Wing', value: 'wing' },
-  { label: 'Other', value: 'other' }
+  { label: t('pages.pos.customer.form.paymentCash'), value: 'cash' },
+  { label: t('pages.pos.customer.form.paymentAcleda'), value: 'acleda' },
+  { label: t('pages.pos.customer.form.paymentABA'), value: 'aba' },
+  { label: t('pages.pos.customer.form.paymentWing'), value: 'wing' },
+  { label: t('pages.pos.customer.form.paymentOther'), value: 'other' }
 ]
 const deliveryStatusItems = [
-  { label: 'Pending', value: 'pending' },
-  { label: 'Delivered', value: 'delivered' }
+  { label: t('pages.pos.customer.form.statusPending'), value: 'pending' },
+  { label: t('pages.pos.customer.form.statusDelivered'), value: 'delivered' }
 ]
-const sourceItems = ['Domnaksiiksa', 'Learn fast', 'rean chinese', 'other']
+const sourceItems = [
+  t('pages.pos.customer.form.sourceDomnaksiiksa'),
+  t('pages.pos.customer.form.sourceLearnFast'),
+  t('pages.pos.customer.form.sourceReanChinese'),
+  t('pages.pos.customer.form.sourceOther')
+]
 const customerTypeTabs = computed(() => [
   { label: t('pages.pos.customer.types.customer'), value: 'Customer' },
   { label: t('pages.pos.customer.types.walkIn'), value: 'walkIn' }
 ])
-const provinceItems = [
-  'Nothing',
+const provinceNames = [
   'Phnom Penh',
   'Siemreap',
   'Preah Sihanouk',
@@ -71,6 +80,10 @@ const provinceItems = [
   'Pailin',
   'Preah Vihear',
   'Koh Kong'
+]
+const provinceItems = [
+  t('common.nothing'),
+  ...provinceNames.map(name => t('provinces.' + name))
 ]
 
 function onSelectCustomerType(type: string) {
@@ -243,7 +256,7 @@ watch([deliveryDatePart, deliveryTimePart], () => {
           </div>
         </div>
         <div class="space-y-1.5">
-          <label class="text-sm text-muted-foreground">Delivery Date <span class="text-error">*</span></label>
+          <label class="text-sm text-muted-foreground">{{ $t('pages.pos.customer.form.deliveryDate') }} <span class="text-error">*</span></label>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-1">
             <UInput
               v-model="deliveryDatePart"
@@ -262,7 +275,7 @@ watch([deliveryDatePart, deliveryTimePart], () => {
 
         <div class="flex flex-col sm:flex-row gap-3 w-full">
           <div class="flex-1 space-y-1.5">
-            <label class="text-sm text-muted-foreground">Payment Method <span class="text-error">*</span></label>
+            <label class="text-sm text-muted-foreground">{{ $t('pages.pos.customer.form.paymentMethod') }} <span class="text-error">*</span></label>
             <USelect
               v-model="paymentMethod"
               :items="paymentMethodItems"
@@ -271,7 +284,7 @@ watch([deliveryDatePart, deliveryTimePart], () => {
             />
           </div>
           <div class="flex-1 space-y-1.5">
-            <label class="text-sm text-muted-foreground">Delivery Status<span class="text-error">*</span></label>
+            <label class="text-sm text-muted-foreground">{{ $t('pages.pos.customer.form.deliveryStatus') }}<span class="text-error">*</span></label>
             <USelect
               v-model="deliveryStatus"
               :items="deliveryStatusItems"
@@ -283,7 +296,7 @@ watch([deliveryDatePart, deliveryTimePart], () => {
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
           <div class="flex-1 space-y-1.5">
-            <label class="text-sm text-muted-foreground">Source <span class="text-error">*</span></label>
+            <label class="text-sm text-muted-foreground">{{ $t('pages.pos.customer.form.source') }} <span class="text-error">*</span></label>
             <USelect
               v-model="source"
               :items="sourceItems"
@@ -297,7 +310,7 @@ watch([deliveryDatePart, deliveryTimePart], () => {
               v-model="customerAddress"
               :items="provinceItems"
               searchable
-              placeholder="Select a province..."
+              :placeholder="$t('pages.pos.customer.form.addressPlaceholder')"
               size="lg"
               class="w-full mt-1"
             />

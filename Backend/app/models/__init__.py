@@ -1,3 +1,4 @@
+from app.models.backup_tracker import BackupTracker
 from app.models.category import Category
 from app.models.finance import Finance
 from app.models.history import History
@@ -9,6 +10,7 @@ from app.models.token_session import TokenSession
 from app.models.user import User
 
 __all__ = [
+    "BackupTracker",
     "Category",
     "CheckoutItem",
     "Finance",

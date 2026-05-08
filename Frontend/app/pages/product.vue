@@ -70,16 +70,11 @@ function onProductImageError(event: Event) {
                 v-model:sorting="sorting"
                 v-model:column-visibility="columnVisibility" v-model:pagination="pagination"
                 v-model:column-filters="columnFilters" v-model:filter-value="selectedCategories"
+                v-model:global-filter="searchQuery"
                 :filter-items="categoryItems" :filter-placeholder="$t('product.category')"
                 :data="filteredEntries" :columns="columns" :selectable="true"
                 :total-rows="totalRows"
                 :get-row-actions="getDropdownActions">
-                <template #header>
-                    <div class="w-full max-w-[280px]">
-                        <CommonAppSearch v-model="searchQuery" />
-                    </div>
-                </template>
-
                 <!-- Image -->
                 <template #image-cell="{ row }">
                     <img

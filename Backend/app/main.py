@@ -13,6 +13,7 @@ from app.api.v1.routes import router as api_router
 from app.core.config import settings
 from app.core.database import Base, SessionLocal, engine
 from app.core.security import get_password_hash
+from app.core.scheduler import start_scheduler, shutdown_scheduler
 from app.models import Role, User
 
 app = FastAPI(title=settings.app_name)
@@ -28,30 +29,8 @@ app.add_middleware(
 
 
 def init_db() -> None:
-    """Create tables from SQLAlchemy models (aligned with `e-commerce.sql`) and seed a default admin."""
+    """Create tables from SQLAlchemy models (aligned with `e-commerce.sql`)."""
     Base.metadata.create_all(bind=engine)
-    db = SessionLocal()
-    try:
-        admin_role = db.execute(select(Role).where(Role.name == "admin")).scalar_one_or_none()
-        if not admin_role:
-            admin_role = Role(name="admin", page_access=json.dumps(["admin:*"]))
-            db.add(admin_role)
-            db.flush()
-        if not db.execute(select(Role).where(Role.name == "seller")).scalar_one_or_none():
-            db.add(Role(name="seller", page_access=json.dumps(["pos:view", "pos:create", "product:view"])))
-            db.flush()
-        if not db.execute(select(User).where(User.email == "admin@example.com")).scalar_one_or_none():
-            db.add(
-                User(
-                    name="Admin",
-                    email="admin@example.com",
-                    password_hash=get_password_hash("secret"),
-                    role_id=admin_role.id,
-                )
-            )
-        db.commit()
-    finally:
-        db.close()
 
 
 @app.middleware("http")
@@ -85,6 +64,12 @@ def health():
 @app.on_event("startup")
 def on_startup():
     init_db()
+    start_scheduler()
+
+
+@app.on_event("shutdown")
+def on_shutdown():
+    shutdown_scheduler()
 
 
 app.include_router(api_router, prefix=settings.api_prefix)

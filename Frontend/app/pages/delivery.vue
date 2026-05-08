@@ -18,9 +18,15 @@ const {
   deliveryTypeItems,
   selectedAddresses,
   selectedDeliveryTypes,
+  selectedStatuses,
+  statusItems,
   filteredDeliveryRows,
-  columns
+  columns,
+  updateStatus,
+  updateAllPendingToDelivered
 } = useDelivery()
+
+const hasPending = computed(() => filteredDeliveryRows.value.some(r => r.deliveryStatus === 'pending'))
 
 function goToInvoice(row: any) {
   router.push({
@@ -46,21 +52,20 @@ function goToInvoice(row: any) {
         v-model:column-filters="columnFilters"
         v-model:filter-value="selectedAddresses"
         v-model:filter-value-secondary="selectedDeliveryTypes"
+        v-model:filter-value-third="selectedStatuses"
+        v-model:global-filter="searchQuery"
         :filter-items="addressItems"
         :filter-items-secondary="deliveryTypeItems"
+        :filter-items-third="statusItems"
         :filter-placeholder="t('pages.delivery.columns.address')"
         :filter-placeholder-secondary="t('pages.delivery.columns.deliveryType')"
+        :filter-placeholder-third="t('pages.delivery.columns.deliveryStatus')"
         :data="filteredDeliveryRows"
         :loading="isLoading"
         :total-rows="totalRows"
         :columns="columns"
         :selectable="false"
       >
-        <template #header>
-          <div class="w-full max-w-[280px]">
-            <CommonAppSearch v-model="searchQuery" />
-          </div>
-        </template>
         <template #no-cell="{ row }">
           <span class="text-sm text-muted-foreground">{{ row.index + 1 }}</span>
         </template>
@@ -92,6 +97,42 @@ function goToInvoice(row: any) {
           <span class="text-sm font-medium text-primary">
             {{ formatCurrency(row.original.deliveryPrice, 'USD') }}
           </span>
+        </template>
+
+        <template #deliveryStatus-header>
+          <div class="flex items-center gap-2">
+            <span>{{ t('pages.delivery.columns.deliveryStatus') }}</span>
+            <UTooltip :text="t('actions.confirm')">
+              <UButton
+                v-if="hasPending"
+                icon="i-lucide-check-check"
+                color="success"
+                variant="ghost"
+                size="xs"
+                @click="updateAllPendingToDelivered"
+              />
+            </UTooltip>
+          </div>
+        </template>
+
+        <template #deliveryStatus-cell="{ row }">
+          <div class="flex items-center gap-2">
+            <UBadge
+              :color="row.original.deliveryStatus === 'delivered' ? 'success' : 'warning'"
+              variant="soft"
+              class="capitalize"
+            >
+              {{ row.original.deliveryStatus === 'delivered' ? $t('pages.pos.customer.form.statusDelivered') : $t('pages.pos.customer.form.statusPending') }}
+            </UBadge>
+            <UButton
+              v-if="row.original.deliveryStatus === 'pending'"
+              icon="i-lucide-check-circle"
+              color="success"
+              variant="ghost"
+              size="xs"
+              @click="updateStatus(row.original.invoiceId, 'delivered')"
+            />
+          </div>
         </template>
 
         <template #date-cell="{ row }">

@@ -125,6 +125,9 @@ class PosCheckoutPayload(BaseModel):
     lines: list[InvoiceLinePayload] = Field(default_factory=list)
 
 
+class DeliveryUpdatePayload(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    deliveryStatus: str = Field(min_length=1, max_length=50)
 
 
 class SystemUserCreatePayload(BaseModel):

@@ -21,7 +21,12 @@
         "search": "ស្វែងរក...",
         "amount": "ចំនួនទឹកប្រាក់",
         "items": "ចំនួន",
-        "export": "នាំចេញ"
+        "export": "នាំចេញ",
+        "nothing": "គ្មាន",
+        "total": "សរុប",
+        "percent": "{value}%",
+        "success": "ជោគជ័យ",
+        "error": "ខុស"
     },
     "components": {
         "search": "ច្រោះទិន្នន័យ...",
@@ -88,11 +93,16 @@
         "dashboard": {
             "title": "ទិដ្ឋភាពទូទៅនៃផ្ទាំងគ្រប់គ្រង",
             "moduleDistribution": "ការចែកចាយតាមកម្រៃជើងសា",
+            "commissionDistribution": "ការចែកចាយកម្រៃជើងសា",
+            "topSellingProducts": "ផលិតផលលក់ដាច់បំផុត",
             "monthlyDataQuick": "ទិន្នន័យតាមផលិតផល",
             "revenueByRegion": "វិភាគចំនួនអ្នកទិញតាមខេត្ត",
             "summary": {
                 "totalCategory": "ប្រភេទសរុប",
                 "totalProduct": "ផលិតផលសរុប",
+                "productInStock": "ផលិតផលនៅក្នុងស្តុក",
+                "productOutOfStock": "ផលិតផលអស់ពីស្តុក",
+                "soldProducts": "ផលិតផលបានលក់",
                 "totalInStock": "ស្តុកនៅសល់សរុប",
                 "totalSold": "ផលិតផលបានលក់សរុប",
                 "totalReportAmount": "សរុបទឹកប្រាក់លក់"
@@ -126,7 +136,26 @@
                     "deliveryType": "ប្រភេទដឹកជញ្ជូន",
                     "deliveryPrice": "តម្លៃដឹកជញ្ជូន",
                     "address": "អាសយដ្ឋាន",
-                    "addressPlaceholder": "បញ្ចូលអាសយដ្ឋាន"
+                    "addressPlaceholder": "ជ្រើសរើសខេត្ត...",
+                    "deliveryDate": "កាលបរិច្ឆេទដឹកជញ្ជូន",
+                    "paymentMethod": "វិធីសាស្រ្តបង់ប្រាក់",
+                    "deliveryStatus": "ស្ថានភាពដឹកជញ្ជូន",
+                    "source": "ប្រភព",
+                    "deliveryTypeVET": "VET",
+                    "deliveryTypeDomnaksiiksa": "ដំណាក់សិក្សា",
+                    "deliveryTypeGrap": "Grap",
+                    "deliveryTypeJNT": "J&T",
+                    "paymentCash": "សាច់ប្រាក់",
+                    "paymentAcleda": "ធនាគារACLEDA",
+                    "paymentABA": "ធនាគារABA",
+                    "paymentWing": "Wing",
+                    "paymentOther": "ផ្សេងៗ",
+                    "statusPending": "កំពុងដឹក",
+                    "statusDelivered": "ដឹកជូនរួច",
+                    "sourceDomnaksiiksa": "ដំណាក់សិក្សា",
+                    "sourceLearnFast": "រៀនរហ័ស",
+                    "sourceReanChinese": "រៀនភាសាចិន",
+                    "sourceOther": "ផ្សេងៗ"
                 }
             },
             "productCard": {
@@ -154,9 +183,7 @@
                 },
                 "fields": {
                     "invoiceNo": "លេខវិក្កយបត្រ",
-                    "startDate": "កាលបរិច្ឆេទចាប់ផ្តើម",
-                    "endDate": "កាលបរិច្ឆេទបញ្ចប់",
-                    "registered": "បានចុះឈ្មោះ",
+                    "date": "កាលបរិច្ឆេទ",
                     "name": "ឈ្មោះ",
                     "phone": "ទូរស័ព្ទ",
                     "deliveryType": "ប្រភេទដឹកជញ្ជូន",
@@ -285,7 +312,8 @@
                 "phoneSaler": "ទូរស័ព្ទអ្នកលក់",
                 "source": "ប្រភព",
                 "address": "អាសយដ្ឋាន",
-                "amount": "ចំនួនទឹកប្រាក់"
+                "amount": "ចំនួនទឹកប្រាក់",
+                "sold": "ចំនួនលក់បាន"
             }
         },
         "delivery": {
@@ -297,6 +325,7 @@
                 "address": "អាសយដ្ឋាន",
                 "deliveryType": "ប្រភេទដឹកជញ្ជូន",
                 "deliveryPrice": "តម្លៃដឹកជញ្ជូន",
+                "deliveryStatus": "ស្ថានភាពដឹកជញ្ជូន",
                 "date": "កាលបរិច្ឆេទ"
             }
         },

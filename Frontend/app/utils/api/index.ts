@@ -186,7 +186,12 @@ export function useReportApi() {
 }
 
 export function useDeliveryApi() {
-  return useDeliveriesViewApi()
+  const api = useApi()
+  return {
+    ...useDeliveriesViewApi(),
+    updateStatus: (invoiceId: string, status: string) =>
+      api.put(`/deliveries-view/${invoiceId}`, { deliveryStatus: status })
+  }
 }
 
 export function useCommissionApi() {

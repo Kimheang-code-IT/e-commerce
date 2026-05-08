@@ -1,8 +1,10 @@
 import { ref, computed, onMounted, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useDashboardApi } from '~/utils/api'
 
 /** Home dashboard — fetches aggregated statistics from the optimized /dashboard/summary endpoint. */
 export function useAnalyticsDashboard() {
+  const { t } = useI18n()
   const useBackendApi = useBackendMode()
   const dashboardApi = useDashboardApi()
   const { formattedRange } = useGlobalFilter()
@@ -32,22 +34,22 @@ export function useAnalyticsDashboard() {
       apiSummary.value = {
         stats: [
           {
-            label: 'Total Product',
+            label: t('pages.dashboard.summary.totalProduct'),
             value: String(data?.totalProducts || 0),
             icon: 'i-lucide-folder-tree'
           },
           {
-            label: 'Product in Stock',
+            label: t('pages.dashboard.summary.productInStock'),
             value: String(data?.productsInStock || 0),
             icon: 'i-lucide-package'
           },
           {
-            label: 'Product Out of Stock',
+            label: t('pages.dashboard.summary.productOutOfStock'),
             value: String(data?.productsOutOfStock || 0),
             icon: 'i-lucide-file-text'
           },
           {
-            label: 'Sold Products',
+            label: t('pages.dashboard.summary.soldProducts'),
             value: String(data?.soldProducts || 0),
             icon: 'i-lucide-users'
           }

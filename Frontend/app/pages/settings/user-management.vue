@@ -31,13 +31,8 @@ function onSubmitUser(data: Record<string, any>) {
             <TableApptable :title="$t('pages.userManagement.tableTitle')" v-model:row-selection="rowSelection"
                 v-model:sorting="sorting"
                 v-model:column-visibility="columnVisibility" v-model:pagination="pagination"
-                v-model:column-filters="columnFilters" v-model:filter-value="selectedRoles" :filter-items="roleItems"
+                v-model:column-filters="columnFilters" v-model:filter-value="selectedRoles" v-model:global-filter="searchQuery" :filter-items="roleItems"
                 :data="filteredUsers" :columns="columns" :selectable="true" :total-rows="totalRows" :get-row-actions="getDropdownActions">
-                <template #header>
-                    <div class="w-full max-w-[280px]">
-                        <CommonAppSearch v-model="searchQuery" />
-                    </div>
-                </template>
                 <template #name-cell="{ row }">
                     <div class="flex items-center gap-3">
                         <span class="font-normal text-foreground">{{ row.original.name }}</span>

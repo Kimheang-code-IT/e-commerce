@@ -33,14 +33,10 @@ function onSubmitRole(data: Record<string, any>) {
                 v-model:sorting="sorting"
                 v-model:column-visibility="columnVisibility" v-model:pagination="pagination"
                 v-model:column-filters="columnFilters" v-model:filter-value="selectedRoles"
+                v-model:global-filter="searchQuery"
                 :filter-items="roleFilterItems" :data="filteredRoles" :columns="columns" :selectable="true"
                 :total-rows="totalRows"
                 :get-row-actions="getDropdownActions">
-                <template #header>
-                    <div class="w-full max-w-[280px]">
-                        <CommonAppSearch v-model="searchQuery" />
-                    </div>
-                </template>
                 <template #name-cell="{ row }">
                     <div class="flex items-center gap-2">
                         <span>{{ row.original.name }}</span>

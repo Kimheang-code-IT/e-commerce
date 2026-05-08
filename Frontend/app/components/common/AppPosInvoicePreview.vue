@@ -2,8 +2,9 @@
 import type { Product } from '~/types'
 import { formatCurrency } from '~/utils/format/currency'
 import { formatDate } from '~/utils/format/date'
+import { useI18n } from 'vue-i18n'
 import logo from '~/assets/images/logo.png'
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const authStore = useAuthStore()
 
 const telegramPriceUrl = 'https://t.me/REANCOMPUTERFREE'
@@ -64,8 +65,12 @@ defineProps<{
               <div class="grid grid-cols-[110px_1fr] gap-2 pt-2">
                 <span class="text-slate-600 font-medium">{{ t('pages.pos.invoice.fields.invoiceNo') }}:</span>
                 <span class="font-medium text-slate-900">{{ selectedReportInvoice?.invoiceNo || checkoutInvoiceNo || '-' }}</span>
-                <span class="text-slate-600 font-medium">{{ t('pages.pos.invoice.fields.registered') }}:</span>
-                <span class="font-medium text-slate-900">{{ formatDate(selectedReportInvoice?.date || new Date()) }}</span>
+                <span class="text-slate-600 font-medium">
+                  {{ t('pages.pos.invoice.fields.date') }}:
+                </span>
+                <span class="font-medium text-slate-900">
+                  {{ formatDate(selectedReportInvoice?.date || new Date()) }}
+                </span>
                 <span class="text-slate-600 font-medium">{{ t('pages.pos.invoice.fields.deliveryPrice') }}:</span>
                 <span class="font-medium text-slate-900">{{ formatCurrency(deliveryPrice || 0, 'USD') }}</span>
               </div>
@@ -170,7 +175,7 @@ defineProps<{
 
                 <div class="grid grid-cols-2 gap-4 text-center">
                   <div>
-                    <p class="text-[14px] font-black text-slate-900">{{ customerName || 'Student Name' }}</p>
+                    <p class="text-[14px] font-black text-slate-900">{{ selectedReportInvoice?.customer || customerName || 'Student Name' }}</p>
                     <p class="text-[10px] mt-2 text-slate-400 uppercase font-bold">{{ t('pages.pos.invoice.footer.customer') }}</p>
                   </div>
                   <div>

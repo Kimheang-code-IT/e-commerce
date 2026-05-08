@@ -1,9 +1,25 @@
 from fastapi import APIRouter
-
-from app.api.v1 import auth, categories, commission, dashboard, delivery, finance, history, pos, products, reports, system_roles, system_users
+from app.api.v1 import (
+    auth,
+    backup,
+    categories,
+    commission,
+    dashboard,
+    delivery,
+    finance,
+    history,
+    pos,
+    products,
+    reports,
+    system_roles,
+    system_users,
+    telegram,
+)
 
 router = APIRouter()
 router.include_router(auth.router)
+router.include_router(backup.router)
+router.include_router(telegram.router)
 router.include_router(categories.router)
 router.include_router(products.router)
 router.include_router(system_users.router)

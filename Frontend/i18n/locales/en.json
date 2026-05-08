@@ -21,7 +21,12 @@
         "search": "Search...",
         "amount": "Amount",
         "items": "items",
-        "export": "Export"
+        "export": "Export",
+        "nothing": "Nothing",
+        "total": "Total",
+        "percent": "{value}%",
+        "success": "Success",
+        "error": "Error"
     },
     "components": {
         "search": "Filter...",
@@ -88,11 +93,16 @@
         "dashboard": {
             "title": "Dashboard Overview",
             "moduleDistribution": "Module Distribution",
+            "commissionDistribution": "Commission Distribution",
+            "topSellingProducts": "Top Selling Products",
             "monthlyDataQuick": "Monthly Data (Quick View)",
             "revenueByRegion": "Cambodia - Revenue by Region",
             "summary": {
                 "totalCategory": "Total Category",
                 "totalProduct": "Total Product",
+                "productInStock": "Product in Stock",
+                "productOutOfStock": "Product Out of Stock",
+                "soldProducts": "Sold Products",
                 "totalInStock": "Total In Stock",
                 "totalSold": "Total Product Sold",
                 "totalReportAmount": "Total Amount"
@@ -126,7 +136,26 @@
                     "deliveryType": "Delivery Type",
                     "deliveryPrice": "Delivery Price",
                     "address": "Address",
-                    "addressPlaceholder": "Enter address"
+                    "addressPlaceholder": "Select a province...",
+                    "deliveryDate": "Delivery Date",
+                    "paymentMethod": "Payment Method",
+                    "deliveryStatus": "Delivery Status",
+                    "source": "Source",
+                    "deliveryTypeVET": "VET",
+                    "deliveryTypeDomnaksiiksa": "Domnaksiiksa",
+                    "deliveryTypeGrap": "Grap",
+                    "deliveryTypeJNT": "J&T",
+                    "paymentCash": "Cash",
+                    "paymentAcleda": "ACLEDA Bank",
+                    "paymentABA": "ABA Bank",
+                    "paymentWing": "Wing",
+                    "paymentOther": "Other",
+                    "statusPending": "Pending",
+                    "statusDelivered": "Delivered",
+                    "sourceDomnaksiiksa": "Domnaksiiksa",
+                    "sourceLearnFast": "Learn fast",
+                    "sourceReanChinese": "rean chinese",
+                    "sourceOther": "Other"
                 }
             },
             "productCard": {
@@ -154,9 +183,7 @@
                 },
                 "fields": {
                     "invoiceNo": "Invoice No",
-                    "startDate": "Start Date",
-                    "endDate": "End Date",
-                    "registered": "Registered",
+                    "date": "Date",
                     "name": "Name",
                     "phone": "Phone",
                     "deliveryType": "Delivery Type",
@@ -285,7 +312,8 @@
                 "phoneSaler": "Phone Seller",
                 "source": "Source",
                 "address": "Address",
-                "amount": "Amount"
+                "amount": "Amount",
+                "sold": "Sold"
             }
         },
         "delivery": {
@@ -297,6 +325,7 @@
                 "address": "Address",
                 "deliveryType": "Delivery Type",
                 "deliveryPrice": "Delivery Price",
+                "deliveryStatus": "Delivery Status",
                 "date": "Date"
             }
         },

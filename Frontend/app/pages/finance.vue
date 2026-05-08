@@ -52,15 +52,10 @@ async function fetchFinanceExportData(args: { startDate?: string; endDate?: stri
         v-model:sorting="sorting"
         v-model:column-filters="columnFilters"
         v-model:pagination="pagination"
+        v-model:global-filter="searchQuery"
         :total-rows="totalRows"
         :selectable="false"
       >
-        <template #header>
-          <div class="w-full max-w-[280px]">
-            <CommonAppSearch v-model="searchQuery" />
-          </div>
-        </template>
-
         <template #actions-cell="{ row }">
           <div class="flex justify-end">
             <UButton

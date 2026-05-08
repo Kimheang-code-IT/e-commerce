@@ -10,13 +10,23 @@ export function useCommission() {
   const { t } = useI18n();
   const commissionApi = useCommissionApi();
   const localRows = ref<CommissionEntry[]>([]);
+  const selectedProducts = ref<string[]>([]);
+  const extraQuery = computed(() => ({
+    product: selectedProducts.value.join(",") || undefined,
+  }));
   const { sorting, columnFilters, pagination, searchQuery, resource } =
     useServerListTable<CommissionEntry>({
       resourceKey: "commission-view",
       initialSorting: [{ id: "date", desc: true }],
       localData: localRows,
+      extraQuery,
       listFn: (query, signal) => commissionApi.list(query, signal),
     });
+
+  const productItems = computed(() => {
+    const unique = new Set(resource.rows.value.map((row) => row.product));
+    return [...unique];
+  });
 
   const columns = computed<TableColumn<CommissionEntry>[]>(() => [
     { id: "seller_key", accessorKey: "seller" },
@@ -46,6 +56,8 @@ export function useCommission() {
     columnFilters,
     pagination,
     columns,
+    productItems,
+    selectedProducts,
     groupingOptions,
     grouping,
   };

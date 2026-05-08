@@ -59,8 +59,8 @@ export function useSystemRoleManagement() {
 
     // --- Filter States ---
     const roleFilterItems = computed(() => {
-        const baseNames = ['SuperAdmin', 'Finance Admin', 'Officer', 'Editor', 'Viewer']
-        return baseNames
+        const unique = new Set(effectiveRoles.value.map(r => r.name))
+        return [...unique]
     })
     const selectedRoles = ref<string[]>([])
 
@@ -84,8 +84,7 @@ export function useSystemRoleManagement() {
     const filteredRoles = computed(() => {
         if (selectedRoles.value.length === 0) return effectiveRoles.value
         return effectiveRoles.value.filter(r => {
-            // Match if any selectedRole base name is part of the r.name
-            return selectedRoles.value.some(base => r.name.startsWith(base))
+            return selectedRoles.value.includes(r.name)
         })
     })
 

@@ -110,18 +110,13 @@ function getInitial(name: string) {
                     v-model:pagination="pagination"
                     v-model:column-filters="columnFilters"
                     v-model:filter-value="selectedClassifications"
+                    v-model:global-filter="searchQuery"
                     :data="filteredEntries"
                     :total-rows="totalRows"
                     :columns="columns"
                     :selectable="false"
                     :get-row-actions="getDropdownActions"
                 >
-                    <template #header>
-                        <div class="w-full max-w-[280px]">
-                            <CommonAppSearch v-model="searchQuery" />
-                        </div>
-                    </template>
-
                     <!-- Auto row number (frontend only) -->
                     <template #id-cell="{ row }">
                         {{ pagination.pageIndex * pagination.pageSize + row.index + 1 }}

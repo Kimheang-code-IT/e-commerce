@@ -11,6 +11,7 @@ from app.services.data_service import (
     export_payload,
     list_response,
     paginate_query,
+    parse_csv,
     serialize_commission_row,
 )
 
@@ -32,6 +33,7 @@ def list_commission_view(
     page: int = Query(1, ge=1),
     limit: int = Query(20, ge=1, le=200),
     search: str | None = None,
+    product: str | None = None,
     dateFrom: str | None = None,
     dateTo: str | None = None,
     sortBy: str | None = None,
@@ -43,6 +45,9 @@ def list_commission_view(
     if search:
         keyword = search.strip()
         q = q.where(User.name.ilike(f"%{keyword}%") | Invoice.invoice_no.ilike(f"%{keyword}%"))
+    products = parse_csv(product)
+    if products:
+        q = q.where(CheckoutItem.product_name.in_(products))
     q = apply_created_at_range(q, dateFrom, dateTo, Invoice.created_at)
     q = apply_sort(
         q,
@@ -63,6 +68,7 @@ def list_commission_view(
 @router.get("/export")
 def export_commission_view(
     search: str | None = None,
+    product: str | None = None,
     dateFrom: str | None = None,
     dateTo: str | None = None,
     _=Depends(require_permission("commission:view")),
@@ -72,6 +78,9 @@ def export_commission_view(
     if search:
         keyword = search.strip()
         q = q.where(User.name.ilike(f"%{keyword}%") | Invoice.invoice_no.ilike(f"%{keyword}%"))
+    products = parse_csv(product)
+    if products:
+        q = q.where(CheckoutItem.product_name.in_(products))
     q = apply_created_at_range(q, dateFrom, dateTo, Invoice.created_at)
     rows = db.execute(q).all()
     data = [serialize_commission_row(ci, inv, seller, prod) for ci, inv, seller, prod in rows]

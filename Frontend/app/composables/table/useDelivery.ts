@@ -13,9 +13,11 @@ export function useDelivery() {
   const deliveryRows = ref<DeliveryEntry[]>([])
   const selectedAddresses = ref<string[]>([])
   const selectedDeliveryTypes = ref<string[]>([])
+  const selectedStatuses = ref<string[]>([])
   const extraQuery = computed(() => ({
     address: selectedAddresses.value.join(',') || undefined,
-    deliveryType: selectedDeliveryTypes.value.join(',') || undefined
+    deliveryType: selectedDeliveryTypes.value.join(',') || undefined,
+    deliveryStatus: selectedStatuses.value.join(',') || undefined
   }))
   const { sorting, columnFilters, pagination, searchQuery, resource } = useServerListTable<DeliveryEntry>({
     resourceKey: 'deliveries-view',
@@ -35,12 +37,18 @@ export function useDelivery() {
     const unique = new Set(effectiveRows.value.map((row) => row.deliveryType))
     return [...unique]
   })
+  
+  const statusItems = computed<string[]>(() => {
+    const unique = new Set(effectiveRows.value.map((row) => row.deliveryStatus))
+    return [...unique]
+  })
 
   const filteredDeliveryRows = computed<DeliveryEntry[]>(() => {
     return effectiveRows.value.filter((row) => {
       const matchAddress = selectedAddresses.value.length === 0 || selectedAddresses.value.includes(row.address)
       const matchType = selectedDeliveryTypes.value.length === 0 || selectedDeliveryTypes.value.includes(row.deliveryType)
-      return matchAddress && matchType
+      const matchStatus = selectedStatuses.value.length === 0 || selectedStatuses.value.includes(row.deliveryStatus)
+      return matchAddress && matchType && matchStatus
     })
   })
 
@@ -69,8 +77,33 @@ export function useDelivery() {
       header: t('pages.delivery.columns.deliveryPrice'),
       footer: formatCurrency(deliverySummary.value.deliveryPriceSum, 'USD')
     },
+    { accessorKey: 'deliveryStatus', header: t('pages.delivery.columns.deliveryStatus') },
     { accessorKey: 'date', header: t('pages.delivery.columns.date') }
   ])
+
+  const toast = useToast()
+  async function updateStatus(invoiceId: string, status: string) {
+    try {
+      await deliveryApi.updateStatus(invoiceId, status)
+      toast.add({ title: t('common.success') || 'Success', color: 'success' })
+      resource.refresh()
+    } catch (error: any) {
+      toast.add({ title: t('common.error') || 'Error', description: error.message, color: 'error' })
+    }
+  }
+
+  async function updateAllPendingToDelivered() {
+    const pendingRows = effectiveRows.value.filter(r => r.deliveryStatus === 'pending')
+    if (pendingRows.length === 0) return
+    
+    try {
+      await Promise.all(pendingRows.map(r => deliveryApi.updateStatus(r.invoiceId, 'delivered')))
+      toast.add({ title: t('common.success') || 'Success', description: `Updated ${pendingRows.length} items`, color: 'success' })
+      resource.refresh()
+    } catch (error: any) {
+      toast.add({ title: t('common.error') || 'Error', description: error.message, color: 'error' })
+    }
+  }
 
   return {
     rowSelection,
@@ -81,12 +114,17 @@ export function useDelivery() {
     pagination,
     addressItems,
     deliveryTypeItems,
+    statusItems,
     selectedAddresses,
     selectedDeliveryTypes,
+    selectedStatuses,
     isLoading: resource.isLoading,
     totalRows: resource.totalRows,
     deliveryRows: resource.rows,
     filteredDeliveryRows,
-    columns
+    columns,
+    updateStatus,
+    updateAllPendingToDelivered,
+    refresh: resource.refresh
   }
 }

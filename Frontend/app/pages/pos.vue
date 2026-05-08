@@ -135,9 +135,8 @@ const previewCart = computed(() => {
 
 <template>
     <div class="flex flex-col h-full bg-background text-foreground overflow-hidden tracking-tight">
-
         <!-- ── Header ── -->
-        <LayoutAppHeader :title="selectedReportInvoice?.invoiceNo ? `${t('pages.pos.invoice.fields.invoiceNo')}: ${selectedReportInvoice.invoiceNo}` : (groupedReportInvoices.length > 0 ? `${t('pages.pos.invoice.title')} (${groupedReportInvoices.length})` : (checkoutInvoiceNo ? `${t('pages.pos.invoice.fields.invoiceNo')}: ${checkoutInvoiceNo}` : 'Point of Sale'))">
+        <LayoutAppHeader :title="selectedReportInvoice?.invoiceNo ? `${t('pages.pos.invoice.fields.invoiceNo')}: ${selectedReportInvoice.invoiceNo}` : (groupedReportInvoices.length > 0 ? `${t('pages.pos.invoice.title')} (${groupedReportInvoices.length})` : (checkoutInvoiceNo ? `${t('pages.pos.invoice.fields.invoiceNo')}: ${checkoutInvoiceNo}` : t('pages.pos.title')))">
             <template #right>
                 <div class="flex items-center">
                     <UStepper v-model="currentStep" :items="mobileStepperItems" size="sm"

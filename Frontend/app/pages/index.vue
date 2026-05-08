@@ -120,7 +120,7 @@ const userSalePieData = computed<PieDataPoint[]>(() =>
         >
           <template #header>
             <h3 class="font-normal text-sm">
-              Commission Distribution
+              {{ $t('pages.dashboard.commissionDistribution') }}
             </h3>
           </template>
           <div class="w-full relative flex-1 min-h-0">
@@ -137,7 +137,7 @@ const userSalePieData = computed<PieDataPoint[]>(() =>
         >
           <template #header>
             <h3 class="font-normal text-sm">
-              Top Selling Products
+              {{ $t('pages.dashboard.topSellingProducts') }}
             </h3>
           </template>
           <div class="w-full relative flex-1 min-h-0">

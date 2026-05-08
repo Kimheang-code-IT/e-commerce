@@ -1,5 +1,5 @@
 import json
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, BackgroundTasks
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.models import User
@@ -54,10 +54,16 @@ def calculate_totals(
 @pos_router.post("/checkout")
 def complete_checkout(
     payload: PosCheckoutPayload,
+    background_tasks: BackgroundTasks,
     current_user: User = Depends(require_permission("pos:create")),
     db: Session = Depends(get_db),
 ):
-    return complete_checkout_service(db=db, payload=payload, current_user=current_user)
+    return complete_checkout_service(
+        db=db, 
+        payload=payload, 
+        current_user=current_user, 
+        background_tasks=background_tasks
+    )
 
 
 @pos_router.get("/invoice/{invoice_no}")

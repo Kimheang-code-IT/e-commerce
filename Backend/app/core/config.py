@@ -23,6 +23,18 @@ class Settings(BaseSettings):
     # Absolute origin for building image URLs returned to the SPA (img src on another port).
     file_base_url: str = "http://127.0.0.1:8000"
 
+    # Google Sheets Backup
+    google_sheet_id: str | None = None
+    google_service_account_file: str = "service-account.json"
+    google_backup_enabled: bool = False
+    google_backup_time: str = "23:59"  # HH:MM format
+
+    # Telegram Notification
+    telegram_bot_token: str | None = None
+    telegram_chat_id: str | None = None
+    telegram_notify_enabled: bool = False
+    telegram_report_enabled: bool = False
+    telegram_webhook_secret: str = "secret-key-123"
     model_config = SettingsConfigDict(
         env_file=str(_BACKEND_ROOT / ".env"),
         env_file_encoding="utf-8",
