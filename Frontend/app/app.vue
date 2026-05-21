@@ -68,8 +68,8 @@ useHead({
   }
 })
 
-const title = 'PDME-Revenue'
-const description = 'PDME-Revenue: Customs and Excise Cambodia management system.'
+const title = 'ដំណាក់សិក្សា ​e-commerce'
+const description = 'ដំណាក់សិក្សា ​e-commerce'
 
 useSeoMeta({
   title,

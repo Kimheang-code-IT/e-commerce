@@ -9,7 +9,13 @@ const {
     getDropdownActions, handleSaveRequest, finalizeAction, handleAddNew,
 } = useSystemRoleManagement()
 const auth = useAuthStore()
-const canUpdateRole = computed(() => auth.hasPermission('settings:role-management:update'))
+/** Backend maps role:create/update/delete to the same stored token; any grants management UI. */
+const canUpdateRole = computed(
+    () =>
+        auth.hasPermission('role:create') ||
+        auth.hasPermission('role:update') ||
+        auth.hasPermission('role:delete')
+)
 
 function onSubmitRole(data: Record<string, any>) {
     if (!canUpdateRole.value) return

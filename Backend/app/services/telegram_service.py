@@ -23,36 +23,21 @@ class TelegramService:
         if reply_markup:
             payload["reply_markup"] = reply_markup
         
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(timeout=httpx.Timeout(30.0, connect=10.0)) as client:
             try:
                 response = await client.post(url, json=payload)
-                response.raise_for_status()
-                return response.json()
+                data = response.json()
+                if not data.get("ok"):
+                    logger.error(
+                        "Telegram sendMessage failed (chat=%s status=%s): %s",
+                        chat_id,
+                        response.status_code,
+                        data,
+                    )
+                    return None
+                return data
             except Exception as e:
-                logger.error(f"Failed to send Telegram message: {e}")
-                return None
-
-    async def edit_message(self, chat_id: str, message_id: int, text: str, reply_markup: dict | None = None):
-        if not settings.telegram_bot_token:
-            return
-
-        url = f"{self.base_url}/editMessageText"
-        payload = {
-            "chat_id": chat_id,
-            "message_id": message_id,
-            "text": text,
-            "parse_mode": "HTML"
-        }
-        if reply_markup:
-            payload["reply_markup"] = reply_markup
-
-        async with httpx.AsyncClient() as client:
-            try:
-                response = await client.post(url, json=payload)
-                response.raise_for_status()
-                return response.json()
-            except Exception as e:
-                logger.error(f"Failed to edit Telegram message: {e}")
+                logger.error("Failed to send Telegram message to %s: %s", chat_id, e)
                 return None
 
     async def answer_callback(self, callback_query_id: str, text: str | None = None):
@@ -88,10 +73,14 @@ class TelegramService:
             for i, item in enumerate(items, 1):
                 msg += f"{i}. {item.product_name} x {item.quantity} = ${item.total:.2f}\n"
 
-            msg += f"\nSubtotal: ${invoice.subtotal:.2f}\n"
-            msg += f"Delivery Fee: ${invoice.delivery_price:.2f}\n"
-            msg += f"Discount: {invoice.discount}%\n"
-            msg += f"<b>Total: ${invoice.total:.2f}</b>\n\n"
+            subtotal = float(invoice.subtotal or 0)
+            discount = float(invoice.discount or 0)
+            delivery_fee = float(invoice.delivery_price or 0)
+            grand_total = max(0.0, subtotal - discount + delivery_fee)
+            msg += f"\nSubtotal: ${subtotal:.2f}\n"
+            msg += f"Delivery Fee: ${delivery_fee:.2f}\n"
+            msg += f"Discount: ${discount:.2f}\n"
+            msg += f"<b>Total: ${grand_total:.2f}</b>\n\n"
             msg += f"Date: {invoice.created_at.strftime('%Y-%m-%d %H:%M')}"
 
             await self.send_message(settings.telegram_chat_id, msg)

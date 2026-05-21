@@ -20,7 +20,7 @@ export function buildCheckoutPayload(input: {
   deliveryType: string
   deliveryPrice: number
   deliveryDate: string
-  discountPercent: number
+  discountAmount: number
   paymentMethod: string
   deliveryStatus: string
   sellerId?: number
@@ -34,7 +34,7 @@ export function buildCheckoutPayload(input: {
     deliveryType: input.deliveryType,
     deliveryPrice: Number(input.deliveryPrice || 0),
     deliveryDate: input.deliveryDate,
-    discountPercent: Number(input.discountPercent || 0),
+    discountAmount: Number(input.discountAmount || 0),
     paymentMethod: input.paymentMethod || 'cash',
     deliveryStatus: input.deliveryStatus || 'pending',
     sellerId: input.sellerId,
@@ -57,7 +57,7 @@ export function resetCustomerForm() {
     deliveryDate: new Date().toISOString(),
     paymentMethod: 'cash',
     deliveryStatus: 'pending',
-    source: 'other',
+    source: 'Other',
     sellerId: undefined as number | undefined
   }
 }

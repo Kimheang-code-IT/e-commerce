@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends, Query, status
-from sqlalchemy import select
+from sqlalchemy import delete, select, update
 from sqlalchemy.orm import Session, joinedload
 
 from app.core.database import get_db
 from app.core.security import get_password_hash
-from app.models import Role, User
+from app.models import History, Invoice, Role, TokenSession, User
 from app.schemas.common import SystemUserCreatePayload, SystemUserUpdatePayload
 from app.services.auth_service import get_current_user, require_permission
 from app.services.data_service import apply_sort, list_response, paginate_query, serialize_user, record_history
@@ -112,10 +112,15 @@ def delete_user(
         return error_response(status.HTTP_404_NOT_FOUND, "Not found", "NOT_FOUND")
     if row.id == current_user.id:
         return error_response(status.HTTP_409_CONFLICT, "Cannot delete current user", "CONFLICT")
-    
+
     user_name = row.name
+    # Remove FK references so delete does not violate PostgreSQL constraints.
+    db.execute(delete(History).where(History.user_id == user_id))
+    db.execute(delete(TokenSession).where(TokenSession.user_id == user_id))
+    # Sales rows keep their invoice records; attribute them to the admin performing deletion.
+    db.execute(update(Invoice).where(Invoice.user_id == user_id).values(user_id=current_user.id))
+
     db.delete(row)
-    db.commit()
     record_history(db, current_user.id, "Delete", f"Deleted user '{user_name}'")
     db.commit()
     return {"message": "User deleted"}

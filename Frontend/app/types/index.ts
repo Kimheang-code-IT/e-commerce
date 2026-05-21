@@ -29,14 +29,21 @@ export interface ChartDataPoint {
 export interface FormField {
   key: string
   label: string
-  type?: 'input' | 'number' | 'select' | 'permission-tree' | 'textarea' | 'password' | 'date' | 'file' | string
+  type?: 'input' | 'number' | 'currency' | 'money-tabs' | 'select' | 'permission-tree' | 'textarea' | 'password' | 'date' | 'file' | string
   icon?: string
   placeholder?: string
   items?: any[]
   childItems?: any[]
+  actionsByPage?: Record<string, string[]>
   multiple?: boolean
   readonly?: boolean
   required?: boolean
+  /** Show trailing "USD" and treat as money (also use type: 'currency'). */
+  currency?: 'USD'
+  min?: number
+  max?: number
+  /** For type `money-tabs`: field key used as base price when mode is % (e.g. outPrice). */
+  refPriceKey?: string
   class?: string
 }
 

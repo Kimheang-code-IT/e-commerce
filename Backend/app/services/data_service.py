@@ -1,4 +1,5 @@
 import json
+import csv
 import uuid
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -231,11 +232,33 @@ def serialize_user(row: User, *, role_name: str | None = None) -> dict[str, Any]
     }
 
 
-def export_payload(data: list[dict[str, Any]], module_name: str):
-    if len(data) <= settings.export_inline_threshold:
+def _write_csv(file_path: Path, data: list[dict[str, Any]]) -> None:
+    if not data:
+        file_path.write_text("", encoding="utf-8")
+        return
+    headers = sorted({key for row in data for key in row.keys()})
+    with file_path.open("w", encoding="utf-8", newline="") as fp:
+        writer = csv.DictWriter(fp, fieldnames=headers)
+        writer.writeheader()
+        for row in data:
+            writer.writerow(row)
+
+
+def export_payload(data: list[dict[str, Any]], module_name: str, fmt: str = "json"):
+    fmt = (fmt or "json").lower()
+    if fmt not in {"json", "csv"}:
+        fmt = "json"
+
+    if fmt == "json" and len(data) <= settings.export_inline_threshold:
         return {"data": data}
+
     export_dir = Path(settings.export_dir)
     export_dir.mkdir(parents=True, exist_ok=True)
-    file_name = f"{module_name}-{uuid.uuid4().hex}.json"
-    (export_dir / file_name).write_text(json.dumps(data), encoding="utf-8")
+    ext = "csv" if fmt == "csv" else "json"
+    file_name = f"{module_name}-{uuid.uuid4().hex}.{ext}"
+    output_path = export_dir / file_name
+    if fmt == "csv":
+        _write_csv(output_path, data)
+    else:
+        output_path.write_text(json.dumps(data), encoding="utf-8")
     return {"data": {"url": f"/{settings.export_dir}/{file_name}"}}

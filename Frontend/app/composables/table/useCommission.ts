@@ -1,18 +1,21 @@
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
 import type { TableColumn } from "@nuxt/ui";
 import { getGroupedRowModel } from "@tanstack/vue-table";
 import type { GroupingOptions } from "@tanstack/vue-table";
 import type { CommissionEntry } from "~/types";
 import { useCommissionApi } from "~/utils/api";
 import { useServerListTable } from "~/features/shared/useServerListTable";
+import { useViewFilterOptions } from "~/composables/useViewFilterOptions";
 
 export function useCommission() {
   const { t } = useI18n();
   const commissionApi = useCommissionApi();
   const localRows = ref<CommissionEntry[]>([]);
   const selectedProducts = ref<string[]>([]);
+  const selectedSources = ref<string[]>([]);
   const extraQuery = computed(() => ({
     product: selectedProducts.value.join(",") || undefined,
+    source: selectedSources.value.join(",") || undefined,
   }));
   const { sorting, columnFilters, pagination, searchQuery, resource } =
     useServerListTable<CommissionEntry>({
@@ -23,9 +26,15 @@ export function useCommission() {
       listFn: (query, signal) => commissionApi.list(query, signal),
     });
 
-  const productItems = computed(() => {
-    const unique = new Set(resource.rows.value.map((row) => row.product));
-    return [...unique];
+  const { itemsFor } = useViewFilterOptions(
+    (query, signal) => commissionApi.filterOptions(query, signal),
+    ["products", "sources"]
+  );
+  const productItems = itemsFor("products");
+  const sourceItems = itemsFor("sources");
+
+  watch([selectedProducts, selectedSources], () => {
+    pagination.value.pageIndex = 0;
   });
 
   const columns = computed<TableColumn<CommissionEntry>[]>(() => [
@@ -57,7 +66,9 @@ export function useCommission() {
     pagination,
     columns,
     productItems,
+    sourceItems,
     selectedProducts,
+    selectedSources,
     groupingOptions,
     grouping,
   };

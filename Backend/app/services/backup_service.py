@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime
-from sqlalchemy import select, or_
+from sqlalchemy import select, or_, and_
 from sqlalchemy.orm import Session, joinedload
 
 from app.models import Product, Category, Invoice, CheckoutItem, User, Role
@@ -74,7 +74,7 @@ class BackupService:
                 values.append(mapper_func(r))
                 max_id = max(max_id, r.id)
             
-            google_sheet_service.append_rows(sheet_name, values)
+            appended_count = google_sheet_service.append_unique_rows_by_first_column(sheet_name, values)
             backup_tracker_repo.update_status(db, backup_name, max_id, "success")
             
             return {
@@ -82,7 +82,7 @@ class BackupService:
                 "status": "success",
                 "backup_name": backup_name,
                 "sheet_name": sheet_name,
-                "rows_added": len(rows),
+                "rows_added": appended_count,
                 "last_backup_id_before": last_id,
                 "last_backup_id_after": max_id
             }
@@ -133,7 +133,15 @@ class BackupService:
                 i.delivery_status, i.delivery_type, i.delivery_price, i.delivery_date, 
                 i.created_at.isoformat() if i.created_at else "", ""
             ]
-        return self._generic_backup(db, "deliveries_google_sheet_backup", "Deliveries Backup", headers, Invoice, mapper, or_(Invoice.delivery_type != "", Invoice.delivery_type != None))
+        return self._generic_backup(
+            db,
+            "deliveries_google_sheet_backup",
+            "Deliveries Backup",
+            headers,
+            Invoice,
+            mapper,
+            and_(Invoice.delivery_type.isnot(None), Invoice.delivery_type != "")
+        )
 
     def backup_users(self, db: Session):
         headers = ["ID", "Name", "Email", "Role", "Permissions", "Created At", "Updated At"]

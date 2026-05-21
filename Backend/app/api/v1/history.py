@@ -6,6 +6,7 @@ from app.core.database import get_db
 from app.models import History, User
 from app.services.auth_service import get_current_user, require_permission
 from app.services.data_service import apply_created_at_range, apply_sort, list_response, paginate_query, parse_csv, to_iso
+from app.services.filter_options_service import history_action_options
 
 router = APIRouter(prefix="/histories", tags=["histories"], dependencies=[Depends(get_current_user)])
 
@@ -59,3 +60,13 @@ def list_histories(
         for h, u in rows
     ]
     return list_response(data, total)
+
+
+@router.get("/filter-options")
+def history_filter_options(
+    dateFrom: str | None = None,
+    dateTo: str | None = None,
+    _=Depends(require_permission("history:view")),
+    db: Session = Depends(get_db),
+):
+    return {"data": {"actions": history_action_options(db, date_from=dateFrom, date_to=dateTo)}}

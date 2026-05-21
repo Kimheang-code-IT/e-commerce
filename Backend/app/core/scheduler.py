@@ -7,7 +7,7 @@ from app.services.backup_service import backup_service
 
 logger = logging.getLogger(__name__)
 
-scheduler = BackgroundScheduler()
+scheduler = BackgroundScheduler(timezone=settings.scheduler_timezone)
 
 def scheduled_google_sheet_backup():
     logger.info("Starting scheduled full Google Sheets backup...")
@@ -21,6 +21,10 @@ def scheduled_google_sheet_backup():
         db.close()
 
 def start_scheduler():
+    if not settings.scheduler_enabled:
+        logger.info("Scheduler is disabled by configuration.")
+        return
+
     if not settings.google_backup_enabled:
         logger.info("Google Sheets backup scheduler is disabled.")
         return

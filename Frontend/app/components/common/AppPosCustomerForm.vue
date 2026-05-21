@@ -1,5 +1,11 @@
 <script setup lang="ts">
 import { formatDate } from '~/utils/format/date'
+import {
+  POS_WALK_IN_ADDRESS,
+  POS_WALK_IN_DELIVERY_TYPE,
+  POS_WALK_IN_SOURCE,
+  usePosFormOptions
+} from '~/composables/pos/usePosFormOptions'
 
 const customerType = defineModel<string>('customerType', { required: true })
 const customerName = defineModel<string>('customerName', { required: true })
@@ -10,7 +16,7 @@ const deliveryPrice = defineModel<number>('deliveryPrice', { required: true })
 const deliveryDate = defineModel<string>('deliveryDate', { required: true })
 const paymentMethod = defineModel<string>('paymentMethod', { required: true, default: 'cash' })
 const deliveryStatus = defineModel<string>('deliveryStatus', { required: true, default: 'pending' })
-const source = defineModel<string>('source', { required: true, default: 'other' })
+const source = defineModel<string>('source', { required: true, default: 'Other' })
 const sellerId = defineModel<number | undefined>('sellerId')
 const { t } = useI18n()
 const auth = useAuthStore()
@@ -27,64 +33,38 @@ watch(
 const deliveryDatePart = ref('')
 const deliveryTimePart = ref('')
 
-const customerTypes = [t('pages.pos.customer.types.customer'), t('pages.pos.customer.types.walkIn')]
-const deliveryTypeItems = [
-  t('pages.pos.customer.form.deliveryTypeVET'),
-  t('pages.pos.customer.form.deliveryTypeDomnaksiiksa'),
-  t('pages.pos.customer.form.deliveryTypeGrap'),
-  t('pages.pos.customer.form.deliveryTypeJNT')
-]
-const paymentMethodItems = [
-  { label: t('pages.pos.customer.form.paymentCash'), value: 'cash' },
-  { label: t('pages.pos.customer.form.paymentAcleda'), value: 'acleda' },
-  { label: t('pages.pos.customer.form.paymentABA'), value: 'aba' },
-  { label: t('pages.pos.customer.form.paymentWing'), value: 'wing' },
-  { label: t('pages.pos.customer.form.paymentOther'), value: 'other' }
-]
+const {
+  deliveryTypeItems,
+  sourceItems,
+  paymentMethodItems,
+  addressItems: provinceItems
+} = usePosFormOptions()
+
+const deliveryPriceError = computed(() => {
+  const v = Number(deliveryPrice.value)
+  if (!Number.isFinite(v) || v < 0) return t('pages.pos.validation.numberRequired')
+  return ''
+})
 const deliveryStatusItems = [
   { label: t('pages.pos.customer.form.statusPending'), value: 'pending' },
   { label: t('pages.pos.customer.form.statusDelivered'), value: 'delivered' }
-]
-const sourceItems = [
-  t('pages.pos.customer.form.sourceDomnaksiiksa'),
-  t('pages.pos.customer.form.sourceLearnFast'),
-  t('pages.pos.customer.form.sourceReanChinese'),
-  t('pages.pos.customer.form.sourceOther')
 ]
 const customerTypeTabs = computed(() => [
   { label: t('pages.pos.customer.types.customer'), value: 'Customer' },
   { label: t('pages.pos.customer.types.walkIn'), value: 'walkIn' }
 ])
-const provinceNames = [
-  'Phnom Penh',
-  'Siemreap',
-  'Preah Sihanouk',
-  'Battambang',
-  'Kampong Cham',
-  'Kandal',
-  'Banteay Meanchey',
-  'Kampong Speu',
-  'Prey Veng',
-  'Kampot',
-  'Takeo',
-  'Kampong Thom',
-  'Pursat',
-  'Tboung Khmum',
-  'Kratie',
-  'Svay Rieng',
-  'Mondul Kiri',
-  'Ratanak Kiri',
-  'Stung Treng',
-  'Oddar Meanchey',
-  'Kep',
-  'Pailin',
-  'Preah Vihear',
-  'Koh Kong'
-]
-const provinceItems = [
-  t('common.nothing'),
-  ...provinceNames.map(name => t('provinces.' + name))
-]
+
+type ProvinceMenuItem = { label: string; value: string }
+
+const selectedProvinceItem = computed<ProvinceMenuItem>({
+  get() {
+    const v = customerAddress.value || 'Nothing'
+    return provinceItems.value.find((i) => i.value === v) ?? provinceItems.value[0]!
+  },
+  set(item) {
+    customerAddress.value = item?.value ?? 'Nothing'
+  }
+})
 
 function onSelectCustomerType(type: string) {
   customerType.value = type
@@ -92,13 +72,20 @@ function onSelectCustomerType(type: string) {
   if (type === 'walkIn') {
     customerName.value = 'Walk-in'
     customerPhone.value = '000000000'
-    customerAddress.value = 'Nothing'
+    customerAddress.value = POS_WALK_IN_ADDRESS
+    deliveryType.value = POS_WALK_IN_DELIVERY_TYPE
+    source.value = POS_WALK_IN_SOURCE
+    paymentMethod.value = 'cash'
+    deliveryStatus.value = 'pending'
     return
   }
 
   customerName.value = ''
   customerPhone.value = ''
   customerAddress.value = ''
+  deliveryType.value = 'VET'
+  source.value = 'Other'
+  paymentMethod.value = 'cash'
 }
 
 watch(customerType, (type) => {
@@ -106,17 +93,9 @@ watch(customerType, (type) => {
   onSelectCustomerType(type)
 })
 
-if (!deliveryType.value) {
-  deliveryType.value = deliveryTypeItems[0] as string
-}
-
 if (deliveryPrice.value === undefined || deliveryPrice.value === null || Number.isNaN(Number(deliveryPrice.value))) {
   deliveryPrice.value = 2
 }
-if (!source.value) {
-  source.value = 'other'
-}
-
 function pad(value: number): string {
   return String(value).padStart(2, '0')
 }
@@ -239,19 +218,19 @@ watch([deliveryDatePart, deliveryTimePart], () => {
             <USelect
               v-model="deliveryType"
               :items="deliveryTypeItems"
+              value-key="value"
               size="lg"
               class="w-full mt-1"
             />
           </div>
           <div class="flex-1 space-y-1.5">
             <label class="text-sm text-muted-foreground">{{ $t('pages.pos.customer.form.deliveryPrice') }}<span class="text-error ml-1">*</span></label>
-            <UInput
-              v-model.number="deliveryPrice"
-              type="number"
-              min="0"
-              step="0.01"
+            <CommonAppCurrencyInput
+              v-model="deliveryPrice"
+              :min="0"
+              :step="0.01"
               size="lg"
-              class="w-full mt-1"
+              :error-message="deliveryPriceError"
             />
           </div>
         </div>
@@ -279,6 +258,7 @@ watch([deliveryDatePart, deliveryTimePart], () => {
             <USelect
               v-model="paymentMethod"
               :items="paymentMethodItems"
+              value-key="value"
               size="lg"
               class="w-full mt-1"
             />
@@ -300,6 +280,7 @@ watch([deliveryDatePart, deliveryTimePart], () => {
             <USelect
               v-model="source"
               :items="sourceItems"
+              value-key="value"
               size="lg"
               class="w-full mt-1"
             />
@@ -307,7 +288,7 @@ watch([deliveryDatePart, deliveryTimePart], () => {
           <div class="space-y-1.5">
             <label class="text-sm text-muted-foreground">{{ $t('pages.pos.customer.form.address') }}<span class="text-error ml-1">*</span></label>
             <USelectMenu
-              v-model="customerAddress"
+              v-model="selectedProvinceItem"
               :items="provinceItems"
               searchable
               :placeholder="$t('pages.pos.customer.form.addressPlaceholder')"

@@ -17,8 +17,8 @@ export const routePermissionMap: RoutePermissionEntry[] = [
   { home: '/finance', match: (path) => path.startsWith('/finance'), permission: PERMISSIONS.financeView },
   { home: '/delivery', match: (path) => path.startsWith('/delivery'), permission: PERMISSIONS.deliveryView },
   { home: '/history', match: (path) => path.startsWith('/history'), permission: PERMISSIONS.historyView },
-  { home: '/settings/user-management', match: (path) => path.startsWith('/settings/user-management'), permission: PERMISSIONS.settingsUserView, roles: ['admin']},
-  { home: '/settings/role-management', match: (path) => path.startsWith('/settings/role-management'), permission: PERMISSIONS.settingsRoleView, roles: ['admin']},
+  { home: '/settings/user-management', match: (path) => path.startsWith('/settings/user-management'), permission: PERMISSIONS.userView },
+  { home: '/settings/role-management', match: (path) => path.startsWith('/settings/role-management'), permission: PERMISSIONS.roleView },
 ]
 
 export function useRoutePermissionMap() {

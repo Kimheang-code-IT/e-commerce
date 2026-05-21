@@ -1,10 +1,15 @@
 import json
-from fastapi import APIRouter, Depends, status, BackgroundTasks
+
+from fastapi import APIRouter, Depends, status
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
+
 from app.core.database import get_db
 from app.models import User
 from app.schemas.common import PosCheckoutPayload, PosPreviewSessionCreatePayload
 from app.services.auth_service import get_current_user, require_permission
+from app.services.filter_options_service import pos_form_options
+from app.services.invoice_pdf_service import invoice_pdf_public_url, resolve_invoice_pdf_file
 from app.services.pos_service import (
     calculate_totals_service,
     complete_checkout_service,
@@ -54,16 +59,10 @@ def calculate_totals(
 @pos_router.post("/checkout")
 def complete_checkout(
     payload: PosCheckoutPayload,
-    background_tasks: BackgroundTasks,
-    current_user: User = Depends(require_permission("pos:create")),
+    current_user: User = Depends(require_permission("pos:checkout")),
     db: Session = Depends(get_db),
 ):
-    return complete_checkout_service(
-        db=db, 
-        payload=payload, 
-        current_user=current_user, 
-        background_tasks=background_tasks
-    )
+    return complete_checkout_service(db=db, payload=payload, current_user=current_user)
 
 
 @pos_router.get("/invoice/{invoice_no}")
@@ -73,3 +72,42 @@ def get_invoice_preview_by_no(
     db: Session = Depends(get_db),
 ):
     return invoice_preview_by_no(db=db, invoice_no=invoice_no)
+
+
+@pos_router.get("/invoice/{invoice_no}/pdf")
+def download_invoice_pdf(
+    invoice_no: str,
+    _=Depends(require_permission("pos:view")),
+    db: Session = Depends(get_db),
+):
+    """Download invoice PDF (generated on demand if missing)."""
+    resolved = resolve_invoice_pdf_file(db, invoice_no)
+    if not resolved:
+        return error_response(status.HTTP_404_NOT_FOUND, "Invoice or PDF not found", "NOT_FOUND")
+    path, invoice = resolved
+    return FileResponse(
+        path,
+        media_type="application/pdf",
+        filename=f"{invoice.invoice_no}.pdf",
+    )
+
+
+@pos_router.get("/invoice/{invoice_no}/pdf-url")
+def get_invoice_pdf_url(
+    invoice_no: str,
+    _=Depends(require_permission("pos:view")),
+    db: Session = Depends(get_db),
+):
+    """Return public path to invoice PDF (creates file if needed)."""
+    resolved = resolve_invoice_pdf_file(db, invoice_no)
+    if not resolved:
+        return error_response(status.HTTP_404_NOT_FOUND, "Invoice or PDF not found", "NOT_FOUND")
+    return {"data": {"pdfUrl": invoice_pdf_public_url(invoice_no)}}
+
+
+@pos_router.get("/filter-options")
+def pos_filter_options(
+    _=Depends(require_permission("pos:view")),
+    db: Session = Depends(get_db),
+):
+    return {"data": pos_form_options(db)}

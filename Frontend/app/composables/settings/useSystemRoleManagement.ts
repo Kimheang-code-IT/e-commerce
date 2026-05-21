@@ -64,21 +64,32 @@ export function useSystemRoleManagement() {
     })
     const selectedRoles = ref<string[]>([])
 
-    const pageItems = [
-        'dashboard',
-        'category',
-        'product',
-        'pos',
-        'delivery',
-        'finance',
-        'commission',
-        'report',
-        'history',
-        'settings:user-management',
-        'settings:role-management'
-    ] as const
-
-    const permissionItems = ['view', 'edit', 'update'] as const
+    // Mirrors `settings:*` tokens in `Backend/app/security/rbac.py` (stored in role page_access).
+    const pagePermissionMap: Record<string, string[]> = {
+        'settings:dashboard-management': ['view'],
+        'settings:category-management': ['view', 'create', 'update', 'delete'],
+        'settings:product-management': [
+            'view',
+            'create',
+            'update',
+            'delete',
+            'export',
+            'adjust-stock',
+            'view-adjust-stock',
+            'add-damage',
+            'view-add-damage'
+        ],
+        'settings:pos-management': ['view', 'checkout'],
+        'settings:finance-management': ['view', 'update'],
+        'settings:report-management': ['view', 'export'],
+        'settings:delivery-management': ['view', 'update', 'export'],
+        'settings:history-management': ['view', 'export'],
+        'settings:commission-management': ['view', 'export'],
+        'settings:role-management': ['view', 'update'],
+        'settings:user-management': ['view', 'create', 'update', 'delete']
+    }
+    const pageItems = Object.keys(pagePermissionMap)
+    const permissionItems = ['view'] as const
 
     // --- Computed Logic ---
     const filteredRoles = computed(() => {
@@ -141,6 +152,7 @@ export function useSystemRoleManagement() {
             type: 'permission-tree',
             items: [...pageItems],
             childItems: [...permissionItems],
+            actionsByPage: pagePermissionMap,
             required: true
         }
     ])
@@ -148,7 +160,7 @@ export function useSystemRoleManagement() {
     // --- Actions ---
     function getDropdownActions(role: SystemRole): DropdownMenuItem[][] {
         const actions: DropdownMenuItem[] = []
-        if (auth.hasPermission('settings:role-management:edit')) {
+        if (auth.hasPermission('role:update')) {
             actions.push({
                 label: t('actions.edit'), icon: 'i-lucide-edit',
                 onSelect: () => {
@@ -157,7 +169,7 @@ export function useSystemRoleManagement() {
                 }
             })
         }
-        if (auth.hasPermission('settings:role-management:update')) {
+        if (auth.hasPermission('role:delete')) {
             actions.push({
                 label: t('actions.delete'),
                 icon: 'i-lucide-trash',
@@ -177,7 +189,10 @@ export function useSystemRoleManagement() {
             data.pageAccess = data.pageAccess
                 .map((s: any) => String(s).trim())
                 .filter(Boolean)
-                .map((s: string) => s.toLowerCase())
+                .map((s: string) => {
+                    if (s === 'ALL_PAGES' || s === 'admin:*') return s
+                    return s.toLowerCase()
+                })
         } else {
             data.pageAccess = []
         }
@@ -211,7 +226,7 @@ export function useSystemRoleManagement() {
     }
 
     function handleAddNew() {
-        if (!auth.hasPermission('settings:role-management:update')) return
+        if (!auth.hasPermission('role:create')) return
         selectedRole.value = null
         isFormOpen.value = true
     }

@@ -1,5 +1,32 @@
 <script setup lang="ts">
-const { stats: apiStats, currentAnalytics, topProducts, userCommissions } = useAnalyticsDashboard()
+const {
+  stats: apiStats,
+  currentAnalytics,
+  topProducts,
+  userCommissions,
+  categories,
+  productOptions,
+  selectedCategoryId,
+  selectedProductId
+} = useAnalyticsDashboard()
+
+const selectedCategoryItems = computed({
+  get: () =>
+    categories.value.filter((item) => item.value === selectedCategoryId.value),
+  set: (items: Array<{ label: string; value: string }>) => {
+    const latest = items.at(-1)
+    selectedCategoryId.value = latest?.value ?? null
+  }
+})
+
+const selectedProductItems = computed({
+  get: () =>
+    productOptions.value.filter((item) => item.value === selectedProductId.value),
+  set: (items: Array<{ label: string; value: number }>) => {
+    const latest = items.at(-1)
+    selectedProductId.value = latest?.value ?? null
+  }
+})
 
 // Keep dashboard charts large and balanced across screen sizes.
 const SECTION_HEIGHT = {
@@ -36,7 +63,22 @@ const userSalePieData = computed<PieDataPoint[]>(() =>
 <template>
     <div class="flex flex-col h-full bg-background text-foreground tracking-tight">
       <div class="sticky top-0 z-30 bg-white dark:bg-gray-900">
-        <LayoutAppHeader :title="$t('pages.dashboard.title')" show-datepicker />
+        <LayoutAppHeader :title="$t('pages.dashboard.title')" show-datepicker>
+          <template #right>
+            <div class="flex items-center gap-2">
+              <CommonAppMutilSelect
+                v-model="selectedCategoryItems"
+                :items="categories"
+                placeholder="Category"
+              />
+              <CommonAppMutilSelect
+                v-model="selectedProductItems"
+                :items="productOptions"
+                placeholder="Product"
+              />
+            </div>
+          </template>
+        </LayoutAppHeader>
       </div>
 
     <div class="flex-1 p-2 space-y-3">

@@ -17,6 +17,7 @@ from app.services.product_service import (
     list_products_service,
     update_product_service,
 )
+from app.services.cache_service import PREFIX_STOCK, cached_response
 from app.services.product_stock_status import stock_status_tier
 
 router = APIRouter()
@@ -28,7 +29,11 @@ def get_product_stock_status(
     _: User = Depends(require_permission("product:view")),
 ):
     """Returns stock tier for UI labels (`aLot` / `lower` / `out`). Same rules as `stockStatus` on product payloads."""
-    return {"data": {"stockStatus": stock_status_tier(inStock)}}
+    return cached_response(
+        PREFIX_STOCK,
+        {"inStock": inStock},
+        lambda: {"data": {"stockStatus": stock_status_tier(inStock)}},
+    )
 
 
 @router.get("/products")

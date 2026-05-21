@@ -16,6 +16,8 @@ const emit = defineEmits<{
     (e: 'submit', data: FormRecord): void
 }>()
 
+const { t } = useI18n()
+
 // Internal form state
 const formData = ref<FormRecord>({})
 const filePreviewSources = ref<Record<string, string>>({})
@@ -132,6 +134,11 @@ function initializeFormData(source?: FormRecord) {
                 dataCopy[getCurrentImageKey(field.key)] = dataCopy[field.key] || ''
                 dataCopy[field.key] = []
                 fileUploadRenderKeys.value[field.key] = (fileUploadRenderKeys.value[field.key] || 0) + 1
+            } else if (field.type === 'money-tabs') {
+                dataCopy[moneyTabsModeKey(field.key)] = 'usd'
+                const usd = Math.max(0, Number(dataCopy[field.key] ?? 0))
+                dataCopy[field.key] = usd
+                dataCopy[moneyTabsInputKey(field.key)] = usd
             }
         })
         formData.value = dataCopy
@@ -150,6 +157,10 @@ function initializeFormData(source?: FormRecord) {
             initial[field.key] = []
             initial[getCurrentImageKey(field.key)] = ''
             fileUploadRenderKeys.value[field.key] = (fileUploadRenderKeys.value[field.key] || 0) + 1
+        } else if (field.type === 'money-tabs') {
+            initial[field.key] = 0
+            initial[moneyTabsModeKey(field.key)] = 'usd'
+            initial[moneyTabsInputKey(field.key)] = 0
         } else {
             initial[field.key] = ''
         }
@@ -169,9 +180,79 @@ function normalizeNumberInput(value: unknown) {
     return cleaned
 }
 
+function isUsdField(field: FormField) {
+    return field.type === 'currency' || field.currency === 'USD'
+}
+
+function moneyTabsModeKey(fieldKey: string) {
+    return `${fieldKey}Mode`
+}
+
+function moneyTabsInputKey(fieldKey: string) {
+    return `${fieldKey}Input`
+}
+
+function moneyTabsRefPrice(field: FormField): number {
+    if (!field.refPriceKey) return 0
+    return Math.max(0, Number(formData.value[field.refPriceKey] ?? 0))
+}
+
+function syncMoneyTabsField(field: FormField) {
+    const mode = formData.value[moneyTabsModeKey(field.key)] === 'percent' ? 'percent' : 'usd'
+    const input = Math.max(0, Number(formData.value[moneyTabsInputKey(field.key)] ?? 0))
+    if (mode === 'percent') {
+        const pct = Math.min(100, input)
+        const base = moneyTabsRefPrice(field)
+        formData.value[field.key] = Math.round(((base * pct) / 100) * 100) / 100
+    } else {
+        formData.value[field.key] = input
+    }
+}
+
+function moneyTabsError(field: FormField): string {
+    const mode = formData.value[moneyTabsModeKey(field.key)] === 'percent' ? 'percent' : 'usd'
+    const input = Number(formData.value[moneyTabsInputKey(field.key)])
+    if (!Number.isFinite(input)) return t('pages.pos.validation.numberRequired')
+    const min = field.min ?? 0
+    if (mode === 'percent') {
+        if (input < 0) return t('pages.pos.validation.numberRequired')
+        if (input > 100) return t('pages.pos.validation.discountPercentMax')
+        return ''
+    }
+    if (input < min) return t('pages.pos.validation.minUsd', { min })
+    const base = moneyTabsRefPrice(field)
+    if (field.max != null && input > field.max) return t('pages.pos.validation.maxUsd', { max: field.max })
+    if (base > 0 && input > base) return t('pages.pos.validation.discountUsdMax')
+    return ''
+}
+
+function onMoneyTabsModeChange(field: FormField, mode: string) {
+    const usd = Math.max(0, Number(formData.value[field.key] ?? 0))
+    const base = moneyTabsRefPrice(field)
+    if (mode === 'percent') {
+        formData.value[moneyTabsInputKey(field.key)] =
+            base > 0 ? Math.round((usd / base) * 10000) / 100 : 0
+    } else {
+        formData.value[moneyTabsInputKey(field.key)] = usd
+    }
+    syncMoneyTabsField(field)
+}
+
 function onNumberInput(fieldKey: string, event: Event) {
     const target = event.target as HTMLInputElement | null
     formData.value[fieldKey] = normalizeNumberInput(target?.value ?? '')
+}
+
+function usdFieldError(field: FormField): string {
+    if (!isUsdField(field)) return ''
+    const raw = formData.value[field.key]
+    if (raw === '' || raw === undefined || raw === null) return ''
+    const v = Number(raw)
+    if (!Number.isFinite(v)) return t('pages.pos.validation.numberRequired')
+    const min = field.min ?? 0
+    if (v < min) return t('pages.pos.validation.minUsd', { min })
+    if (field.max != null && v > field.max) return t('pages.pos.validation.maxUsd', { max: field.max })
+    return ''
 }
 
 // Watch for data changes to sync form data
@@ -189,6 +270,9 @@ watch([formData, activeFields], () => {
     activeFields.value
         .filter(field => field.type === 'file')
         .forEach(field => syncFilePreview(field.key))
+    activeFields.value
+        .filter(field => field.type === 'money-tabs')
+        .forEach(field => syncMoneyTabsField(field))
 }, { deep: true, immediate: true })
 
 onBeforeUnmount(() => {
@@ -201,7 +285,12 @@ function onSave() {
     activeFields.value.forEach(field => {
         if (field.type === 'date' && result[field.key] && typeof result[field.key].toString === 'function') {
             result[field.key] = result[field.key].toString()
-        } else if (field.type === 'number') {
+        } else if (field.type === 'money-tabs') {
+            syncMoneyTabsField(field)
+            result[field.key] = Number(result[field.key] ?? 0)
+            delete result[moneyTabsModeKey(field.key)]
+            delete result[moneyTabsInputKey(field.key)]
+        } else if (field.type === 'number' || field.type === 'currency' || field.currency === 'USD') {
             const value = String(result[field.key] ?? '').trim()
             result[field.key] = value === '' ? 0 : Number(value)
         } else if (field.type === 'file') {
@@ -273,19 +362,47 @@ function onSave() {
                     </template>
                 </UInput>
 
-                <!-- NUMBER TYPE -->
-                <UInput
-                    v-else-if="field.type === 'number'"
-                    v-model="formData[field.key]"
-                    type="number"
-                    inputmode="decimal"
-                    step="any"
+                <!-- MONEY TABS (% or USD) — toggle on left of input; saves USD in field.key -->
+                <CommonAppMoneyModeInput
+                    v-else-if="field.type === 'money-tabs'"
+                    v-model:mode="formData[moneyTabsModeKey(field.key)]"
+                    v-model:input-value="formData[moneyTabsInputKey(field.key)]"
                     :placeholder="field.placeholder"
                     :disabled="field.readonly"
+                    :max-usd="moneyTabsRefPrice(field) || field.max"
+                    :error-message="moneyTabsError(field)"
+                    :usd-preview="Number(formData[field.key] ?? 0)"
+                    show-usd-preview
                     size="lg"
-                    class="w-full"
-                    @input="onNumberInput(field.key, $event)"
+                    @mode-change="(m: 'usd' | 'percent') => onMoneyTabsModeChange(field, m)"
+                    @input="syncMoneyTabsField(field)"
                 />
+
+                <!-- NUMBER / CURRENCY (USD) TYPE -->
+                <div v-else-if="field.type === 'number' || field.type === 'currency' || field.currency === 'USD'" class="w-full space-y-1">
+                    <UInput
+                        v-model="formData[field.key]"
+                        type="number"
+                        inputmode="decimal"
+                        :step="isUsdField(field) ? 0.01 : 'any'"
+                        :min="isUsdField(field) ? (field.min ?? 0) : undefined"
+                        :max="field.max"
+                        :placeholder="field.placeholder"
+                        :disabled="field.readonly"
+                        :color="usdFieldError(field) ? 'error' : undefined"
+                        size="lg"
+                        class="w-full tabular-nums"
+                        :ui="isUsdField(field) ? { trailing: 'pe-2' } : undefined"
+                        @input="onNumberInput(field.key, $event)"
+                    >
+                        <template v-if="isUsdField(field)" #trailing>
+                            <span class="text-xs font-semibold text-muted-foreground select-none">USD</span>
+                        </template>
+                    </UInput>
+                    <p v-if="usdFieldError(field)" class="text-xs text-error">
+                        {{ usdFieldError(field) }}
+                    </p>
+                </div>
 
                 <!-- SELECT TYPE -->
                 <CommonAppMutilSelect
@@ -310,6 +427,7 @@ function onSave() {
                     v-model="formData[field.key]"
                     :pages="(field.items || []) as string[]"
                     :actions="(field.childItems || []) as string[]"
+                    :actions-by-page="field.actionsByPage || {}"
                 />
 
                 <!-- TEXTAREA TYPE -->

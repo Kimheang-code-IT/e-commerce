@@ -1,13 +1,18 @@
 <script setup lang="ts">
 import type { Product } from '~/types'
 import { formatCurrency } from '~/utils/format/currency'
+import {
+  validateDiscountInput,
+  type DiscountMode
+} from '~/composables/pos/discountHelpers'
 
 interface CartItem {
   product: Product
   qty: number
 }
 
-const discountPercent = defineModel<number>('discountPercent', { required: true })
+const discountMode = defineModel<DiscountMode>('discountMode', { default: 'usd' })
+const discountInput = defineModel<number>('discountInput', { required: true })
 
 const props = withDefaults(defineProps<{
   cart: CartItem[]
@@ -28,6 +33,28 @@ const emit = defineEmits<{
   (e: 'remove-item', productId: number): void
   (e: 'next'): void
 }>()
+
+const { t } = useI18n()
+
+const discountValidationKey = computed(() =>
+  validateDiscountInput(discountMode.value, discountInput.value, props.subtotal)
+)
+
+const discountErrorMessage = computed(() => {
+  const key = discountValidationKey.value
+  if (!key) return ''
+  if (key === 'percentMax') return t('pages.pos.validation.discountPercentMax')
+  if (key === 'usdMax') return t('pages.pos.validation.discountUsdMax')
+  return t('pages.pos.validation.numberRequired')
+})
+
+const discountInputMax = computed(() =>
+  discountMode.value === 'percent' ? 100 : props.subtotal
+)
+
+watch(discountMode, () => {
+  if (discountInput.value < 0) discountInput.value = 0
+})
 </script>
 
 <template>
@@ -126,21 +153,25 @@ const emit = defineEmits<{
         <span class="font-medium text-foreground">{{ formatCurrency(subtotal, 'USD') }}</span>
       </div>
 
-      <div class="flex items-center justify-between gap-2">
-        <span class="text-sm text-muted-foreground shrink-0">{{ $t('pages.pos.cart.discount') }}</span>
-        <div class="flex items-center gap-2">
-          <UInput
-            v-model.number="discountPercent"
-            type="number"
-            size="xs"
-            min="0"
-            max="100"
-            class="w-16 text-center"
+      <div class="flex flex-col gap-1 min-w-0">
+        <div class="flex flex-row items-center gap-2 w-full min-w-0">
+          <span class="text-sm text-muted-foreground shrink-0">
+            {{ $t('pages.pos.cart.discount') }}
+          </span>
+          <CommonAppMoneyModeInput
+            v-model:mode="discountMode"
+            v-model:input-value="discountInput"
+            class="flex-1 min-w-0"
+            size="sm"
+            :max-usd="discountInputMax"
           />
-          <span class="text-sm font-medium text-red-500 w-16 text-right shrink-0">
+          <span class="text-sm font-medium text-red-500 shrink-0 tabular-nums whitespace-nowrap">
             -{{ formatCurrency(discountAmount, 'USD') }}
           </span>
         </div>
+        <p v-if="discountErrorMessage" class="text-xs text-error text-right">
+          {{ discountErrorMessage }}
+        </p>
       </div>
 
       <USeparator />
@@ -154,9 +185,9 @@ const emit = defineEmits<{
         block
         size="md"
         :icon="currentStep === totalSteps - 1 ? (cart.length === 0 && props.allowFinishWithoutCart ? 'i-lucide-printer' : 'i-lucide-check') : 'i-lucide-corner-down-right'"
-        :color="currentStep === totalSteps - 1 ? 'primary' : 'primary'"
+        color="primary"
         variant="solid"
-        :disabled="cart.length === 0 && !props.allowFinishWithoutCart"
+        :disabled="(cart.length === 0 && !props.allowFinishWithoutCart) || !!discountValidationKey"
         class="font-semibold"
         @click="emit('next')"
       >

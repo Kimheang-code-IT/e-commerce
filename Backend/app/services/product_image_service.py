@@ -78,6 +78,9 @@ def normalize_stored_image(value: str | None, product_id: int, previous_stored: 
 def public_image_url(stored: str | None) -> str:
     if not stored:
         return ""
+    if stored.startswith("/uploads/"):
+        # Keep local upload paths relative so nginx can serve them for any host/domain.
+        return stored
     if stored.startswith(("http://", "https://", "data:")):
         return stored
     base = (settings.file_base_url or "").rstrip("/")

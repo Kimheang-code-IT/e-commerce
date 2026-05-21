@@ -5,6 +5,7 @@ import { useReportApi } from '~/utils/api'
 import { formatCurrency } from '~/utils/format/currency'
 import type { ReportRow } from '~/types'
 import { useServerListTable } from '~/features/shared/useServerListTable'
+import { useViewFilterOptions } from '~/composables/useViewFilterOptions'
 
 export function useReport() {
   const { t } = useI18n()
@@ -12,16 +13,29 @@ export function useReport() {
   const { rowSelection, columnVisibility } = useBaseTable({})
   const reportRows = ref<ReportRow[]>([])
   const selectedProducts = ref<string[]>([])
-  const selectedProductsQuery = computed(() => ({
-    product: selectedProducts.value.join(',') || undefined
+  const selectedSources = ref<string[]>([])
+  const selectedProvinces = ref<string[]>([])
+  const filterExtraQuery = computed(() => ({
+    product: selectedProducts.value.join(',') || undefined,
+    source: selectedSources.value.join(',') || undefined,
+    province: selectedProvinces.value.join(',') || undefined
   }))
   const { sorting, columnFilters, pagination, searchQuery, resource } = useServerListTable<ReportRow>({
     resourceKey: 'reports-view',
     initialSorting: [{ id: 'date', desc: true }],
     localData: reportRows,
-    extraQuery: selectedProductsQuery,
+    extraQuery: filterExtraQuery,
     listFn: (query, signal) => reportApi.list(query, signal),
   })
+
+  const { itemsFor } = useViewFilterOptions(
+    (query, signal) => reportApi.filterOptions(query, signal),
+    ['products', 'sources', 'provinces']
+  )
+  const productItems = itemsFor('products')
+  const sourceItems = itemsFor('sources')
+  const provinceItems = itemsFor('provinces')
+
   const selectedReportRows = computed<ReportRow[]>(() => {
     const selectedIndexes = Object.keys(rowSelection.value || {})
       .filter((key) => (rowSelection.value as Record<string, boolean>)[key])
@@ -50,22 +64,10 @@ export function useReport() {
   })
 
   const effectiveRows = computed(() => resource.rows.value)
-  const productItems = computed<string[]>(() => {
-    const allProducts = new Set<string>()
-    effectiveRows.value.forEach((row) => {
-      if (row.product) {
-        row.product.split(',').forEach((p) => {
-          const trimmed = p.trim()
-          if (trimmed) allProducts.add(trimmed)
-        })
-      }
-    })
-    return [...allProducts].sort()
-  })
+  const filteredReportRows = computed<ReportRow[]>(() => effectiveRows.value)
 
-  const filteredReportRows = computed<ReportRow[]>(() => {
-    if (!selectedProducts.value.length) return effectiveRows.value
-    return effectiveRows.value.filter((row) => selectedProducts.value.includes(row.product))
+  watch([selectedProducts, selectedSources, selectedProvinces], () => {
+    pagination.value.pageIndex = 0
   })
 
   const reportSummary = computed(() => {
@@ -131,7 +133,11 @@ export function useReport() {
     reportRows: resource.rows,
     filteredReportRows,
     productItems,
+    sourceItems,
+    provinceItems,
     selectedProducts,
+    selectedSources,
+    selectedProvinces,
     selectedReportRows,
     allFilteredSelected,
     someFilteredSelected,
@@ -140,5 +146,3 @@ export function useReport() {
     totalRows: resource.totalRows
   }
 }
-
-

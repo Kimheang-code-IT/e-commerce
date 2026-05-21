@@ -1,0 +1,42 @@
+/**
+ * Mirrors `Backend/app/security/rbac.py` ALIASES.
+ * API permission checks use short keys (e.g. `category:view`); role `page_access` stores
+ * full tokens (e.g. `settings:category-management:view`).
+ */
+export const RBAC_ALIASES: Record<string, readonly string[]> = {
+  'category:view': ['settings:category-management:view'],
+  'category:create': ['settings:category-management:create'],
+  'category:update': ['settings:category-management:update'],
+  'category:delete': ['settings:category-management:delete'],
+  'product:view': ['settings:product-management:view'],
+  'product:create': ['settings:product-management:create'],
+  'product:update': ['settings:product-management:update'],
+  'product:delete': ['settings:product-management:delete'],
+  'product:export': ['settings:product-management:export'],
+  'product:adjust-stock': ['settings:product-management:adjust-stock'],
+  'product:view-adjust-stock': ['settings:product-management:view-adjust-stock'],
+  'product:add-damage': ['settings:product-management:add-damage'],
+  'product:view-add-damage': ['settings:product-management:view-add-damage'],
+  'pos:view': ['settings:pos-management:view'],
+  'pos:checkout': ['settings:pos-management:checkout'],
+  'finance:view': ['settings:finance-management:view'],
+  'finance:update': ['settings:finance-management:update'],
+  'report:view': ['settings:report-management:view'],
+  'report:export': ['settings:report-management:export'],
+  'delivery:view': ['settings:delivery-management:view'],
+  'delivery:update': ['settings:delivery-management:update'],
+  'delivery:export': ['settings:delivery-management:export'],
+  'history:view': ['settings:history-management:view'],
+  'history:export': ['settings:history-management:export'],
+  'commission:view': ['settings:commission-management:view'],
+  'commission:export': ['settings:commission-management:export'],
+  'dashboard:view': ['settings:dashboard-management:view'],
+  'role:view': ['settings:role-management:view'],
+  'role:create': ['settings:role-management:update'],
+  'role:update': ['settings:role-management:update'],
+  'role:delete': ['settings:role-management:update'],
+  'user:view': ['settings:user-management:view'],
+  'user:create': ['settings:user-management:create'],
+  'user:update': ['settings:user-management:update'],
+  'user:delete': ['settings:user-management:delete']
+}

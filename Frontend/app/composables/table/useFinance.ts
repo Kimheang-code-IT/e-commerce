@@ -50,8 +50,8 @@ export function useFinance() {
 
   const editFields = computed(() => [
     { key: 'productName', label: t('pages.finance.columns.productName'), type: 'input', readonly: true },
-    { key: 'facebook', label: t('pages.finance.columns.facebook'), type: 'number' },
-    { key: 'other', label: t('pages.finance.columns.other'), type: 'number' },
+    { key: 'facebook', label: t('pages.finance.columns.facebook'), type: 'currency', min: 0 },
+    { key: 'other', label: t('pages.finance.columns.other'), type: 'currency', min: 0 },
     { key: 'totalCommission', label: t('pages.finance.columns.totalCommission'), type: 'number', readonly: true },
     { key: 'inPriceForPos', label: t('pages.finance.columns.inPriceForPos'), type: 'number', readonly: true },
   ])

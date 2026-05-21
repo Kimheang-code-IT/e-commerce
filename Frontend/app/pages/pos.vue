@@ -2,6 +2,7 @@
 import { usePos } from '~/composables/table/usePos'
 import { useInvoicePrinter } from '~/composables/useInvoicePrinter'
 import { formatDate } from '~/utils/format/date'
+import { formatCurrency } from '~/utils/format/currency'
 
 const { t } = useI18n()
 const {
@@ -14,7 +15,11 @@ const {
     searchQuery,
     viewMode,
     currentStep,
+    isCheckoutConfirmOpen,
     isFinishDialogOpen,
+    checkoutConfirmSummary,
+    confirmCheckoutAndContinue,
+    closeCheckoutConfirm,
     isFinishing,
     mobileStepperItems,
     items,
@@ -34,7 +39,9 @@ const {
     cart,
     itemCount,
     subtotal,
-    discountPercent,
+    discountMode,
+    discountInput,
+    discountUsd,
     discountAmount,
     total,
     selectedReportInvoice,
@@ -237,15 +244,82 @@ const previewCart = computed(() => {
 
             <div :class="[mobilePanel === 'right' ? 'flex' : 'hidden', 'lg:flex w-full lg:w-[35%]']">
                 <CommonAppPosCartPanel :cart="cart" :item-count="itemCount" :subtotal="subtotal"
-                    v-model:discount-percent="discountPercent" :discount-amount="discountAmount" :total="total"
+                    v-model:discount-mode="discountMode" v-model:discount-input="discountInput"
+                    :discount-amount="discountAmount" :total="total"
                     :current-step="currentStep" :total-steps="items.length"
                     :allow-finish-without-cart="hasReportPreviewInvoices" @clear-cart="clearCart"
                     @update-qty="updateQty" @remove-item="removeFromCart" @next="requestFinish" />
             </div>
         </div>
 
-        <CommonAppModalCURD v-model:open="isFinishDialogOpen" title="Finish Checkout"
-            description="Do you want to print the invoice now?" submit-label="Print Invoice" cancel-label="No"
-            type="primary" :loading="isFinishing" @submit="handleFinishWithPrint" @cancel="finishWithoutPrint" />
+        <CommonAppModalCURD
+            v-model:open="isCheckoutConfirmOpen"
+            :title="t('pages.pos.checkoutConfirm.title')"
+            :description="t('pages.pos.checkoutConfirm.description')"
+            :submit-label="t('pages.pos.checkoutConfirm.submit')"
+            :cancel-label="t('components.cancel')"
+            type="warning"
+            @submit="confirmCheckoutAndContinue"
+            @cancel="closeCheckoutConfirm"
+        >
+            <div class="rounded-lg border border-default bg-muted/30 p-3 text-sm space-y-2">
+                <div class="flex justify-between gap-2">
+                    <span class="text-muted-foreground">{{ t('pages.pos.checkoutConfirm.customer') }}</span>
+                    <span class="font-medium text-foreground text-right">{{ checkoutConfirmSummary.customerName }}</span>
+                </div>
+                <div class="flex justify-between gap-2">
+                    <span class="text-muted-foreground">{{ t('pages.pos.checkoutConfirm.phone') }}</span>
+                    <span class="font-medium text-foreground">{{ checkoutConfirmSummary.customerPhone }}</span>
+                </div>
+                <div class="flex justify-between gap-2">
+                    <span class="text-muted-foreground">{{ t('pages.pos.checkoutConfirm.address') }}</span>
+                    <span class="font-medium text-foreground text-right">{{ checkoutConfirmSummary.customerAddress }}</span>
+                </div>
+                <div class="flex justify-between gap-2">
+                    <span class="text-muted-foreground">{{ t('pages.pos.checkoutConfirm.delivery') }}</span>
+                    <span class="font-medium text-foreground">
+                        {{ checkoutConfirmSummary.deliveryType }}
+                        ({{ formatCurrency(checkoutConfirmSummary.deliveryPrice, 'USD') }})
+                    </span>
+                </div>
+                <div class="flex justify-between gap-2">
+                    <span class="text-muted-foreground">{{ t('pages.pos.checkoutConfirm.payment') }}</span>
+                    <span class="font-medium text-foreground">{{ checkoutConfirmSummary.paymentMethod }}</span>
+                </div>
+                <div class="flex justify-between gap-2">
+                    <span class="text-muted-foreground">{{ t('pages.pos.checkoutConfirm.source') }}</span>
+                    <span class="font-medium text-foreground">{{ checkoutConfirmSummary.source }}</span>
+                </div>
+                <div class="flex justify-between gap-2">
+                    <span class="text-muted-foreground">{{ t('pages.pos.checkoutConfirm.items') }}</span>
+                    <span class="font-medium text-foreground">{{ checkoutConfirmSummary.itemCount }}</span>
+                </div>
+                <USeparator />
+                <div class="flex justify-between gap-2">
+                    <span class="text-muted-foreground">{{ t('pages.pos.cart.subtotal') }}</span>
+                    <span>{{ formatCurrency(checkoutConfirmSummary.subtotal, 'USD') }}</span>
+                </div>
+                <div class="flex justify-between gap-2">
+                    <span class="text-muted-foreground">{{ t('pages.pos.cart.discount') }}</span>
+                    <span>{{ formatCurrency(checkoutConfirmSummary.discount, 'USD') }}</span>
+                </div>
+                <div class="flex justify-between gap-2 text-base">
+                    <span class="font-semibold text-foreground">{{ t('pages.pos.checkoutConfirm.total') }}</span>
+                    <span class="font-bold text-primary">{{ formatCurrency(checkoutConfirmSummary.total, 'USD') }}</span>
+                </div>
+            </div>
+        </CommonAppModalCURD>
+
+        <CommonAppModalCURD
+            v-model:open="isFinishDialogOpen"
+            :title="t('pages.pos.printConfirm.title')"
+            :description="t('pages.pos.printConfirm.description')"
+            :submit-label="t('pages.pos.printConfirm.print')"
+            :cancel-label="t('pages.pos.printConfirm.skip')"
+            type="primary"
+            :loading="isFinishing"
+            @submit="handleFinishWithPrint"
+            @cancel="finishWithoutPrint"
+        />
     </div>
 </template>

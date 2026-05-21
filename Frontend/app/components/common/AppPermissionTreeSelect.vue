@@ -6,9 +6,11 @@ const modelValue = defineModel<string[] | undefined>({ default: undefined })
 const props = withDefaults(defineProps<{
   pages: string[]
   actions: string[]
+  actionsByPage?: Record<string, string[]>
 }>(), {
   pages: () => [],
-  actions: () => ['view', 'edit', 'update']
+  actions: () => ['view', 'update'],
+  actionsByPage: () => ({})
 })
 
 const expandedPages = ref<string[]>([])
@@ -22,20 +24,25 @@ function hasAction(page: string, action: string) {
 }
 
 function hasAnyAction(page: string) {
-  return props.actions.some((action) => hasAction(page, action))
+  return getActionsForPage(page).some((action) => hasAction(page, action))
+}
+
+function getActionsForPage(page: string) {
+  return props.actionsByPage?.[page] || props.actions
 }
 
 function togglePage(page: string) {
   const selected = new Set(modelValue.value || [])
+  const pageActions = getActionsForPage(page)
   if (hasAnyAction(page)) {
-    props.actions.forEach((action) => selected.delete(getKey(page, action)))
+    pageActions.forEach((action) => selected.delete(getKey(page, action)))
     modelValue.value = [...selected]
     expandedPages.value = expandedPages.value.filter((p) => p !== page)
     return
   }
 
   // Default first action when page is selected.
-  selected.add(getKey(page, props.actions[0] || 'view'))
+  selected.add(getKey(page, pageActions[0] || 'view'))
   modelValue.value = [...selected]
   if (!expandedPages.value.includes(page)) {
     expandedPages.value.push(page)
@@ -94,7 +101,7 @@ function prettyName(value: string) {
       <div v-if="expandedPages.includes(page) || hasAnyAction(page)" class="px-2 pb-2">
         <div class="grid grid-cols-1 gap-1 pl-6">
           <label
-            v-for="action in actions"
+            v-for="action in getActionsForPage(page)"
             :key="`${page}:${action}`"
             class="flex items-center gap-2 cursor-pointer rounded px-2 py-1"
             :class="hasAction(page, action) ? 'bg-primary/10' : 'hover:bg-muted/60'"

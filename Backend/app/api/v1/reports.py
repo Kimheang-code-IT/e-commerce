@@ -14,6 +14,7 @@ from app.services.data_service import (
     parse_csv,
     serialize_report_row,
 )
+from app.services.filter_options_service import report_filter_options
 
 router = APIRouter(prefix="/reports-view", tags=["reports-view"], dependencies=[Depends(get_current_user)])
 
@@ -33,6 +34,8 @@ def list_reports_view(
     limit: int = Query(20, ge=1, le=200),
     search: str | None = None,
     product: str | None = None,
+    source: str | None = None,
+    province: str | None = None,
     dateFrom: str | None = None,
     dateTo: str | None = None,
     sortBy: str | None = None,
@@ -53,7 +56,15 @@ def list_reports_view(
     if products:
         conditions = [Invoice.product_name.ilike(f"%{p}%") for p in products]
         q = q.where(or_(*conditions))
-    
+
+    sources = parse_csv(source)
+    if sources:
+        q = q.where(or_(*[Invoice.source == s for s in sources]))
+
+    provinces = parse_csv(province)
+    if provinces:
+        q = q.where(or_(*[Invoice.customer_address == p for p in provinces]))
+
     q = apply_created_at_range(q, dateFrom, dateTo, Invoice.created_at)
     q = apply_sort(
         q,
@@ -77,8 +88,11 @@ def list_reports_view(
 def export_reports_view(
     search: str | None = None,
     product: str | None = None,
+    source: str | None = None,
+    province: str | None = None,
     dateFrom: str | None = None,
     dateTo: str | None = None,
+    format: str = Query("json", pattern="^(json|csv)$"),
     _=Depends(require_permission("report:view")),
     db: Session = Depends(get_db),
 ):
@@ -95,8 +109,26 @@ def export_reports_view(
     if products:
         conditions = [Invoice.product_name.ilike(f"%{p}%") for p in products]
         q = q.where(or_(*conditions))
-        
+
+    sources = parse_csv(source)
+    if sources:
+        q = q.where(or_(*[Invoice.source == s for s in sources]))
+
+    provinces = parse_csv(province)
+    if provinces:
+        q = q.where(or_(*[Invoice.customer_address == p for p in provinces]))
+
     q = apply_created_at_range(q, dateFrom, dateTo, Invoice.created_at)
     pairs = db.execute(q).all()
     result = [serialize_report_row(None, inv, seller) for inv, seller in pairs]
-    return export_payload(result, "reports-view")
+    return export_payload(result, "reports-view", format)
+
+
+@router.get("/filter-options")
+def reports_filter_options(
+    dateFrom: str | None = None,
+    dateTo: str | None = None,
+    _=Depends(require_permission("report:view")),
+    db: Session = Depends(get_db),
+):
+    return {"data": report_filter_options(db, date_from=dateFrom, date_to=dateTo)}

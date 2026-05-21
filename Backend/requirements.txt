@@ -1,12 +1,48 @@
+# Core API
 fastapi
-uvicorn
+uvicorn[standard]
+
+# Database
 sqlalchemy
+alembic
+psycopg2-binary
+
+# Settings / Environment
 pydantic-settings
+python-dotenv
+
+# Auth / Security
 python-jose[cryptography]
 passlib[bcrypt]
-pytest
-httpx
-apscheduler==3.11.2
+bcrypt
+
+# HTTP Client
 httpx==0.28.1
+
+# Background Jobs
+celery
+redis
+reportlab
+
+# Scheduler
+apscheduler==3.11.2
+
+# Google Sheets API
 google-api-python-client==2.196.0
 google-auth==2.52.0
+google-auth-oauthlib
+google-auth-httplib2
+
+# Telegram Bot
+python-telegram-bot
+
+# Validation / Upload
+python-multipart
+email-validator
+
+# Testing
+pytest
+pytest-asyncio
+
+# Logging / Production
+loguru

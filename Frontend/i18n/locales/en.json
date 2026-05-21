@@ -164,16 +164,44 @@
                 "addMore": "Add More",
                 "addToCart": "Add to Cart"
             },
+            "validation": {
+                "numberRequired": "Enter a valid amount",
+                "minUsd": "Minimum is {min} USD",
+                "maxUsd": "Maximum is {max} USD",
+                "discountPercentMax": "Discount cannot exceed 100%",
+                "discountUsdMax": "Discount cannot exceed subtotal"
+            },
             "cart": {
                 "title": "Cart",
                 "clearAll": "Clear All",
                 "empty": "Your cart is empty.",
                 "items": "Items",
                 "subtotal": "Subtotal",
-                "discount": "Discount%",
+                "discount": "Discount",
+                "discountUsd": "USD",
+                "discountPercent": "%",
                 "total": "Total",
                 "next": "Next",
                 "finish": "Finish"
+            },
+            "checkoutConfirm": {
+                "title": "Confirm checkout",
+                "description": "Please review the order details before completing checkout.",
+                "submit": "Confirm & continue",
+                "customer": "Customer",
+                "phone": "Phone",
+                "address": "Address",
+                "delivery": "Delivery",
+                "payment": "Payment",
+                "source": "Source",
+                "items": "Items",
+                "total": "Total"
+            },
+            "printConfirm": {
+                "title": "Finish checkout",
+                "description": "Do you want to print the invoice now?",
+                "print": "Print invoice",
+                "skip": "Complete without print"
             },
             "invoice": {
                 "title": "Invoice",
@@ -288,6 +316,7 @@
         "commission": {
             "title": "Commission",
             "tableTitle": "Commission",
+            "filterSource": "Source",
             "columns": {
                 "seller": "Seller",
                 "product": "Product",
@@ -301,6 +330,8 @@
         "report": {
             "title": "Report",
             "tableTitle": "Report",
+            "filterSource": "Source",
+            "filterProvince": "Province",
             "columns": {
                 "no": "No",
                 "invoiceNo": "Invoice No",

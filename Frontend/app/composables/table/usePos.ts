@@ -84,8 +84,22 @@ export function usePos() {
     }
 
     if (cartState.cart.value.length === 0 && !hasReportPreviewInvoices.value) return
-    printing.openPrintDialog()
+    printing.openCheckoutConfirm()
   }
+
+  const checkoutConfirmSummary = computed(() => ({
+    customerName: customer.customerName.value,
+    customerPhone: customer.customerPhone.value,
+    customerAddress: customer.customerAddress.value,
+    deliveryType: customer.deliveryType.value,
+    deliveryPrice: Number(customer.deliveryPrice.value || 0),
+    paymentMethod: customer.paymentMethod.value,
+    source: customer.source.value,
+    itemCount: cartState.itemCount.value,
+    subtotal: displaySubtotal.value,
+    discount: displayDiscount.value,
+    total: displayTotal.value
+  }))
 
   function completeCheckoutUiReset() {
     cartState.clearCart()
@@ -100,7 +114,7 @@ export function usePos() {
       if (cartState.cart.value.length > 0) {
         await checkout.checkout({
           cart: cartState.cart.value,
-          discountPercent: cartState.discountPercent.value,
+          discountAmount: cartState.discountUsd.value,
           customer: {
             customerName: customer.customerName.value,
             customerPhone: customer.customerPhone.value,
@@ -126,7 +140,7 @@ export function usePos() {
       if (cartState.cart.value.length > 0) {
         await checkout.checkout({
           cart: cartState.cart.value,
-          discountPercent: cartState.discountPercent.value,
+          discountAmount: cartState.discountUsd.value,
           customer: {
             customerName: customer.customerName.value,
             customerPhone: customer.customerPhone.value,
@@ -177,7 +191,9 @@ export function usePos() {
         customer.customerName.value = String(invoice.customer || '')
         customer.customerPhone.value = String(invoice.phoneCustomer || '')
         customer.customerAddress.value = String(invoice.address || '')
-        customer.source.value = String(invoice.source || 'other')
+        const src = String(invoice.source ?? '').trim()
+        customer.source.value =
+          !src || src.toLowerCase() === 'other' ? 'Other' : src
         checkout.checkoutInvoiceNo.value = ''
         checkout.lastInvoiceData.value = null
       }
@@ -212,7 +228,9 @@ export function usePos() {
     cart: cartState.cart,
     itemCount: cartState.itemCount,
     subtotal: computed(() => cartState.totals.value.subtotal),
-    discountPercent: cartState.discountPercent,
+    discountMode: cartState.discountMode,
+    discountInput: cartState.discountInput,
+    discountUsd: cartState.discountUsd,
     discountAmount: computed(() => cartState.totals.value.discountAmount),
     total: computed(() => cartState.totals.value.total),
     selectedReportInvoice: preview.selectedReportInvoice,
@@ -223,7 +241,11 @@ export function usePos() {
     displaySubtotal,
     displayDiscount,
     displayTotal,
+    isCheckoutConfirmOpen: printing.isCheckoutConfirmOpen,
     isFinishDialogOpen: printing.isFinishDialogOpen,
+    checkoutConfirmSummary,
+    confirmCheckoutAndContinue: printing.confirmCheckoutAndContinue,
+    closeCheckoutConfirm: printing.closeCheckoutConfirm,
     isFinishing: checkout.isFinishing,
     addToCart: cartState.addItem,
     updateQty: cartState.updateQty,

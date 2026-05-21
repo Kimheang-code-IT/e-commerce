@@ -23,7 +23,7 @@ export function usePosCheckout() {
 
   async function checkout(args: {
     cart: PosCartItem[]
-    discountPercent: number
+    discountAmount: number
     customer: PosCustomerInput
   }) {
     if (isFinishing.value) return null
@@ -31,7 +31,7 @@ export function usePosCheckout() {
     try {
       const payload = buildCheckoutPayload({
         ...args.customer,
-        discountPercent: args.discountPercent,
+        discountAmount: args.discountAmount,
         lines: mapCartToApiLines(args.cart)
       })
       const response = await posApi.checkout(payload)

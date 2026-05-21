@@ -118,7 +118,7 @@ class PosCheckoutPayload(BaseModel):
     deliveryType: str = "delivery"
     deliveryPrice: float = 0
     deliveryDate: str = ""
-    discountPercent: float = 0
+    discountAmount: float = Field(default=0, ge=0)
     paymentMethod: str = "cash"
     deliveryStatus: str = "pending"
     sellerId: int | None = None

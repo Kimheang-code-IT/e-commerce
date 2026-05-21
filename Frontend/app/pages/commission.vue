@@ -4,7 +4,7 @@ import { formatCurrency } from '~/utils/format/currency'
 import { formatDate } from '~/utils/format/date'
 import { useCommissionApi } from '~/utils/api'
 
-const { data, columns, groupingOptions, grouping, isLoading, sorting, searchQuery, columnFilters, pagination, totalRows, productItems, selectedProducts } = useCommission()
+const { data, columns, groupingOptions, grouping, isLoading, sorting, searchQuery, columnFilters, pagination, totalRows, productItems, sourceItems, selectedProducts, selectedSources } = useCommission()
 const { t } = useI18n()
 const isExportOpen = ref(false)
 const commissionApi = useCommissionApi()
@@ -13,7 +13,8 @@ async function fetchCommissionExportData(args: { startDate?: string; endDate?: s
   const res = await commissionApi.exportCsv({
     ...((args.startDate || args.endDate) ? { dateFrom: args.startDate, dateTo: args.endDate } : {}),
     search: searchQuery.value || undefined,
-    product: selectedProducts.value.length ? selectedProducts.value.join(',') : undefined
+    product: selectedProducts.value.length ? selectedProducts.value.join(',') : undefined,
+    source: selectedSources.value.length ? selectedSources.value.join(',') : undefined
   })
   return res.data || data.value
 }
@@ -42,8 +43,11 @@ async function fetchCommissionExportData(args: { startDate?: string; endDate?: s
         v-model:pagination="pagination"
         v-model:global-filter="searchQuery"
         v-model:filter-value="selectedProducts"
+        v-model:filter-value-secondary="selectedSources"
         :filter-items="productItems"
+        :filter-items-secondary="sourceItems"
         :filter-placeholder="t('pages.commission.columns.product')"
+        :filter-placeholder-secondary="t('pages.commission.filterSource')"
         v-model:grouping="grouping"
         :grouping-options="groupingOptions"
         :selectable="false"

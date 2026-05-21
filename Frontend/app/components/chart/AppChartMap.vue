@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { PROVINCE_SHORTCUTS, resolveProvinceAlias } from '~/utils/provinces'
 
 const props = defineProps<{
     data: { name: string; value: number }[]
@@ -10,35 +11,6 @@ const props = defineProps<{
 
 const emit = defineEmits(['select-province'])
 const appConfig = useAppConfig()
-
-// Province shortcut mapping
-const PROVINCE_SHORTCUTS: Record<string, string> = {
-    'Banteay Meanchey': 'BMC',
-    'Battambang': 'BTB',
-    'Kampong Cham': 'KPC',
-    'Kampong Chhnang': 'KCH',
-    'Kampong Speu': 'KPS',
-    'Kampong Thom': 'KPT',
-    'Kampot': 'KMP',
-    'Kandal': 'KND',
-    'Kep': 'KEP',
-    'Koh Kong': 'KKG',
-    'Kratie': 'KRT',
-    'Mondul Kiri': 'MDK',
-    'Oddar Meanchey': 'OMC',
-    'Pailin': 'PLN',
-    'Phnom Penh': 'PP',
-    'Preah Sihanouk': 'SHV',
-    'Preah Vihear': 'PVH',
-    'Prey Veng': 'PVG',
-    'Pursat': 'PUR',
-    'Ratanak Kiri': 'RTK',
-    'Siemreap': 'SRP',
-    'Stung Treng': 'STR',
-    'Svay Rieng': 'SVR',
-    'Takeo': 'TKO',
-    'Tboung Khmum': 'TBK'
-}
 
 const geojson = ref<any>(null)
 const isMapLoaded = ref(false)
@@ -233,10 +205,14 @@ const staticProvinceMeta = computed<StaticProvinceMeta[]>(() => {
  */
 const normalizedData = computed(() =>
     props.data
-        .map((item) => ({
-            name: String(item?.name || '').trim(),
-            value: Number(item?.value) || 0
-        }))
+        .map((item) => {
+            const raw = String(item?.name || '').trim()
+            const canonical = resolveProvinceAlias(raw)
+            return {
+                name: canonical,
+                value: Number(item?.value) || 0
+            }
+        })
         .filter((item) => item.name.length > 0)
 )
 

@@ -63,6 +63,7 @@ def export_finance_view(
     search: str | None = None,
     dateFrom: str | None = None,
     dateTo: str | None = None,
+    format: str = Query("json", pattern="^(json|csv)$"),
     _=Depends(require_permission("finance:view")),
     db: Session = Depends(get_db),
 ):
@@ -73,7 +74,7 @@ def export_finance_view(
         q = q.where(Product.name.ilike(f"%{keyword}%"))
     q = apply_created_at_range(q, dateFrom, dateTo, Finance.created_at)
     rows = db.execute(q).all()
-    return export_payload([serialize_finance_view(f, p) for f, p in rows], "finance-view")
+    return export_payload([serialize_finance_view(f, p) for f, p in rows], "finance-view", format)
 
 
 @router.put("/{item_id}")

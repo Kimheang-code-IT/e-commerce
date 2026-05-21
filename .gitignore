@@ -11,6 +11,16 @@ __pycache__/
 *.db
 *.sqlite3
 .env
+.env.local
+.env.*.local
+Backend/.env
+Frontend/.env
+
+Backend/credentials/*.json
+
+*.pem
+*.key
+*credentials*.json
 
 node_modules/
 .nuxt/

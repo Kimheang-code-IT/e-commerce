@@ -2,45 +2,241 @@ from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-# Backend project root (contains `.env`, `app.db`, etc.)
 _BACKEND_ROOT = Path(__file__).resolve().parent.parent.parent
 
 
 class Settings(BaseSettings):
-    """Application settings. Override via environment variables or `Backend/.env`."""
+    APP_NAME: str = "ecommerce-api"
+    APP_ENV: str = "development"
+    APP_DEBUG: bool = True
+    API_DOCS_ENABLED: bool = True
+    API_PREFIX: str = "/api/v1"
+    CORS_ORIGINS: str = "http://localhost:3000,http://127.0.0.1:3000"
+    # When true, allow browser requests from any private LAN IP/port (Wi-Fi deploy on changing hosts).
+    CORS_ALLOW_LAN: bool = False
+    FILE_BASE_URL: str = ""
+    # Set by scripts/deploy_lan.py / root .env (informational logging only).
+    HOST_LAN_IP: str = ""
+    PUBLIC_HTTP_PORT: str = "8080"
+    EXPORT_INLINE_THRESHOLD: int = 100
+    EXPORT_DIR: str = "exports"
 
-    app_name: str = "E-Commerce Backend API"
-    api_prefix: str = "/api/v1"
-    secret_key: str = "change-me-in-env"
-    access_token_expire_minutes: int = 1440
-    refresh_token_expire_days: int = 14
-    jwt_issuer: str = "e-comerce-backend"
-    jwt_audience: str = ""
-    sqlite_url: str = f"sqlite:///{(_BACKEND_ROOT / 'app.db').as_posix()}"
-    export_inline_threshold: int = 100
-    export_dir: str = "exports"
-    cors_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
-    # Absolute origin for building image URLs returned to the SPA (img src on another port).
-    file_base_url: str = "http://127.0.0.1:8000"
+    DATABASE_URL: str
 
-    # Google Sheets Backup
-    google_sheet_id: str | None = None
-    google_service_account_file: str = "service-account.json"
-    google_backup_enabled: bool = False
-    google_backup_time: str = "23:59"  # HH:MM format
+    JWT_SECRET_KEY: str
+    JWT_ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 14
+    JWT_ISSUER: str = "e-comerce-backend"
+    JWT_AUDIENCE: str = ""
 
-    # Telegram Notification
-    telegram_bot_token: str | None = None
-    telegram_chat_id: str | None = None
-    telegram_notify_enabled: bool = False
-    telegram_report_enabled: bool = False
-    telegram_webhook_secret: str = "secret-key-123"
+    REDIS_URL: str = "redis://localhost:6379/0"
+    CELERY_BROKER_URL: str = "redis://localhost:6379/0"
+    CELERY_RESULT_BACKEND: str = "redis://localhost:6379/1"
+    CACHE_ENABLED: bool = True
+    CACHE_TTL_SECONDS: int = 300
+    CELERY_TASK_SOFT_TIME_LIMIT: int = 120
+    CELERY_TASK_TIME_LIMIT: int = 180
+    CELERY_TASK_MAX_RETRIES: int = 3
+    CELERY_TASK_DEFAULT_RETRY_DELAY: int = 30
+    INVOICE_PDF_DIR: str = "uploads/invoices"
+    # When true, generate PDF during checkout response (slower). When false, Celery + GET /pdf only.
+    INVOICE_PDF_SYNC: bool = True
+    INVOICE_PRINT_ENABLED: bool = False
+    INVOICE_PRINT_WEBHOOK_URL: str = ""
+
+    RATE_LIMIT_ENABLED: bool = True
+    RATE_LIMIT_LOGIN_PER_MINUTE: int = 20
+    RATE_LIMIT_CHECKOUT_PER_MINUTE: int = 60
+
+    TELEGRAM_BOT_TOKEN: str | None = None
+    TELEGRAM_CHAT_ID: str | None = None
+    TELEGRAM_NOTIFY_ENABLED: bool = False
+    TELEGRAM_REPORT_ENABLED: bool = False
+    TELEGRAM_WEBHOOK_SECRET: str | None = None
+
+    GOOGLE_SHEET_ID: str | None = None
+    GOOGLE_SERVICE_ACCOUNT_FILE: str | None = None
+    GOOGLE_BACKUP_ENABLED: bool = False
+    GOOGLE_BACKUP_TIME: str = "23:59"
+
+    SCHEDULER_ENABLED: bool = True
+    SCHEDULER_TIMEZONE: str = "Asia/Phnom_Penh"
+
+    LOG_LEVEL: str = "INFO"
+    LOG_JSON: bool = False
+
+    # Bootstrap admin user (startup seed). Set email/password only via environment / `.env` — never commit secrets.
+    DEFAULT_ADMIN_SEED_ENABLED: bool = True
+    DEFAULT_ADMIN_NAME: str = "Admin"
+    DEFAULT_ADMIN_EMAIL: str | None = None
+    DEFAULT_ADMIN_PASSWORD: str | None = None
+    # Comma-separated legacy emails to migrate to DEFAULT_ADMIN_EMAIL (e.g. old typo domain).
+    DEFAULT_ADMIN_LEGACY_EMAILS: str = "admin@gamil.com"
+
     model_config = SettingsConfigDict(
         env_file=str(_BACKEND_ROOT / ".env"),
         env_file_encoding="utf-8",
-        env_nested_delimiter="__",
+        case_sensitive=True,
         extra="ignore",
     )
+
+    # Backward-compatible accessors used by existing code.
+    @property
+    def app_name(self) -> str:
+        return self.APP_NAME
+
+    @property
+    def api_prefix(self) -> str:
+        return self.API_PREFIX
+
+    @property
+    def api_docs_enabled(self) -> bool:
+        return self.API_DOCS_ENABLED
+
+    @property
+    def cors_origins(self) -> str:
+        return self.CORS_ORIGINS
+
+    @property
+    def file_base_url(self) -> str:
+        return self.FILE_BASE_URL
+
+    @property
+    def export_inline_threshold(self) -> int:
+        return self.EXPORT_INLINE_THRESHOLD
+
+    @property
+    def export_dir(self) -> str:
+        return self.EXPORT_DIR
+
+    @property
+    def secret_key(self) -> str:
+        return self.JWT_SECRET_KEY
+
+    @property
+    def access_token_expire_minutes(self) -> int:
+        return self.ACCESS_TOKEN_EXPIRE_MINUTES
+
+    @property
+    def refresh_token_expire_days(self) -> int:
+        return self.REFRESH_TOKEN_EXPIRE_DAYS
+
+    @property
+    def jwt_issuer(self) -> str:
+        return self.JWT_ISSUER
+
+    @property
+    def jwt_audience(self) -> str:
+        return self.JWT_AUDIENCE
+
+    @property
+    def database_url(self) -> str:
+        return self.DATABASE_URL
+
+    @property
+    def redis_url(self) -> str:
+        return self.REDIS_URL
+
+    @property
+    def celery_broker_url(self) -> str:
+        return self.CELERY_BROKER_URL
+
+    @property
+    def celery_result_backend(self) -> str:
+        return self.CELERY_RESULT_BACKEND
+
+    @property
+    def cache_enabled(self) -> bool:
+        return self.CACHE_ENABLED
+
+    @property
+    def cache_ttl_seconds(self) -> int:
+        return self.CACHE_TTL_SECONDS
+
+    @property
+    def invoice_pdf_dir(self) -> str:
+        return self.INVOICE_PDF_DIR
+
+    @property
+    def invoice_print_enabled(self) -> bool:
+        return self.INVOICE_PRINT_ENABLED
+
+    @property
+    def invoice_print_webhook_url(self) -> str:
+        return (self.INVOICE_PRINT_WEBHOOK_URL or "").strip()
+
+    @property
+    def invoice_pdf_sync(self) -> bool:
+        return self.INVOICE_PDF_SYNC
+
+    @property
+    def rate_limit_enabled(self) -> bool:
+        return self.RATE_LIMIT_ENABLED
+
+    @property
+    def rate_limit_login_per_minute(self) -> int:
+        return self.RATE_LIMIT_LOGIN_PER_MINUTE
+
+    @property
+    def rate_limit_checkout_per_minute(self) -> int:
+        return self.RATE_LIMIT_CHECKOUT_PER_MINUTE
+
+    @property
+    def is_production(self) -> bool:
+        return self.APP_ENV.lower() == "production"
+
+    @property
+    def telegram_bot_token(self) -> str | None:
+        return self.TELEGRAM_BOT_TOKEN
+
+    @property
+    def telegram_chat_id(self) -> str | None:
+        return self.TELEGRAM_CHAT_ID
+
+    @property
+    def telegram_notify_enabled(self) -> bool:
+        return self.TELEGRAM_NOTIFY_ENABLED
+
+    @property
+    def telegram_report_enabled(self) -> bool:
+        return self.TELEGRAM_REPORT_ENABLED
+
+    @property
+    def telegram_webhook_secret(self) -> str | None:
+        return self.TELEGRAM_WEBHOOK_SECRET
+
+    @property
+    def google_sheet_id(self) -> str | None:
+        return self.GOOGLE_SHEET_ID
+
+    @property
+    def google_service_account_file(self) -> str | None:
+        return self.GOOGLE_SERVICE_ACCOUNT_FILE
+
+    @property
+    def google_backup_enabled(self) -> bool:
+        return self.GOOGLE_BACKUP_ENABLED
+
+    @property
+    def google_backup_time(self) -> str:
+        return self.GOOGLE_BACKUP_TIME
+
+    @property
+    def scheduler_enabled(self) -> bool:
+        return self.SCHEDULER_ENABLED
+
+    @property
+    def scheduler_timezone(self) -> str:
+        return self.SCHEDULER_TIMEZONE
+
+    @property
+    def log_level(self) -> str:
+        return self.LOG_LEVEL
+
+    @property
+    def log_json(self) -> bool:
+        return self.LOG_JSON
 
 
 settings = Settings()

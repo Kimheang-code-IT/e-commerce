@@ -13,6 +13,7 @@ from app.api.v1 import (
     reports,
     system_roles,
     system_users,
+    tasks,
     telegram,
 )
 
@@ -32,3 +33,4 @@ router.include_router(delivery.router)
 router.include_router(pos.router)
 router.include_router(pos.pos_router)
 router.include_router(dashboard.router)
+router.include_router(tasks.router)

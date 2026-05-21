@@ -28,6 +28,8 @@ export type ApiQueryParams = {
   [key: string]: string | number | undefined
 }
 
+export type DateQuery = { dateFrom?: string; dateTo?: string }
+
 function makeCrudApi<T>(resource: string) {
   const api = useApi()
   return {
@@ -129,7 +131,13 @@ export function useHistoriesApi() {
   const api = useApi()
   return {
     list: (params?: ApiQueryParams, signal?: AbortSignal) =>
-      api.get<ApiList<AuditLog>>('/histories', { query: params, signal, dedupe: true })
+      api.get<ApiList<AuditLog>>('/histories', { query: params, signal, dedupe: true }),
+    filterOptions: (params?: DateQuery, signal?: AbortSignal) =>
+      api.get<{ data: { actions: string[] } }>('/histories/filter-options', {
+        query: params,
+        signal,
+        dedupe: true
+      })
   }
 }
 
@@ -146,13 +154,29 @@ export function useReportsViewApi() {
   return {
     list: (params?: ApiQueryParams, signal?: AbortSignal) =>
       api.get<ApiList<ReportRow>>('/reports-view', { query: params, signal, dedupe: true }),
+    filterOptions: (params?: DateQuery, signal?: AbortSignal) =>
+      api.get<{ data: { products: string[]; sources: string[]; provinces: string[] } }>(
+        '/reports-view/filter-options',
+        { query: params, signal, dedupe: true }
+      ),
     exportCsv: (params?: ApiQueryParams) =>
-      api.get<{ url?: string; data?: ReportRow[] }>('/reports-view/export', { query: params })
+      api.get<{ url?: string; data?: ReportRow[] }>('/reports-view/export', {
+        query: { ...(params || {}), format: 'json' }
+      })
   }
 }
 
 export function useDeliveriesViewApi() {
-  return makeViewListApi<DeliveryEntry>('/deliveries-view')
+  const api = useApi()
+  const base = '/deliveries-view'
+  return {
+    list: (params?: ApiQueryParams, signal?: AbortSignal) =>
+      api.get<ApiList<DeliveryEntry>>(base, { query: params, signal, dedupe: true }),
+    filterOptions: (params?: DateQuery, signal?: AbortSignal) =>
+      api.get<{
+        data: { addresses: string[]; deliveryTypes: string[]; statuses: string[] }
+      }>(`${base}/filter-options`, { query: params, signal, dedupe: true })
+  }
 }
 
 export function useCommissionViewApi() {
@@ -160,8 +184,16 @@ export function useCommissionViewApi() {
   return {
     list: (params?: ApiQueryParams, signal?: AbortSignal) =>
       api.get<ApiList<CommissionEntry>>('/commission-view', { query: params, signal, dedupe: true }),
+    filterOptions: (params?: DateQuery, signal?: AbortSignal) =>
+      api.get<{ data: { products: string[]; sources: string[] } }>('/commission-view/filter-options', {
+        query: params,
+        signal,
+        dedupe: true
+      }),
     exportCsv: (params?: ApiQueryParams) =>
-      api.get<{ url?: string; data?: CommissionEntry[] }>('/commission-view/export', { query: params })
+      api.get<{ url?: string; data?: CommissionEntry[] }>('/commission-view/export', {
+        query: { ...(params || {}), format: 'json' }
+      })
   }
 }
 
@@ -173,7 +205,9 @@ export function useFinanceViewApi() {
     update: (id: number, payload: { facebook: number; other: number }) =>
       api.put<{ data: FinanceEntry }>(`/finance-view/${id}`, payload),
     exportCsv: (params?: ApiQueryParams) =>
-      api.get<{ url?: string; data?: FinanceEntry[] }>('/finance-view/export', { query: params })
+      api.get<{ url?: string; data?: FinanceEntry[] }>('/finance-view/export', {
+        query: { ...(params || {}), format: 'json' }
+      })
   }
 }
 
@@ -211,6 +245,15 @@ export function usePosApi() {
     }
   }
   return {
+    filterOptions: (signal?: AbortSignal) =>
+      api.get<{
+        data: {
+          deliveryTypes: string[]
+          sources: string[]
+          paymentMethods: string[]
+          addresses: string[]
+        }
+      }>('/pos/filter-options', { signal, dedupe: true }),
     createPreviewSession: (invoices: any[]) =>
       withLegacyFallback(
         () => api.post<{ previewKey: string }>('/pos/preview', { invoices }),
@@ -223,8 +266,12 @@ export function usePosApi() {
       ),
     getInvoicePreviewByNo: (invoiceNo: string) =>
       api.get<{ invoice?: any; lines?: any[]; invoices?: any[] }>(`/pos/invoice/${invoiceNo}`),
+    getInvoicePdfUrl: (invoiceNo: string) =>
+      api.get<{ data: { pdfUrl: string } }>(`/pos/invoice/${encodeURIComponent(invoiceNo)}/pdf-url`),
+    invoicePdfDownloadPath: (invoiceNo: string) =>
+      `/api/v1/pos/invoice/${encodeURIComponent(invoiceNo)}/pdf`,
     calculateTotals: (payload: {
-      discountPercent: number
+      discountAmount: number
       lines: Array<{ productId: number; qty: number }>
     }) =>
       withLegacyFallback(
@@ -239,22 +286,59 @@ export function usePosApi() {
       deliveryType: string
       deliveryPrice: number
       deliveryDate: string
-      discountPercent: number
+      discountAmount: number
       sellerId?: number
       lines: Array<{ productId: number; qty: number }>
     }) =>
       withLegacyFallback(
         () =>
-          api.post<{ data: { invoiceNo: string; subtotal: number; discountAmount: number; total: number; invoice: any } }>(
-            '/pos/checkout',
-            payload
-          ),
+          api.post<{
+            data: {
+              orderId: number
+              invoiceId: number
+              invoiceNo: string
+              invoiceNumber: string
+              subtotal: number
+              discountAmount: number
+              total: number
+              pdfUrl?: string | null
+              pdfTaskId?: string | null
+              printTaskId?: string | null
+              notificationTaskId?: string | null
+              cacheTaskId?: string | null
+              invoice: any
+            }
+          }>('/pos/checkout', payload),
         () =>
-          api.post<{ data: { invoiceNo: string; subtotal: number; discountAmount: number; total: number; invoice: any } }>(
-            '/invoices/checkout',
-            payload
-          )
+          api.post<{
+            data: {
+              orderId: number
+              invoiceId: number
+              invoiceNo: string
+              invoiceNumber: string
+              subtotal: number
+              discountAmount: number
+              total: number
+              pdfUrl?: string | null
+              pdfTaskId?: string | null
+              printTaskId?: string | null
+              notificationTaskId?: string | null
+              cacheTaskId?: string | null
+              invoice: any
+            }
+          }>('/invoices/checkout', payload)
       ),
+    getTaskStatus: (taskId: string) =>
+      api.get<{
+        data: {
+          taskId: string
+          status: string
+          ready: boolean
+          successful?: boolean | null
+          result?: unknown
+          error?: string
+        }
+      }>(`/tasks/${taskId}`),
   }
 }
 

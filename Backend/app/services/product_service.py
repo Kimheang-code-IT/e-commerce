@@ -22,6 +22,7 @@ from app.services.data_service import (
     record_history,
 )
 from app.services.product_image_service import delete_stored_file_if_local, normalize_stored_image
+from app.services.cache_service import cached_response, invalidate_products_and_dashboard, PREFIX_PRODUCTS
 from app.shared.api_response import error_response
 
 
@@ -46,6 +47,24 @@ def _sync_stock_history(
 
 
 def list_products_service(*, db: Session, query: ListQuery, category: str | None):
+    cache_parts = {
+        "page": query.page,
+        "limit": query.limit,
+        "search": query.search,
+        "category": category,
+        "dateFrom": query.dateFrom,
+        "dateTo": query.dateTo,
+        "sortBy": query.sortBy,
+        "sortOrder": query.sortOrder,
+    }
+
+    def _build():
+        return _list_products_uncached(db=db, query=query, category=category)
+
+    return cached_response(PREFIX_PRODUCTS, cache_parts, _build)
+
+
+def _list_products_uncached(*, db: Session, query: ListQuery, category: str | None):
     q = list_products_query(db, search=query.search, category=category)
     q = apply_created_at_range(q, query.dateFrom, query.dateTo, Product.created_at)
     q = apply_sort(
@@ -106,10 +125,11 @@ def create_product_service(*, db: Session, body: ProductCreatePayload, user_id: 
     ensure_finance_for_product(db, row.id)
     db.commit()
     db.refresh(row)
-    
+
     record_history(db, user_id, "Create", f"Created product '{row.name}'")
     db.commit()
-    
+    invalidate_products_and_dashboard()
+
     row_out = db.execute(select(Product).options(joinedload(Product.category_rel)).where(Product.id == row.id)).unique().scalar_one()
     amap, dmap = batch_stock_totals(db, [row_out.id])
     return {"data": serialize_product(row_out, added=amap.get(row_out.id, 0), damaged=dmap.get(row_out.id, 0))}
@@ -162,10 +182,11 @@ def update_product_service(*, db: Session, item_id: int, body: ProductUpdatePayl
     ensure_finance_for_product(db, row.id)
     db.commit()
     db.refresh(row)
-    
+
     record_history(db, user_id, "Update", f"Updated product '{row.name}'")
     db.commit()
-    
+    invalidate_products_and_dashboard()
+
     row_out = db.execute(select(Product).options(joinedload(Product.category_rel)).where(Product.id == item_id)).unique().scalar_one()
     amap, dmap = batch_stock_totals(db, [row_out.id])
     return {"data": serialize_product(row_out, added=amap.get(row_out.id, 0), damaged=dmap.get(row_out.id, 0))}
@@ -182,7 +203,8 @@ def delete_product_service(*, db: Session, item_id: int, user_id: int):
     adjust_category_product_count(db, row.category_id, -1)
     db.delete(row)
     db.commit()
-    
+
     record_history(db, user_id, "Delete", f"Deleted product '{product_name}'")
     db.commit()
+    invalidate_products_and_dashboard()
     return {"message": "Product deleted"}

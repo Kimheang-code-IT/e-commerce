@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useReport } from '~/composables/table/useReport'
 import { formatCurrency } from '~/utils/format/currency'
-import { usePosApi, useReportApi } from '~/utils/api'
+import { useReportApi } from '~/utils/api'
 
 const {
   rowSelection,
@@ -17,13 +17,16 @@ const {
   someFilteredSelected,
   toggleSelectAllFiltered,
   productItems,
+  sourceItems,
+  provinceItems,
   selectedProducts,
+  selectedSources,
+  selectedProvinces,
   columns
 } = useReport()
 const { t } = useI18n()
 const router = useRouter()
 const isExportOpen = ref(false)
-const posApi = usePosApi()
 const reportApi = useReportApi()
 
 
@@ -47,7 +50,9 @@ async function fetchReportExportData(args: { startDate?: string; endDate?: strin
   const res = await reportApi.exportCsv({
     ...((args.startDate || args.endDate) ? { dateFrom: args.startDate, dateTo: args.endDate } : {}),
     search: searchQuery.value || undefined,
-    product: selectedProducts.value.length ? selectedProducts.value.join(',') : undefined
+    product: selectedProducts.value.length ? selectedProducts.value.join(',') : undefined,
+    source: selectedSources.value.length ? selectedSources.value.join(',') : undefined,
+    province: selectedProvinces.value.length ? selectedProvinces.value.join(',') : undefined
   })
   return res.data || filteredReportRows.value
 }
@@ -70,8 +75,18 @@ async function fetchReportExportData(args: { startDate?: string; endDate?: strin
     <div class="flex-1 p-2 overflow-hidden">
       <TableApptable :title="t('pages.report.tableTitle')" v-model:row-selection="rowSelection"
         v-model:sorting="sorting" v-model:column-visibility="columnVisibility" v-model:pagination="pagination"
-        v-model:column-filters="columnFilters" v-model:filter-value="selectedProducts" v-model:global-filter="searchQuery" :filter-items="productItems"
-        :filter-placeholder="$t('product.name')" :data="filteredReportRows" :total-rows="totalRows" :columns="columns"
+        v-model:column-filters="columnFilters"
+        v-model:filter-value="selectedProducts"
+        v-model:filter-value-secondary="selectedSources"
+        v-model:filter-value-third="selectedProvinces"
+        v-model:global-filter="searchQuery"
+        :filter-items="productItems"
+        :filter-items-secondary="sourceItems"
+        :filter-items-third="provinceItems"
+        :filter-placeholder="$t('product.name')"
+        :filter-placeholder-secondary="$t('pages.report.filterSource')"
+        :filter-placeholder-third="$t('pages.report.filterProvince')"
+        :data="filteredReportRows" :total-rows="totalRows" :columns="columns"
         :selectable="true">
         <template #no-header>
           <div class="flex items-center gap-2">

@@ -13,6 +13,12 @@ from app.services.data_service import (
     serialize_category,
     record_history,
 )
+from app.services.cache_service import (
+    cached_response,
+    invalidate_categories_and_dashboard,
+    invalidate_products_and_dashboard,
+    PREFIX_CATEGORIES,
+)
 from app.shared.api_response import error_response
 
 router = APIRouter()
@@ -29,27 +35,40 @@ def list_categories(
     _: User = Depends(require_permission("category:view")),
     db: Session = Depends(get_db),
 ):
-    q = select(Category)
-    if search:
-        keyword = search.strip()
-        db_id = Category.from_public_id(keyword)
-        predicates = [
-            Category.name.ilike(f"%{keyword}%"),
-            Category.description.ilike(f"%{keyword}%"),
-            cast(Category.id, String).ilike(f"%{keyword}%"),
-        ]
-        if db_id is not None:
-            predicates.append(Category.id == db_id)
-        q = q.where(or_(*predicates))
-    q = apply_created_at_range(q, dateFrom, dateTo, Category.created_at)
-    q = apply_sort(
-        q,
-        sortBy,
-        sortOrder,
-        {"id": Category.id, "name": Category.name, "total": Category.product_count, "createdAt": Category.created_at},
-    )
-    rows, total = paginate_query(q, db, page, limit)
-    return list_response([serialize_category(row[0]) for row in rows], total)
+    cache_parts = {
+        "page": page,
+        "limit": limit,
+        "search": search,
+        "dateFrom": dateFrom,
+        "dateTo": dateTo,
+        "sortBy": sortBy,
+        "sortOrder": sortOrder,
+    }
+
+    def _build():
+        q_inner = select(Category)
+        if search:
+            keyword = search.strip()
+            db_id = Category.from_public_id(keyword)
+            predicates = [
+                Category.name.ilike(f"%{keyword}%"),
+                Category.description.ilike(f"%{keyword}%"),
+                cast(Category.id, String).ilike(f"%{keyword}%"),
+            ]
+            if db_id is not None:
+                predicates.append(Category.id == db_id)
+            q_inner = q_inner.where(or_(*predicates))
+        q_inner = apply_created_at_range(q_inner, dateFrom, dateTo, Category.created_at)
+        q_inner = apply_sort(
+            q_inner,
+            sortBy,
+            sortOrder,
+            {"id": Category.id, "name": Category.name, "total": Category.product_count, "createdAt": Category.created_at},
+        )
+        rows_inner, total_inner = paginate_query(q_inner, db, page, limit)
+        return list_response([serialize_category(row[0]) for row in rows_inner], total_inner)
+
+    return cached_response(PREFIX_CATEGORIES, cache_parts, _build)
 
 
 @router.post("/categories")
@@ -68,6 +87,8 @@ def create_category(
     db.refresh(row)
     record_history(db, current_user.id, "Create", f"Created category '{row.name}'")
     db.commit()
+    invalidate_categories_and_dashboard()
+    invalidate_products_and_dashboard()
     return {"data": serialize_category(row)}
 
 
@@ -101,6 +122,8 @@ def update_category(
     db.refresh(row)
     record_history(db, current_user.id, "Update", f"Updated category '{row.name}'")
     db.commit()
+    invalidate_categories_and_dashboard()
+    invalidate_products_and_dashboard()
     return {"data": serialize_category(row)}
 
 
@@ -127,4 +150,6 @@ def delete_category(
     db.commit()
     record_history(db, current_user.id, "Delete", f"Deleted category '{category_name}'")
     db.commit()
+    invalidate_categories_and_dashboard()
+    invalidate_products_and_dashboard()
     return {"message": "Category deleted"}

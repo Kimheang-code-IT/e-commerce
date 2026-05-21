@@ -164,16 +164,44 @@
                 "addMore": "បន្ថែមទៀត",
                 "addToCart": "បន្ថែមទៅកន្ត្រក"
             },
+            "validation": {
+                "numberRequired": "សូមបញ្ចូលចំនួនត្រឹមត្រូវ",
+                "minUsd": "អប្បរម៏អប្បបរមា {min} USD",
+                "maxUsd": "អតិបរមា {max} USD",
+                "discountPercentMax": "បញ្ចុះតម្លៃមិនអាចលើស 100%",
+                "discountUsdMax": "បញ្ចុះតម្លៃមិនអាចលើសសរុបរង"
+            },
             "cart": {
                 "title": "កន្ត្រក",
                 "clearAll": "លុបទាំងអស់",
                 "empty": "កន្ត្រករបស់អ្នកទទេ។",
                 "items": "ទំនិញ",
                 "subtotal": "សរុបរង",
-                "discount": "បញ្ចុះតម្លៃ%",
+                "discount": "បញ្ចុះតម្លៃ",
+                "discountUsd": "USD",
+                "discountPercent": "%",
                 "total": "សរុប",
                 "next": "បន្ទាប់",
                 "finish": "បញ្ចប់"
+            },
+            "checkoutConfirm": {
+                "title": "បញ្ជាក់ការទូទាត់",
+                "description": "សូមពិនិត្យព័ត៌មានការបញ្ជាទិញមុនពេលបញ្ចប់។",
+                "submit": "បញ្ជាក់ និងបន្ត",
+                "customer": "អតិថិជន",
+                "phone": "ទូរស័ព្ទ",
+                "address": "អាសយដ្ឋាន",
+                "delivery": "ដឹកជញ្ជូន",
+                "payment": "ទូទាត់",
+                "source": "ប្រភព",
+                "items": "ទំនិញ",
+                "total": "សរុប"
+            },
+            "printConfirm": {
+                "title": "បញ្ចប់ការទូទាត់",
+                "description": "តើអ្នកចង់បោះពុម្ពវិក្កយបត្រឥឡូវទេ?",
+                "print": "បោះពុម្ពវិក្កយបត្រ",
+                "skip": "បញ្ចប់ដោយមិនបោះពុម្ព"
             },
             "invoice": {
                 "title": "វិក្កយបត្រ",
@@ -288,6 +316,7 @@
         "commission": {
             "title": "កម្រៃជើងសា",
             "tableTitle": "កម្រៃជើងសា",
+            "filterSource": "ប្រភព",
             "columns": {
                 "seller": "អ្នកលក់",
                 "product": "ផលិតផល",
@@ -301,6 +330,8 @@
         "report": {
             "title": "របាយការណ៍",
             "tableTitle": "របាយការណ៍",
+            "filterSource": "ប្រភព",
+            "filterProvince": "ខេត្ត",
             "columns": {
                 "no": "ល.រ",
                 "invoiceNo": "លេខវិក្កយបត្រ",

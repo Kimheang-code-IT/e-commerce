@@ -2,6 +2,20 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 
 export default defineNuxtConfig({
+  // SPA + static export: nginx serves `.output/public` (no Node server in Docker).
+  ssr: false,
+  nitro: {
+    preset: 'static'
+  },
+
+  typescript: {
+    tsConfig: {
+      compilerOptions: {
+        types: ['node']
+      }
+    }
+  },
+
   modules: [
     '@nuxt/ui',
     '@nuxt/image',
@@ -62,8 +76,8 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     public: {
-      apiBase: import.meta.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8000/api/v1',
-      useBackendApi: import.meta.env.NUXT_PUBLIC_USE_BACKEND_API === 'true'
+      apiBase: process.env.NUXT_PUBLIC_API_BASE || '/api/v1',
+      useBackendApi: process.env.NUXT_PUBLIC_USE_BACKEND_API === 'true'
     }
   },
 

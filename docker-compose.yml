@@ -1,0 +1,195 @@
+# LAN Wi-Fi: run `.\start-lan.ps1` or `.\docker-update.ps1 -Build`
+# Load balance API: set BACKEND_REPLICAS=2 (nginx upstream `ecom_backend` → all backend containers)
+# Scale: docker compose up -d --scale backend=${BACKEND_REPLICAS:-1}
+# Note: run only ONE telegram-bot instance (polling cannot be duplicated).
+services:
+  nginx:
+    build:
+      context: .
+      dockerfile: nginx/Dockerfile
+      args:
+        NUXT_PUBLIC_SITE_URL: ${NUXT_PUBLIC_SITE_URL:-}
+        NUXT_PUBLIC_API_BASE: ${NUXT_PUBLIC_API_BASE:-/api/v1}
+        NUXT_PUBLIC_USE_BACKEND_API: ${NUXT_PUBLIC_USE_BACKEND_API:-true}
+    container_name: ecom-nginx
+    ports:
+      - "${PUBLIC_HTTP_PORT:-8080}:80"
+      - "${PUBLIC_HTTPS_PORT:-8443}:443"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- --timeout=5 http://127.0.0.1/health >/dev/null 2>&1 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    networks:
+      - proxy-network
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./Backend
+      dockerfile: Dockerfile
+    env_file:
+      - ./Backend/.env
+    environment:
+      CORS_ALLOW_LAN: ${CORS_ALLOW_LAN:-true}
+      FILE_BASE_URL: ${FILE_BASE_URL:-}
+      HOST_LAN_IP: ${HOST_LAN_IP:-}
+      PUBLIC_HTTP_PORT: ${PUBLIC_HTTP_PORT:-8080}
+    command:
+      - uvicorn
+      - app.main:app
+      - --host
+      - "0.0.0.0"
+      - --port
+      - "8000"
+      - --workers
+      - "2"
+      - --proxy-headers
+      - --forwarded-allow-ips=*
+    expose:
+      - "8000"
+    volumes:
+      - backend_uploads:/app/uploads
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=5)"
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - proxy-network
+      - app-network
+    restart: unless-stopped
+
+  db:
+    image: postgres:16-alpine
+    container_name: ecom-postgres
+    env_file:
+      - ./Backend/.env
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: ecom-redis
+    command: redis-server --save "" --appendonly no --maxmemory 128mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  celery-worker:
+    build:
+      context: ./Backend
+      dockerfile: Dockerfile
+    env_file:
+      - ./Backend/.env
+    command:
+      - celery
+      - -A
+      - app.core.celery_app.celery_app
+      - worker
+      - --loglevel=INFO
+      - --concurrency=2
+    volumes:
+      - backend_uploads:/app/uploads
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "celery -A app.core.celery_app.celery_app inspect ping --timeout=10 2>/dev/null | grep -q OK"
+        ]
+      interval: 30s
+      timeout: 15s
+      retries: 5
+      start_period: 45s
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  telegram-bot:
+    build:
+      context: ./Backend
+      dockerfile: Dockerfile
+    container_name: ecom-telegram-bot
+    command: python scripts/telegram_polling.py
+    env_file:
+      - ./Backend/.env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  celery-beat:
+    build:
+      context: ./Backend
+      dockerfile: Dockerfile
+    container_name: ecom-celery-beat
+    command: celery -A app.core.celery_app.celery_app beat --loglevel=INFO
+    env_file:
+      - ./Backend/.env
+    profiles:
+      - beat
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - app-network
+    restart: unless-stopped
+
+volumes:
+  pg_data:
+  redis_data:
+  backend_uploads:
+
+networks:
+  proxy-network:
+    name: ecom-proxy-network
+  app-network:
+    name: ecom-app-network

@@ -13,8 +13,8 @@ export function useApi() {
     const toast = useToast()
     const config = useRuntimeConfig()
     
-    // Base URL from nuxt.config (fallback to localhost for dev)
-    const baseURL = config.public.apiBase || 'http://localhost:8000/api/v1'
+    // Base URL from runtime config; keep relative path for reverse-proxy deployments.
+    const baseURL = config.public.apiBase || '/api/v1'
 
     type ApiErrorPayload = {
         message?: string

@@ -80,4 +80,42 @@ class GoogleSheetService:
             logger.error(f"Failed to append rows to {sheet_name}: {e}")
             raise
 
+    def get_existing_first_column_values(self, sheet_name: str) -> set[str]:
+        """Read first-column values (excluding header) for dedupe checks."""
+        try:
+            service = build('sheets', 'v4', credentials=self._get_credentials(), cache_discovery=False)
+            result = service.spreadsheets().values().get(
+                spreadsheetId=settings.google_sheet_id,
+                range=f"'{sheet_name}'!A2:A"
+            ).execute()
+            values = result.get("values", [])
+            return {str(row[0]).strip() for row in values if row and str(row[0]).strip()}
+        except Exception as e:
+            logger.error(f"Failed to read existing IDs from {sheet_name}: {e}")
+            raise
+
+    def append_unique_rows_by_first_column(self, sheet_name: str, rows: list[list]) -> int:
+        """
+        Append only rows whose first column does not already exist.
+        Returns number of rows appended.
+        """
+        if not rows:
+            return 0
+        existing_ids = self.get_existing_first_column_values(sheet_name)
+        filtered: list[list] = []
+        for row in rows:
+            if not row:
+                continue
+            row_id = str(row[0]).strip()
+            if not row_id or row_id in existing_ids:
+                continue
+            filtered.append(row)
+            existing_ids.add(row_id)
+
+        if not filtered:
+            return 0
+
+        self.append_rows(sheet_name, filtered)
+        return len(filtered)
+
 google_sheet_service = GoogleSheetService()

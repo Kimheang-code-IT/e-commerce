@@ -6,6 +6,7 @@ from app.core.database import get_db
 from app.models import Invoice
 from app.schemas.common import DeliveryUpdatePayload
 from app.services.auth_service import get_current_user, require_permission
+from app.services.cache_service import invalidate_after_checkout
 from app.services.data_service import (
     apply_created_at_range,
     apply_sort,
@@ -15,6 +16,7 @@ from app.services.data_service import (
     record_history,
     serialize_delivery_invoice,
 )
+from app.services.filter_options_service import delivery_filter_options
 
 router = APIRouter(prefix="/deliveries-view", tags=["deliveries-view"], dependencies=[Depends(get_current_user)])
 
@@ -92,5 +94,17 @@ def update_delivery_status(
         "Update",
         f"Updated delivery status for invoice {invoice_no} from {old_status} to {payload.deliveryStatus}",
     )
+    db.commit()
+    invalidate_after_checkout()
 
     return serialize_delivery_invoice(inv)
+
+
+@router.get("/filter-options")
+def deliveries_filter_options(
+    dateFrom: str | None = None,
+    dateTo: str | None = None,
+    _=Depends(require_permission("delivery:view")),
+    db: Session = Depends(get_db),
+):
+    return {"data": delivery_filter_options(db, date_from=dateFrom, date_to=dateTo)}

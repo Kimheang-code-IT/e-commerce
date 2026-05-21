@@ -1,7 +1,10 @@
-from fastapi import APIRouter, Request, Header, HTTPException
+from fastapi import APIRouter, Depends, Header, HTTPException, Request
+
 from app.core.config import settings
-from app.services.telegram_service import telegram_service
+from app.models import User
+from app.services.auth_service import get_current_user, require_permission
 from app.services.telegram_command_service import telegram_command_service
+from app.services.telegram_service import telegram_service
 
 router = APIRouter(prefix="/telegram", tags=["telegram"])
 
@@ -22,7 +25,10 @@ async def telegram_webhook(
     return {"status": "ok"}
 
 @router.post("/test-message")
-async def send_test_message():
+async def send_test_message(
+    _: User = Depends(get_current_user),
+    __=Depends(require_permission("backup:manage")),
+):
     """Manual test endpoint to verify Telegram integration."""
     if not settings.telegram_chat_id:
         raise HTTPException(status_code=400, detail="TELEGRAM_CHAT_ID not configured")

@@ -5,6 +5,7 @@ import { useTableQuery } from "~/composables/table/useTableQuery";
 import type { AuditLog } from '~/types'
 import { useHistoryApi } from '~/utils/api'
 import { useServerTableResource } from '~/composables/table/useServerTableResource'
+import { useViewFilterOptions } from '~/composables/useViewFilterOptions'
 
 export function useAuditHistory() {
     const useBackendApi = useBackendMode()
@@ -24,14 +25,15 @@ export function useAuditHistory() {
     } = useTableQuery({ initialSorting: [{ id: 'id', desc: true }] });
     const searchQuery = ref('')
 
-    // --- Context States ---
     const selectedLog = ref<AuditLog | null>(null)
-
-    // --- Filter States ---
-    const actionItems = ['Login', 'Logout', 'Create', 'Update', 'Delete', 'Export'];
     const selectedActions = ref<string[]>([]);
 
-    // --- Refactor: Use Standalone Data ---
+    const { itemsFor: filterItemsFor } = useViewFilterOptions(
+      (query, signal) => historyApi.filterOptions(query, signal),
+      ['actions']
+    )
+    const actionItems = filterItemsFor('actions')
+
     const logs = ref<AuditLog[]>([])
     const mergedServerQuery = computed(() => ({
         ...serverQuery.value,
@@ -40,6 +42,9 @@ export function useAuditHistory() {
         dateTo: formattedRange.value.end || undefined
     }))
     watch(searchQuery, () => {
+        pagination.value.pageIndex = 0
+    })
+    watch(selectedActions, () => {
         pagination.value.pageIndex = 0
     })
     const resource = useServerTableResource<AuditLog, Record<string, unknown>>({
@@ -55,13 +60,8 @@ export function useAuditHistory() {
     })
     const effectiveLogs = computed(() => resource.rows.value)
 
-    // --- Computed Logic ---
-    const filteredLogs = computed(() => {
-        if (!selectedActions.value.length) return effectiveLogs.value;
-        return effectiveLogs.value.filter(l => selectedActions.value.includes(l.typeAction));
-    })
+    const filteredLogs = computed(() => effectiveLogs.value)
 
-    // --- Actions ---
     function getDropdownActions(log: AuditLog): DropdownMenuItem[][] {
         return [[
             {
@@ -75,16 +75,13 @@ export function useAuditHistory() {
     }
 
     return {
-        // States
         rowSelection, sorting, searchQuery, columnVisibility, columnFilters,
         pagination, isDetailOpen,
         isLoading: resource.isLoading,
         totalRows: resource.totalRows,
         selectedLog, logs: effectiveLogs,
         actionItems, selectedActions,
-        // Computed
         filteredLogs,
-        // Actions
         getDropdownActions,
     }
 }
