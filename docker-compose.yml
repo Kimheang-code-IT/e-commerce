@@ -172,8 +172,6 @@ services:
     command: celery -A app.core.celery_app.celery_app beat --loglevel=INFO
     env_file:
       - ./Backend/.env
-    profiles:
-      - beat
     depends_on:
       db:
         condition: service_healthy
@@ -183,6 +181,8 @@ services:
       - app-network
     restart: unless-stopped
 
+# Data persists in Docker volumes named {COMPOSE_PROJECT_NAME}_pg_data (set in root .env).
+# New code + old rows: keep COMPOSE_PROJECT_NAME=e-comerce when the folder was renamed.
 volumes:
   pg_data:
   redis_data:

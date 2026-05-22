@@ -81,6 +81,8 @@ def write_compose_env(*, host_ip: str, http_port: int, https_port: int, backend_
     public_url = f"http://{host_ip}:{http_port}"
     lines = [
         "# Auto-generated — do not edit; regenerated on each start (scripts/deploy_lan.py).",
+        "# Docker volume prefix: e-commerce_pg_data (set e-comerce after folder rename only).",
+        "COMPOSE_PROJECT_NAME=e-commerce",
         f"HOST_LAN_IP={host_ip}",
         f"PUBLIC_HTTP_PORT={http_port}",
         f"PUBLIC_HTTPS_PORT={https_port}",
@@ -100,6 +102,7 @@ def write_compose_env(*, host_ip: str, http_port: int, https_port: int, backend_
 COMPOSE_BUILD_SERVICES = [
     "backend",
     "celery-worker",
+    "celery-beat",
     "telegram-bot",
     "nginx",
 ]
@@ -132,7 +135,7 @@ def compose_up(*, build: bool, profile_beat: bool = False, backend_replicas: int
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Auto LAN IP + Docker start (no manual IP config)")
-    parser.add_argument("--port", type=int, default=8080)
+    parser.add_argument("--port", type=int, default=8081)
     parser.add_argument("--https-port", type=int, default=8443)
     parser.add_argument("--ip", help="Override detected LAN IP")
     parser.add_argument("--build", action="store_true", help="Rebuild backend/celery/nginx images before up")
@@ -190,7 +193,7 @@ def main() -> int:
         if code != 0:
             return code
         print("Done. Use the URL above on any device on the same Wi-Fi.")
-        print("Services: nginx, backend, db, redis, celery-worker, telegram-bot")
+        print("Services: nginx, backend, db, redis, celery-worker, celery-beat, telegram-bot")
         if args.beat:
             print("Also running: celery-beat (profile beat)")
         print("After code changes: python scripts/deploy_lan.py --build")

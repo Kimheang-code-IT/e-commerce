@@ -11,7 +11,7 @@ from app.core.celery_app import celery_app
 from app.core.config import settings
 from app.core.database import SessionLocal
 from app.models import CheckoutItem, Invoice
-from app.services.backup_service import backup_service
+from app.services.alert_service import run_google_backup_with_notify, run_low_stock_alert
 from app.services.cache_service import invalidate_after_checkout
 from app.services.invoice_pdf_service import generate_invoice_pdf
 from app.services.invoice_print_service import print_invoice
@@ -89,12 +89,6 @@ def send_checkout_notification_task(self, invoice_id: int) -> dict:
 def refresh_checkout_caches_task(self, invoice_id: int) -> dict:
     def _run() -> dict:
         deleted = invalidate_after_checkout()
-        if settings.google_backup_enabled and settings.google_sheet_id:
-            db = SessionLocal()
-            try:
-                backup_service.backup_all(db)
-            finally:
-                db.close()
         return {"status": "ok", "invoice_id": invoice_id, "cache_keys_deleted": deleted}
 
     return run_once_per_invoice(self.name, invoice_id, _run)
@@ -117,6 +111,38 @@ def process_checkout_background(self, invoice_id: int) -> dict:
         "notification_task": notify.id,
         "cache_task": cache.id,
     }
+
+
+@celery_app.task(name="app.tasks.check_low_stock_alert_task", base=IdempotentTask)
+def check_low_stock_alert_task() -> dict:
+    from app.core.scheduler_lock import try_acquire_scheduler_lock
+
+    if not try_acquire_scheduler_lock("low_stock_alert", ttl_seconds=900):
+        return {"status": "skipped", "reason": "lock_held"}
+    db = SessionLocal()
+    try:
+        return run_low_stock_alert(db)
+    except Exception as exc:
+        logger.exception("Low stock alert failed: %s", exc)
+        return {"status": "error", "error": str(exc)}
+    finally:
+        db.close()
+
+
+@celery_app.task(name="app.tasks.scheduled_google_backup_task", base=IdempotentTask)
+def scheduled_google_backup_task() -> dict:
+    from app.core.scheduler_lock import try_acquire_scheduler_lock
+
+    if not try_acquire_scheduler_lock("google_sheet_backup", ttl_seconds=7200):
+        return {"status": "skipped", "reason": "lock_held"}
+    db = SessionLocal()
+    try:
+        return run_google_backup_with_notify(db)
+    except Exception as exc:
+        logger.exception("Scheduled backup task failed: %s", exc)
+        return {"status": "error", "error": str(exc)}
+    finally:
+        db.close()
 
 
 @celery_app.task(name="app.tasks.send_daily_product_report", base=IdempotentTask)

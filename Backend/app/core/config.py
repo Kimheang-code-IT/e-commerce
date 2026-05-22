@@ -53,7 +53,11 @@ class Settings(BaseSettings):
     TELEGRAM_CHAT_ID: str | None = None
     TELEGRAM_NOTIFY_ENABLED: bool = False
     TELEGRAM_REPORT_ENABLED: bool = False
+    TELEGRAM_BACKUP_ALERT_ENABLED: bool = True
     TELEGRAM_WEBHOOK_SECRET: str | None = None
+
+    LOW_STOCK_ALERT_ENABLED: bool = True
+    LOW_STOCK_THRESHOLD: int = 10
 
     GOOGLE_SHEET_ID: str | None = None
     GOOGLE_SERVICE_ACCOUNT_FILE: str | None = None

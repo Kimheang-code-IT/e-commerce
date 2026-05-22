@@ -14,11 +14,22 @@ param(
 Set-Location $PSScriptRoot
 $ErrorActionPreference = "Stop"
 
+if ($env:COMPOSE_PROJECT_NAME) {
+    Write-Host "Keeping existing data volumes: $($env:COMPOSE_PROJECT_NAME)_pg_data" -ForegroundColor Green
+} elseif (Test-Path ".env") {
+    Get-Content ".env" | ForEach-Object {
+        if ($_ -match '^\s*COMPOSE_PROJECT_NAME=(.+)$') { $env:COMPOSE_PROJECT_NAME = $Matches[1].Trim() }
+    }
+    if ($env:COMPOSE_PROJECT_NAME) {
+        Write-Host "Keeping existing data volumes: $($env:COMPOSE_PROJECT_NAME)_pg_data" -ForegroundColor Green
+    }
+}
+
 Write-Host "Checking Backend/.env for Docker..." -ForegroundColor Cyan
 python Backend/scripts/check_env_docker.py
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-$services = @("backend", "celery-worker", "telegram-bot", "nginx")
+$services = @("backend", "celery-worker", "celery-beat", "telegram-bot", "nginx")
 
 if (-not $NoBuild) {
     Write-Host "Building images: $($services -join ', ')..." -ForegroundColor Cyan

@@ -1,4 +1,5 @@
 from celery import Celery
+from celery.schedules import crontab
 
 from app.core.config import settings
 
@@ -9,6 +10,34 @@ def _get_broker_url() -> str:
 
 def _get_result_backend() -> str:
     return settings.celery_result_backend or settings.redis_url
+
+
+def _parse_backup_cron() -> tuple[int, int]:
+    try:
+        hour, minute = map(int, (settings.google_backup_time or "19:00").split(":"))
+        return hour, minute
+    except ValueError:
+        return 19, 0
+
+
+def _build_beat_schedule() -> dict:
+    backup_hour, backup_minute = _parse_backup_cron()
+    schedule: dict = {
+        "daily-product-report": {
+            "task": "app.tasks.send_daily_product_report",
+            "schedule": crontab(hour=8, minute=0),
+        },
+        "low-stock-alert": {
+            "task": "app.tasks.check_low_stock_alert_task",
+            "schedule": crontab(minute=0, hour="*/2"),
+        },
+    }
+    if settings.google_backup_enabled:
+        schedule["daily-google-backup"] = {
+            "task": "app.tasks.scheduled_google_backup_task",
+            "schedule": crontab(hour=backup_hour, minute=backup_minute),
+        }
+    return schedule
 
 
 celery_app = Celery(
@@ -31,10 +60,5 @@ celery_app.conf.update(
     worker_prefetch_multiplier=1,
     task_soft_time_limit=settings.CELERY_TASK_SOFT_TIME_LIMIT,
     task_time_limit=settings.CELERY_TASK_TIME_LIMIT,
-    beat_schedule={
-        "daily-product-report": {
-            "task": "app.tasks.send_daily_product_report",
-            "schedule": 60.0 * 60.0 * 24.0,
-        }
-    },
+    beat_schedule=_build_beat_schedule(),
 )

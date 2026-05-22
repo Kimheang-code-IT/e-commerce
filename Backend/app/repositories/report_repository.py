@@ -323,13 +323,15 @@ class ReportRepository:
         }
 
     def get_product_report_rows(self, db: Session):
-        # Sold amounts from paid invoice line totals (ci.total), not current catalog out_price.
+        # Sold $ = sold_qty × unit price × invoice discount share (proportional to line subtotal).
+        # Excludes delivery; uses (subtotal - discount) / subtotal per paid invoice.
         query = text("""
             SELECT
                 p.id,
                 p.name,
                 COALESCE(sold.sold_qty, 0) AS sold_qty,
                 COALESCE(sold.total_price_sold, 0) AS total_price_sold,
+                COALESCE(sold.total_price_sold_gross, 0) AS total_price_sold_gross,
                 COALESCE(p.in_stock, 0) AS stock_qty,
                 COALESCE(p.in_stock, 0) * COALESCE(p.out_price, 0) AS total_price_in_stock
             FROM products p
@@ -337,7 +339,16 @@ class ReportRepository:
                 SELECT
                     ci.product_id,
                     SUM(ci.quantity) AS sold_qty,
-                    SUM(ci.total) AS total_price_sold
+                    SUM(
+                        ci.quantity * COALESCE(ci.price, 0)
+                        * CASE
+                            WHEN COALESCE(i.subtotal, 0) > 0
+                            THEN (COALESCE(i.subtotal, 0) - COALESCE(i.discount, 0))
+                                 / COALESCE(i.subtotal, 0)
+                            ELSE 1
+                          END
+                    ) AS total_price_sold,
+                    SUM(ci.quantity * COALESCE(ci.price, 0)) AS total_price_sold_gross
                 FROM checkout_items ci
                 INNER JOIN invoices i ON i.id = ci.invoice_id
                     AND i.status = 'paid'
@@ -353,8 +364,9 @@ class ReportRepository:
                 "name": r[1],
                 "sold_qty": int(r[2]),
                 "total_price_sold": float(r[3]),
-                "stock_qty": int(r[4]),
-                "total_price_in_stock": float(r[5]),
+                "total_price_sold_gross": float(r[4]),
+                "stock_qty": int(r[5]),
+                "total_price_in_stock": float(r[6]),
             }
             for r in results
         ]

@@ -89,23 +89,32 @@ class ReportService:
             return [header + "No sold or in-stock products found."]
 
         lines: list[str] = []
-        grand_total_sold = 0.0
+        grand_gross = 0.0
+        grand_net = 0.0
         grand_total_in_stock = 0.0
 
         for i, row in enumerate(rows, 1):
-            grand_total_sold += row["total_price_sold"]
+            sold_qty = int(row["sold_qty"])
+            line_net = float(row["total_price_sold"])
+            line_gross = float(row.get("total_price_sold_gross") or line_net)
+            grand_gross += line_gross
+            grand_net += line_net
             grand_total_in_stock += row["total_price_in_stock"]
+            # Per product: sold_qty × unit price after invoice discount (no delivery).
             lines.append(
                 f"{i}. {row['name']}\n"
-                f"Sold Qty: {row['sold_qty']}\n"
-                f"Total Price Sold: ${row['total_price_sold']:.2f}\n"
+                f"Sold Qty: {sold_qty}\n"
+                f"Total Price Sold: ${line_net:.2f}\n"
                 f"Stock Qty: {row['stock_qty']}\n"
                 f"Total Price In Stock: ${row['total_price_in_stock']:.2f}\n"
             )
 
+        discount_usd = max(0.0, grand_gross - grand_net)
+        discount_pct = (discount_usd / grand_gross * 100.0) if grand_gross > 0 else 0.0
         footer = (
             "============================\n\n"
-            f"Grand Total Sold: ${grand_total_sold:.2f}\n"
+            f"Grand Total Sold: ${grand_gross:.2f}\n"
+            f"Discount USD: ${discount_usd:.2f} ({discount_pct:.2f}%)\n"
             f"Grand Total In Stock: ${grand_total_in_stock:.2f}\n\n"
         )
         return self._chunk_report_lines(header, lines, footer)

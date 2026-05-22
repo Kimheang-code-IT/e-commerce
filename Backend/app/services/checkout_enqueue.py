@@ -21,6 +21,7 @@ def _apply_task(task, *, task_id: str, args: tuple):
 
 def enqueue_checkout_followups(invoice_id: int) -> dict[str, str | None]:
     from app.tasks import (
+        check_low_stock_alert_task,
         generate_invoice_pdf_task,
         print_invoice_task,
         refresh_checkout_caches_task,
@@ -36,6 +37,11 @@ def enqueue_checkout_followups(invoice_id: int) -> dict[str, str | None]:
         _apply_task(generate_invoice_pdf_task, task_id=pdf_task_id, args=(invoice_id,))
         _apply_task(send_checkout_notification_task, task_id=notify_task_id, args=(invoice_id,))
         _apply_task(refresh_checkout_caches_task, task_id=cache_task_id, args=(invoice_id,))
+        _apply_task(
+            check_low_stock_alert_task,
+            task_id=f"checkout-low-stock-{invoice_id}",
+            args=(),
+        )
         # Print runs after PDF when webhook printing is enabled.
         _apply_task(print_invoice_task, task_id=print_task_id, args=(invoice_id,))
         return {
@@ -43,6 +49,7 @@ def enqueue_checkout_followups(invoice_id: int) -> dict[str, str | None]:
             "printTaskId": print_task_id,
             "notificationTaskId": notify_task_id,
             "cacheTaskId": cache_task_id,
+            "lowStockTaskId": f"checkout-low-stock-{invoice_id}",
         }
     except Exception as exc:
         logger.warning("Celery enqueue failed for invoice %s: %s", invoice_id, exc)
