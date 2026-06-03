@@ -19,31 +19,26 @@ git push origin main
 
 ## Deploy on another computer
 
-**Requirements:** Docker, Python 3.11+ (for deploy script), Git. **Host nginx** for browsers to reach the app.
+**Full checklist:** [docs/DEPLOY-NEW-PC.md](docs/DEPLOY-NEW-PC.md)  
+**Secrets to copy:** [SECRETS.example.md](SECRETS.example.md)
+
+**Requirements:** Docker Desktop, Python 3.11+, Git, Node/pnpm (frontend build), host nginx (browser access).
 
 ```powershell
-git clone https://github.com/YOUR_USER/e-comerce.git
-cd e-comerce
+git clone https://github.com/Kimheang-code-IT/e-commerce.git
+cd e-commerce
+git checkout main
 .\scripts\setup-from-github.ps1
 ```
 
-Or manually:
+1. Edit **`Backend/.env`** (or copy from your old PC — see `SECRETS.example.md`).
+2. `python Backend/scripts/check_env_docker.py` → must say OK.
+3. `.\docker-update.ps1`
+4. Build frontend: `cd Frontend; pnpm install; pnpm exec nuxi generate`
+5. Configure host nginx: [host-nginx-examples/domank-dontrey.in.conf.sample](host-nginx-examples/domank-dontrey.in.conf.sample)
+6. `.\scripts\verify-deploy.ps1`
 
-1. Copy `Backend/.env.example` → `Backend/.env` (DB, JWT, Telegram, Google backup).
-2. Place Google service account JSON at `Backend/credentials/` if using backup.
-3. Start Docker:
-
-```powershell
-.\docker-update.ps1
-```
-
-4. Build frontend and configure host nginx — see [host-nginx-examples/domank-dontrey.in.conf.sample](host-nginx-examples/domank-dontrey.in.conf.sample).
-
-```bash
-cd Frontend && pnpm install && pnpm exec nuxi generate
-```
-
-5. Open your site via nginx (e.g. `https://domank-dontrey.in/` or `http://<LAN-IP>/`). First run with no users: `/setup`.
+First visit with empty database: open **`/setup`** to create the admin user.
 
 ### Telegram (same bot everywhere)
 
@@ -68,6 +63,8 @@ Rebuild frontend if `NUXT_PUBLIC_*` changed; reload host nginx.
 
 ## Docs
 
+- **[docs/DEPLOY-NEW-PC.md](docs/DEPLOY-NEW-PC.md)** — clone and deploy on a new PC (start here)
+- [SECRETS.example.md](SECRETS.example.md) — what to copy from the old machine
 - [DEPLOY-LAN.md](DEPLOY-LAN.md) — Docker + LAN + host nginx
 - [docs/PRODUCTION.md](docs/PRODUCTION.md) — production checklist
 - [host-nginx-examples/](host-nginx-examples/) — sample nginx config
