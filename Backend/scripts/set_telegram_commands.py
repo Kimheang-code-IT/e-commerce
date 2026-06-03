@@ -24,7 +24,7 @@ async def set_commands():
         {"command": "payment", "description": "💳 Price by Payment Method Report"},
         {"command": "commission", "description": "👤 Commission by User Report"},
         {"command": "delivery", "description": "🚚 Price by Delivery Type Report"},
-        {"command": "help", "description": "❓ How to use this bot"}
+        {"command": "backup", "description": "📊 Backup all tables to Google Sheets"},
     ]
     
     payload = {"commands": commands}

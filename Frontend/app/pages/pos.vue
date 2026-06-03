@@ -49,6 +49,7 @@ const {
     checkoutInvoiceNo,
     selectedReportInvoices,
     hasReportPreviewInvoices,
+    isInvoicePreviewMode,
     displaySubtotal,
     displayDiscount,
     displayTotal,
@@ -62,7 +63,8 @@ const {
     finishWithoutPrint,
     finishWithPrint,
     isInCart,
-    getCartQty
+    getCartQty,
+    canCheckout
 } = usePos()
 
 const { invoicePrintRef, printInvoice } = useInvoicePrinter()
@@ -160,21 +162,40 @@ const previewCart = computed(() => {
                 </UButton>
             </template>
             <template #right>
-                <div class="flex items-center">
-                    <UStepper v-model="currentStep" :items="mobileStepperItems" size="sm"
-                        class="sm:hidden min-w-[140px]" />
-                    <UStepper v-model="currentStep" :items="items" size="sm" class="hidden sm:flex min-w-[300px]" />
+                <div class="flex items-center gap-2">
+                    <template v-if="isInvoicePreviewMode">
+                        <UButton
+                            icon="i-lucide-printer"
+                            color="primary"
+                            variant="solid"
+                            size="sm"
+                            class="shrink-0"
+                            @click="printInvoice"
+                        >
+                            <span class="hidden sm:inline">{{ t('pages.pos.preview.print') }}</span>
+                        </UButton>
+                    </template>
+                    <template v-else>
+                        <UStepper v-model="currentStep" :items="mobileStepperItems" size="sm"
+                            class="sm:hidden min-w-[140px]" />
+                        <UStepper v-model="currentStep" :items="items" size="sm" class="hidden sm:flex min-w-[300px]" />
+                    </template>
                 </div>
             </template>
         </LayoutAppHeader>
-        <div class="lg:hidden px-2 pt-2">
+        <div v-if="!isInvoicePreviewMode" class="lg:hidden px-2 pt-2">
             <UTabs v-model="mobilePanel" :items="mobilePanelItems" :content="false" color="primary" class="w-full" />
         </div>
 
         <!-- ── Body: Split Layout ── -->
         <div class="flex flex-col lg:flex-row flex-1 overflow-hidden min-h-0">
             <div
-                :class="[mobilePanel === 'left' ? 'flex' : 'hidden', 'lg:flex w-full lg:w-[65%] min-w-0 lg:border-r border-default overflow-hidden']">
+                :class="[
+                    isInvoicePreviewMode ? 'flex' : (mobilePanel === 'left' ? 'flex' : 'hidden'),
+                    isInvoicePreviewMode ? 'lg:flex w-full' : 'lg:flex w-full lg:w-[65%]',
+                    'min-w-0 overflow-hidden',
+                    !isInvoicePreviewMode ? 'lg:border-r border-default' : '',
+                ]">
                 <!-- ══ LEFT: Content Panel ══ -->
                 <div v-if="currentStep === 0" class="w-full flex flex-col min-w-0 overflow-hidden">
 
@@ -258,12 +279,14 @@ const previewCart = computed(() => {
             </div>
 
             <div
+                v-if="!isInvoicePreviewMode"
                 :class="[mobilePanel === 'right' ? 'flex' : 'hidden', 'lg:flex w-full lg:w-[35%] min-h-0 h-full flex-col']">
                 <CommonAppPosCartPanel :cart="cart" :item-count="itemCount" :subtotal="subtotal"
                     v-model:discount-mode="discountMode" v-model:discount-input="discountInput"
                     :discount-amount="discountAmount" :total="total"
                     :current-step="currentStep" :total-steps="items.length"
-                    :allow-finish-without-cart="hasReportPreviewInvoices" @clear-cart="clearCart"
+                    :allow-finish-without-cart="hasReportPreviewInvoices" :can-checkout="canCheckout"
+                    @clear-cart="clearCart"
                     @update-qty="updateQty" @remove-item="removeFromCart"
                     @set-line-price="setLineUnitPrice" @reset-line-price="resetLineUnitPrice"
                     @next="requestFinish" />
@@ -271,6 +294,7 @@ const previewCart = computed(() => {
         </div>
 
         <CommonAppModalCURD
+            v-if="!isInvoicePreviewMode"
             v-model:open="isCheckoutConfirmOpen"
             :title="t('pages.pos.checkoutConfirm.title')"
             :description="t('pages.pos.checkoutConfirm.description')"
@@ -329,6 +353,7 @@ const previewCart = computed(() => {
         </CommonAppModalCURD>
 
         <CommonAppModalCURD
+            v-if="!isInvoicePreviewMode"
             v-model:open="isFinishDialogOpen"
             :title="t('pages.pos.printConfirm.title')"
             :description="t('pages.pos.printConfirm.description')"

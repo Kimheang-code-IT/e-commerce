@@ -218,6 +218,9 @@
                 "items": "ទំនិញ",
                 "total": "សរុប"
             },
+            "preview": {
+                "print": "បោះពុម្ព"
+            },
             "printConfirm": {
                 "title": "បញ្ចប់ការទូទាត់",
                 "description": "តើអ្នកចង់បោះពុម្ពវិក្កយបត្រឥឡូវទេ?",
@@ -280,7 +283,24 @@
             "loginSuccessDesc": "សូមស្វាគមន៍ត្រឡប់មកវិញ, {name}",
             "loginFailedTitle": "ចូលគណនីបរាជ័យ",
             "loginFailedDesc": "អ៊ីមែល ឬពាក្យសម្ងាត់ដែលអ្នកបានបញ្ចូលមិនត្រឹមត្រូវ។",
-            "departmentLine": "រក្សាសិទ្ធិ​ ដំណាក់សិក្សា"
+            "departmentLine": "រក្សាសិទ្ធិដោយ​ ដំណាក់តន្ត្រី",
+            "setupTitle": "បង្កើតគណនីអ្នកគ្រប់គ្រង",
+            "setupDesc": "មិនទាន់មានអ្នកប្រើប្រាស់។ បង្កើតអ្នកគ្រប់គ្រងដំបូងដើម្បីគ្រប់គ្រងប្រព័ន្ធ។",
+            "setupName": "ឈ្មោះអ្នកគ្រប់គ្រង",
+            "setupNamePlaceholder": "បញ្ចូលឈ្មោះអ្នកគ្រប់គ្រង",
+            "setupPasswordPlaceholder": "យ៉ាងហោច ៨ តួអក្សរ",
+            "setupPasswordConfirm": "បញ្ជាក់ពាក្យសម្ងាត់",
+            "setupPasswordConfirmPlaceholder": "បញ្ចូលពាក្យសម្ងាត់ម្តងទៀត",
+            "setupBtn": "បង្កើតគណនីអ្នកគ្រប់គ្រង",
+            "setupHint": "គណនីនេះមានសិទ្ធិគ្រប់គ្រងប្រព័ន្ធទាំងមូល (តួនាទី admin)។",
+            "setupGoLogin": "មានគណនីរួចហើយ? ចូលគណនី",
+            "setupSuccessTitle": "បានបង្កើតអ្នកគ្រប់គ្រង",
+            "setupSuccessDesc": "អ្នកអាចចូលគណនីដោយប្រើគណនីថ្មីបានហើយ។",
+            "setupFailedTitle": "ការកំណត់ដំបូងបរាជ័យ",
+            "setupFailedDesc": "មិនអាចបង្កើតគណនីអ្នកគ្រប់គ្រងបានទេ។ សូមព្យាយាមម្តងទៀត។",
+            "setupStatusFailed": "មិនអាចពិនិត្យស្ថានភាពការកំណត់ដំបូងបានទេ។",
+            "setupBackendRequired": "ត្រូវការភ្ជាប់ API ដើម្បីដំណើរការការកំណត់ដំបូង។",
+            "setupChecking": "កំពុងពិនិត្យស្ថានភាព…"
         },
         "dataEntry": {
             "title": "បញ្ចូលទិន្នន័យ",
@@ -355,11 +375,13 @@
             "filterProvince": "ខេត្ត",
             "actions": {
                 "refund": "សងប្រាក់",
+                "preview": "មើលវិក្កយបត្រ",
                 "checkout": "ត្រឡប់ទៅគិតលុយ"
             },
             "refundDialog": {
                 "title": "សងប្រាក់",
                 "reason": "មូលហេតុសងប្រាក់",
+                "reasonRequired": "សូមបញ្ចូលមូលហេតុសងប្រាក់។",
                 "reasonPlaceholder": "បញ្ចូលមូលហេតុសងប្រាក់...",
                 "confirm": "បញ្ជាក់សងប្រាក់",
                 "successTitle": "បានរក្សាទុកការសងប្រាក់",

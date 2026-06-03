@@ -9,6 +9,7 @@ import { useViewFilterOptions } from "~/composables/useViewFilterOptions";
 
 export function useCommission() {
   const { t } = useI18n();
+  const perms = useModulePermissions('commission');
   const commissionApi = useCommissionApi();
   const localRows = ref<CommissionEntry[]>([]);
   const selectedProducts = ref<string[]>([]);
@@ -71,5 +72,6 @@ export function useCommission() {
     selectedSources,
     groupingOptions,
     grouping,
+    canExport: perms.canExport,
   };
 }

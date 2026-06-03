@@ -68,8 +68,8 @@ useHead({
   }
 })
 
-const title = 'ដំណាក់សិក្សា ​e-commerce'
-const description = 'ដំណាក់សិក្សា ​e-commerce'
+const title = 'ដំណាក់តន្ត្រី'
+const description = 'ដំណាក់តន្ត្រី'
 
 useSeoMeta({
   title,

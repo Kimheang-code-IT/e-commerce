@@ -1,27 +1,35 @@
 <script setup lang="ts">
 import { useReport } from '~/composables/table/useReport'
+import { useRefund } from '~/composables/table/useRefund'
 import { formatCurrency } from '~/utils/format/currency'
 import { useReportApi } from '~/utils/api'
 import type { ReportRow } from '~/types'
 
 const router = useRouter()
 const { t } = useI18n()
-function goToInvoice(row: ReportRow) {
+
+function goToPreview(row: ReportRow) {
+  router.push({
+    path: '/pos',
+    query: { invoiceNo: row.invoiceNo },
+  })
+}
+
+function goToReopenCheckout(row: ReportRow) {
   router.push({
     path: '/pos',
     query: { invoiceNo: row.invoiceNo, reopen: '1' },
   })
 }
 
-function goToRefund(row: ReportRow) {
-  router.push({
-    path: '/refund',
-    query: {
-      invoiceNo: row.invoiceNo,
-      ...(row.id != null ? { itemId: String(row.id) } : {}),
-    },
-  })
-}
+const {
+  isRefundDialogOpen,
+  refundTargetRow,
+  refundReason,
+  submittingRefund,
+  openRefundDialog,
+  confirmRefund
+} = useRefund()
 
 const {
   rowSelection,
@@ -46,10 +54,23 @@ const {
   getDropdownActions,
   isLoading,
   refresh: refreshReports
-} = useReport({ onRefund: goToRefund, onCheckout: goToInvoice })
+} = useReport({
+  onRefund: openRefundDialog,
+  onPreview: goToPreview,
+  onCheckout: goToReopenCheckout,
+})
 
 const isExportOpen = ref(false)
 const reportApi = useReportApi()
+const { canExport: canExportReport } = useModulePermissions('report')
+const { canView: canViewPos, canCheckout: canCheckoutPos } = useModulePermissions('pos')
+
+async function onConfirmRefund() {
+  await confirmRefund(async () => {
+    await refreshReports()
+    await router.push('/refund')
+  })
+}
 
 async function goToSelectedInvoices() {
   if (!selectedReportRows.value.length) return
@@ -76,11 +97,18 @@ async function fetchReportExportData(args: { startDate?: string; endDate?: strin
   <div class="flex flex-col h-full bg-background overflow-hidden text-foreground tracking-tight">
     <LayoutAppHeader :title="t('pages.report.title')" show-datepicker>
       <template #right>
-        <UButton icon="i-lucide-receipt-text" color="primary" variant="solid" class="font-normal shadow-sm shrink-0"
-          :disabled="selectedReportRows.length === 0" @click="goToSelectedInvoices">
+        <UButton
+          v-if="canViewPos || canCheckoutPos"
+          icon="i-lucide-receipt-text"
+          color="primary"
+          variant="solid"
+          class="font-normal shadow-sm shrink-0"
+          :disabled="selectedReportRows.length === 0"
+          @click="goToSelectedInvoices"
+        >
           <span class="hidden sm:inline">Preview Selected</span>
         </UButton>
-        <UButton icon="i-lucide-download" color="neutral" variant="subtle" class="font-normal shadow-sm shrink-0"
+        <UButton v-if="canExportReport" icon="i-lucide-download" color="neutral" variant="subtle" class="font-normal shadow-sm shrink-0"
           @click="isExportOpen = true">
           <span class="hidden sm:inline">{{ $t('common.export') }}</span>
         </UButton>
@@ -149,5 +177,12 @@ async function fetchReportExportData(args: { startDate?: string; endDate?: strin
         filename="report" date-field="date" />
     </div>
 
+    <CommonAppRefundDialog
+      v-model:open="isRefundDialogOpen"
+      v-model:reason="refundReason"
+      :row="refundTargetRow"
+      :submitting="submittingRefund"
+      @confirm="onConfirmRefund"
+    />
   </div>
 </template>

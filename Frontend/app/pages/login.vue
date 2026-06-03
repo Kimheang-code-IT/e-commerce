@@ -100,7 +100,6 @@ async function onSubmit(payload: FormSubmitEvent<Schema>) {
 
 <template>
   <div class="flex flex-col items-center justify-center">
-
     <UAuthForm :schema="schema" :description="t('pages.auth.loginDesc')" icon="i-lucide-lock" :fields="fields"
       :submit="{ label: t('pages.auth.loginBtn'), class: 'w-full h-10! text-xl font-normal' }" @submit="onSubmit">
       <template #leading>

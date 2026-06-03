@@ -15,6 +15,7 @@ const {
     filteredEntries, confirmConfig,
     columns, entryFormFields,
     getDropdownActions, handleSaveRequest, finalizeAction, handleAddNew,
+    canCreate, canExport, canAdjustStock, canViewAdjustStock, canAddDamage, canViewAddDamage,
     stockAdjustMode, stockAdjustQty, stockAdjustInPrice, stockAdjustOutPrice,
     stockAdjustNote, stockAdjustTarget,
     openStockAdjustDialog, applyStockAdjust,
@@ -22,9 +23,6 @@ const {
     isHistoryOpen, historyType, historyEntries, isHistoryLoading, historyTotalRows,
     historyPagination, historyDateRange, openHistory, loadHistory, onHistorySaved,
 } = useProduct()
-
-const auth = useAuthStore()
-const canAdjustStock = computed(() => auth.hasPermission('product:adjust-stock'))
 
 const isExportOpen = ref(false)
 
@@ -58,11 +56,11 @@ function onProductImageError(event: Event) {
     <div class="flex flex-col h-full bg-background overflow-hidden text-foreground tracking-tight">
         <LayoutAppHeader :title="$t('pages.dataEntry.title')" show-datepicker>
             <template #right>
-                <UButton icon="i-lucide-download" color="neutral" variant="subtle"
+                <UButton v-if="canExport" icon="i-lucide-download" color="neutral" variant="subtle"
                     class="font-normal shadow-sm shrink-0" @click="isExportOpen = true">
                     <span class="hidden sm:inline">{{ $t('common.export') }}</span>
                 </UButton>
-                <UButton icon="i-lucide-circle-plus" color="primary" variant="solid"
+                <UButton v-if="canCreate" icon="i-lucide-circle-plus" color="primary" variant="solid"
                     class="font-normal shadow-sm shrink-0" @click="handleAddNew">
                     <span class="hidden sm:inline">{{ $t('pages.dataEntry.addBtn') }}</span>
                 </UButton>
@@ -135,11 +133,12 @@ function onProductImageError(event: Event) {
                 <!-- Added -->
                 <template #added-cell="{ row }">
                     <UButton
+                        v-if="canAdjustStock || canViewAdjustStock"
                         variant="ghost"
                         color="primary"
                         size="sm"
                         class="px-2 underline"
-                        @click="openStockAdjustDialog(row.original, 'added')"
+                        @click="canAdjustStock ? openStockAdjustDialog(row.original, 'added') : openHistory(row.original, 'added')"
                     >
                         {{ row.original.added }}
                     </UButton>
@@ -148,11 +147,12 @@ function onProductImageError(event: Event) {
                 <!-- Damaged -->
                 <template #damaged-cell="{ row }">
                     <UButton
+                        v-if="canAddDamage || canViewAddDamage"
                         variant="ghost"
                         :color="row.original.damaged > 0 ? 'error' : 'neutral'"
                         size="sm"
                         class="px-2 underline"
-                        @click="openStockAdjustDialog(row.original, 'damaged')"
+                        @click="canAddDamage ? openStockAdjustDialog(row.original, 'damaged') : openHistory(row.original, 'damaged')"
                     >
                         {{ row.original.damaged }}
                     </UButton>

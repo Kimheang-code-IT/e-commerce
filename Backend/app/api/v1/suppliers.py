@@ -35,7 +35,7 @@ def _serialize_supplier(row: Supplier, product_count: int, total_amount: float, 
 @router.get("")
 def list_suppliers(
     query: ListQuery = Depends(list_query_dependency),
-    _: User = Depends(require_permission("product:view")),
+    _: User = Depends(require_permission("supplier:view")),
     db: Session = Depends(get_db),
 ):
     totals_subq = (
@@ -89,7 +89,7 @@ def list_suppliers(
 def create_supplier(
     payload: SupplierCreatePayload,
     current_user: User = Depends(get_current_user),
-    _: User = Depends(require_permission("product:create")),
+    _: User = Depends(require_permission("supplier:create")),
     db: Session = Depends(get_db),
 ):
     row = Supplier(
@@ -111,7 +111,7 @@ def update_supplier(
     supplier_id: int,
     payload: SupplierUpdatePayload,
     current_user: User = Depends(get_current_user),
-    _: User = Depends(require_permission("product:update")),
+    _: User = Depends(require_permission("supplier:update")),
     db: Session = Depends(get_db),
 ):
     row = db.get(Supplier, supplier_id)
@@ -142,7 +142,7 @@ def update_supplier(
 def delete_supplier(
     supplier_id: int,
     current_user: User = Depends(get_current_user),
-    _: User = Depends(require_permission("product:delete")),
+    _: User = Depends(require_permission("supplier:delete")),
     db: Session = Depends(get_db),
 ):
     row = db.get(Supplier, supplier_id)
@@ -162,7 +162,7 @@ def list_supplier_products(
     limit: int = Query(20, ge=1, le=200),
     dateFrom: str | None = None,
     dateTo: str | None = None,
-    _: User = Depends(require_permission("product:view")),
+    _: User = Depends(require_permission("supplier:view")),
     db: Session = Depends(get_db),
 ):
     supplier = db.get(Supplier, supplier_id)
@@ -194,7 +194,7 @@ def update_supplier_product(
     product_id: int,
     payload: SupplierProductUpdatePayload,
     current_user: User = Depends(get_current_user),
-    _: User = Depends(require_permission("product:update")),
+    _: User = Depends(require_permission("supplier:update")),
     db: Session = Depends(get_db),
 ):
     row = db.execute(

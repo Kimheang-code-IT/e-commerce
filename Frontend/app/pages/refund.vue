@@ -18,19 +18,11 @@ const {
   productItems,
   sourceItems,
   addressItems,
-  pendingInvoiceNo,
-  pendingRows,
-  pendingLoading,
-  hasPendingRefund,
-  selectedPendingIds,
-  refundReason,
-  submittingRefund,
-  confirmPendingRefund,
-  clearPendingRefund,
-  togglePendingRow,
   refundRecords,
   refundColumns,
-  removeRefundRecord
+  removeRefundRecord,
+  canDelete,
+  canView
 } = useRefund()
 
 const isExportOpen = ref(false)
@@ -41,6 +33,7 @@ const isExportOpen = ref(false)
     <LayoutAppHeader :title="$t('pages.refund.title')" show-datepicker>
       <template #right>
         <UButton
+          v-if="canView"
           icon="i-lucide-download"
           color="neutral"
           variant="subtle"
@@ -53,19 +46,6 @@ const isExportOpen = ref(false)
     </LayoutAppHeader>
 
     <div class="flex-1 p-2 overflow-hidden flex flex-col gap-2">
-      <CommonAppRefundPendingPanel
-        v-if="hasPendingRefund || pendingLoading"
-        v-model:reason="refundReason"
-        :invoice-no="pendingInvoiceNo"
-        :rows="pendingRows"
-        :selected-ids="selectedPendingIds"
-        :loading="pendingLoading"
-        :submitting="submittingRefund"
-        @confirm="confirmPendingRefund"
-        @cancel="clearPendingRefund"
-        @toggle-row="togglePendingRow"
-      />
-
       <div class="flex-1 min-h-0">
         <TableApptable
           :title="$t('pages.refund.recordsTitle')"
@@ -103,6 +83,7 @@ const isExportOpen = ref(false)
           </template>
           <template #action-cell="{ row }">
             <UButton
+              v-if="canDelete"
               icon="i-lucide-trash"
               color="error"
               variant="ghost"

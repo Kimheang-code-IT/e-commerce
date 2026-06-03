@@ -35,7 +35,10 @@ const {
   isProductEditOpen,
   productFormData,
   openProductEdit,
-  saveProductEdit
+  saveProductEdit,
+  canCreate,
+  canUpdate,
+  canView
 } = useSupplierTable()
 
 const isExportOpen = ref(false)
@@ -54,6 +57,7 @@ function onSubmitSupplierProduct(data: Record<string, any>) {
     <LayoutAppHeader title="Supplier Management" show-datepicker>
       <template #right>
         <UButton
+          v-if="canView"
           icon="i-lucide-download"
           color="neutral"
           variant="subtle"
@@ -63,6 +67,7 @@ function onSubmitSupplierProduct(data: Record<string, any>) {
           <span class="hidden sm:inline">{{ $t('common.export') }}</span>
         </UButton>
         <UButton
+          v-if="canCreate"
           icon="i-lucide-circle-plus"
           color="primary"
           variant="solid"

@@ -1,0 +1,61 @@
+# Production overlay for single VPS. Use:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --scale backend=2
+#
+# Pair with Backend/.env: APP_ENV=production, SCHEDULER_ENABLED=false, CORS_ALLOW_LAN=false
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "5"
+
+services:
+  nginx:
+    logging: *default-logging
+
+  backend:
+    environment:
+      APP_ENV: production
+      CORS_ALLOW_LAN: ${CORS_ALLOW_LAN:-false}
+      SCHEDULER_ENABLED: ${SCHEDULER_ENABLED:-false}
+      BACKEND_REPLICAS: ${BACKEND_REPLICAS:-2}
+    logging: *default-logging
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+
+  celery-worker:
+    logging: *default-logging
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  celery-beat:
+    logging: *default-logging
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  telegram-bot:
+    logging: *default-logging
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  db:
+    logging: *default-logging
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  redis:
+    logging: *default-logging
+    deploy:
+      resources:
+        limits:
+          memory: 192M

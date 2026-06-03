@@ -62,6 +62,7 @@ export function useProduct() {
     isDetailOpen,
     isConfirmOpen,
   } = useBaseTable({});
+  const perms = useModulePermissions('product');
 
   const { sorting, columnFilters, pagination, serverQuery } = useTableQuery({
     initialSorting: [{ id: "id", desc: false }],
@@ -391,43 +392,48 @@ export function useProduct() {
 
   // --- Row Actions ---
   function getDropdownActions(entry: Product): DropdownMenuItem[][] {
-    return [
-      [
-        {
-          label: t("actions.edit"),
-          icon: "i-lucide-edit",
-          onSelect: async () => {
-            const resolvedSupplierId = await resolveSupplierIdForProduct(entry);
-            selectedEntry.value = {
-              ...entry,
-              supplierId: resolvedSupplierId,
-            };
-            isFormOpen.value = true;
-          },
+    const items: DropdownMenuItem[] = [];
+    if (perms.canUpdate.value) {
+      items.push({
+        label: t("actions.edit"),
+        icon: "i-lucide-edit",
+        onSelect: async () => {
+          const resolvedSupplierId = await resolveSupplierIdForProduct(entry);
+          selectedEntry.value = {
+            ...entry,
+            supplierId: resolvedSupplierId,
+          };
+          isFormOpen.value = true;
         },
-
-        {
-          label: t("product.viewAddedStock"),
-          icon: "i-lucide-history",
-          onSelect: () => openHistory(entry, "added"),
+      });
+    }
+    if (perms.canViewAdjustStock.value) {
+      items.push({
+        label: t("product.viewAddedStock"),
+        icon: "i-lucide-history",
+        onSelect: () => openHistory(entry, "added"),
+      });
+    }
+    if (perms.canViewAddDamage.value) {
+      items.push({
+        label: t("product.viewDamagedStock"),
+        icon: "i-lucide-alert-circle",
+        onSelect: () => openHistory(entry, "damaged"),
+      });
+    }
+    if (perms.canDelete.value) {
+      items.push({
+        label: t("actions.delete"),
+        icon: "i-lucide-trash",
+        color: "error" as const,
+        onSelect: () => {
+          selectedEntry.value = entry;
+          confirmMode.value = "delete";
+          isConfirmOpen.value = true;
         },
-        {
-          label: t("product.viewDamagedStock"),
-          icon: "i-lucide-alert-circle",
-          onSelect: () => openHistory(entry, "damaged"),
-        },
-        {
-          label: t("actions.delete"),
-          icon: "i-lucide-trash",
-          color: "error" as const,
-          onSelect: () => {
-            selectedEntry.value = entry;
-            confirmMode.value = "delete";
-            isConfirmOpen.value = true;
-          },
-        },
-      ],
-    ];
+      });
+    }
+    return items.length ? [items] : [];
   }
 
   function resolveFirstUploadFile(value: unknown): File | null {
@@ -571,12 +577,15 @@ export function useProduct() {
   }
 
   function handleAddNew() {
+    if (!perms.canCreate.value) return;
     selectedEntry.value = null;
     pendingImageFile.value = null;
     isFormOpen.value = true;
   }
 
   function openStockAdjustDialog(entry: Product, mode: "added" | "damaged") {
+    if (mode === "added" && !perms.canAdjustStock.value) return;
+    if (mode === "damaged" && !perms.canAddDamage.value) return;
     stockAdjustTarget.value = entry;
     stockAdjustMode.value = mode;
     stockAdjustQty.value = 0;
@@ -698,6 +707,13 @@ export function useProduct() {
     entryFormFields,
     // Actions
     getDropdownActions,
+    canCreate: perms.canCreate,
+    canUpdate: perms.canUpdate,
+    canExport: perms.canExport,
+    canAdjustStock: perms.canAdjustStock,
+    canViewAdjustStock: perms.canViewAdjustStock,
+    canAddDamage: perms.canAddDamage,
+    canViewAddDamage: perms.canViewAddDamage,
     handleSaveRequest,
     finalizeAction,
     handleAddNew,

@@ -6,6 +6,7 @@ import { useServerListTable } from '~/features/shared/useServerListTable'
 
 export function useFinance() {
   const { t } = useI18n()
+  const perms = useModulePermissions('finance')
   const financeApi = useFinanceApi()
   const data = ref<FinanceEntry[]>([])
   const { sorting, columnFilters, pagination, searchQuery, resource } = useServerListTable<FinanceEntry>({
@@ -158,7 +159,9 @@ export function useFinance() {
     editingRow,
     editFields,
     openEdit,
-    handleUpdate
+    handleUpdate,
+    canUpdate: perms.canUpdate,
+    canView: perms.canView,
   }
 }
 

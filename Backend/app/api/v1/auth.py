@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.models import User
-from app.schemas.common import AuthLoginPayload, AuthLoginResponse
+from app.schemas.common import AuthLoginPayload, AuthLoginResponse, SetupBootstrapPayload
 from app.services.auth_service import (
     login_user,
     logout_user_sessions,
@@ -13,11 +13,66 @@ from app.services.auth_service import (
 from app.dependencies.auth import get_current_user
 from app.shared.api_response import error_response
 from app.services.data_service import record_history
+from app.services.setup_service import (
+    ADMIN_ROLE_NAME,
+    bootstrap_admin_user,
+    needs_initial_setup,
+    user_count,
+)
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 from app.utils.timezone import cambodia_now
+
+
+@router.get("/setup/status")
+def setup_status(db: Session = Depends(get_db)):
+    count = user_count(db)
+    return {
+        "data": {
+            "needsSetup": count == 0,
+            "userCount": count,
+        }
+    }
+
+
+@router.post("/setup")
+def setup_initial_admin(payload: SetupBootstrapPayload, db: Session = Depends(get_db)):
+    if not needs_initial_setup(db):
+        return error_response(
+            status.HTTP_409_CONFLICT,
+            "Initial setup already completed",
+            "SETUP_COMPLETE",
+        )
+    try:
+        user = bootstrap_admin_user(
+            db,
+            name=payload.name,
+            email=payload.email,
+            password=payload.password,
+        )
+    except ValueError as exc:
+        code = str(exc)
+        if code == "EMAIL_EXISTS":
+            return error_response(status.HTTP_409_CONFLICT, "Email already exists", "CONFLICT")
+        if code == "ADMIN_ROLE_UNAVAILABLE":
+            return error_response(
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+                "Could not create admin role",
+                "INTERNAL_ERROR",
+            )
+        return error_response(status.HTTP_409_CONFLICT, "Initial setup already completed", "SETUP_COMPLETE")
+    return {
+        "success": True,
+        "message": "Admin account created. You can log in now.",
+        "data": {
+            "id": user.id,
+            "name": user.name,
+            "email": user.email,
+            "role": ADMIN_ROLE_NAME,
+        },
+    }
 
 
 @router.post("/login", response_model=AuthLoginResponse)

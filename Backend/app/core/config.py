@@ -71,17 +71,11 @@ class Settings(BaseSettings):
 
     SCHEDULER_ENABLED: bool = True
     SCHEDULER_TIMEZONE: str = "Asia/Phnom_Penh"
+    # Set to match root .env BACKEND_REPLICAS when API is scaled behind nginx.
+    BACKEND_REPLICAS: int = 1
 
     LOG_LEVEL: str = "INFO"
     LOG_JSON: bool = False
-
-    # Bootstrap admin user (startup seed). Set email/password only via environment / `.env` — never commit secrets.
-    DEFAULT_ADMIN_SEED_ENABLED: bool = True
-    DEFAULT_ADMIN_NAME: str = "Admin"
-    DEFAULT_ADMIN_EMAIL: str | None = None
-    DEFAULT_ADMIN_PASSWORD: str | None = None
-    # Comma-separated legacy emails to migrate to DEFAULT_ADMIN_EMAIL (e.g. old typo domain).
-    DEFAULT_ADMIN_LEGACY_EMAILS: str = "admin@gamil.com"
 
     model_config = SettingsConfigDict(
         env_file=str(_BACKEND_ROOT / ".env"),
@@ -244,6 +238,10 @@ class Settings(BaseSettings):
     @property
     def scheduler_timezone(self) -> str:
         return self.SCHEDULER_TIMEZONE
+
+    @property
+    def backend_replicas(self) -> int:
+        return max(1, int(self.BACKEND_REPLICAS))
 
     @property
     def log_level(self) -> str:

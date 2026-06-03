@@ -57,7 +57,11 @@ export function useAuthApi() {
   const auth = useAuthStore()
   return {
     login: async (payload: { email: string; password: string }) => {
-      const response = await api.post<LoginResponseV3 | LoginResponseV2 | { token: string; refreshToken?: string; user: AuthUser }>('/auth/login', payload)
+      const response = await api.post<LoginResponseV3 | LoginResponseV2 | { token: string; refreshToken?: string; user: AuthUser }>(
+        '/auth/login',
+        payload,
+        { skipAuthRefresh: true, suppressErrorToast: true }
+      )
       if ('success' in response && 'data' in response && response.data && 'token' in response.data) {
         return {
           tokens: {
@@ -88,13 +92,30 @@ export function useAuthApi() {
         {},
         {
           skipAuthRefresh: true,
+          suppressErrorToast: true,
           headers: auth.refreshToken ? { refreshToken: auth.refreshToken } : {}
         }
       )
       return response.data
     },
     me: () => api.get<{ user?: any; data?: { user: any } }>('/auth/me'),
-    logout: () => api.post('/auth/logout', {})
+    logout: () => api.post('/auth/logout', {}),
+    setupStatus: () =>
+      api.get<{ data?: { needsSetup: boolean; userCount: number } }>('/auth/setup/status', {
+        skipAuthRefresh: true,
+        suppressErrorToast: true,
+      }),
+    setupBootstrap: (payload: {
+      name: string
+      email: string
+      password: string
+      passwordConfirm: string
+    }) =>
+      api.post<{ success?: boolean; message?: string; data?: { email: string } }>(
+        '/auth/setup',
+        payload,
+        { skipAuthRefresh: true, suppressErrorToast: true }
+      )
   }
 }
 

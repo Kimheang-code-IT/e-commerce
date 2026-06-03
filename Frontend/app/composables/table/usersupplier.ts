@@ -11,6 +11,7 @@ import { useMutation } from '~/composables/data/useMutation'
 export function useSupplierTable() {
   const useBackendApi = useBackendMode()
   const supplierApi = useSupplierApi()
+  const perms = useModulePermissions('supplier')
   const { t, toast, rowSelection, columnVisibility, isFormOpen, isConfirmOpen } = useBaseTable()
   const { sorting, columnFilters, pagination, globalFilter } = useTableQuery({
     initialSorting: [{ id: 'id', desc: false }]
@@ -157,6 +158,7 @@ export function useSupplierTable() {
   })
 
   function handleAddNew() {
+    if (!perms.canCreate.value) return
     selectedSupplier.value = null
     isFormOpen.value = true
   }
@@ -217,10 +219,14 @@ export function useSupplierTable() {
   }
 
   function getDropdownActions(row: Supplier): DropdownMenuItem[][] {
-    return [[
-      { label: t('actions.edit'), icon: 'i-lucide-pencil', onSelect: () => { selectedSupplier.value = { ...row }; isFormOpen.value = true } },
-      { label: t('actions.delete'), icon: 'i-lucide-trash', color: 'error' as const, onSelect: () => { selectedSupplier.value = row; confirmMode.value = 'delete'; isConfirmOpen.value = true } }
-    ]]
+    const items: DropdownMenuItem[] = []
+    if (perms.canUpdate.value) {
+      items.push({ label: t('actions.edit'), icon: 'i-lucide-pencil', onSelect: () => { selectedSupplier.value = { ...row }; isFormOpen.value = true } })
+    }
+    if (perms.canDelete.value) {
+      items.push({ label: t('actions.delete'), icon: 'i-lucide-trash', color: 'error' as const, onSelect: () => { selectedSupplier.value = row; confirmMode.value = 'delete'; isConfirmOpen.value = true } })
+    }
+    return items.length ? [items] : []
   }
 
   async function openProductsDialog(row: Supplier) {
@@ -231,6 +237,7 @@ export function useSupplierTable() {
   }
 
   function openProductEdit(item: SupplierProductItem) {
+    if (!perms.canUpdate.value) return
     selectedProduct.value = item
     productFormData.value = { id: item.id, productName: item.productName, qty: Number(item.qty || 0), unitPrice: Number(item.unitPrice || 0), createdAt: item.createdAt }
     isProductEditOpen.value = true
@@ -273,6 +280,9 @@ export function useSupplierTable() {
     isConfirmOpen,
     selectedSupplier,
     getDropdownActions,
+    canCreate: perms.canCreate,
+    canUpdate: perms.canUpdate,
+    canView: perms.canView,
     handleSaveRequest,
     finalizeAction,
     handleAddNew,

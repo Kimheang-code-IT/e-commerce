@@ -3,8 +3,8 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.models import Product, User, Invoice, CheckoutItem, Category
-from app.services.auth_service import get_current_user
+from app.models import CheckoutItem, Category, Invoice, Product, User
+from app.services.auth_service import get_current_user, require_permission
 from app.services.cache_service import PREFIX_DASHBOARD, cached_response
 from app.services.data_service import apply_created_at_range
 
@@ -17,6 +17,7 @@ def get_dashboard_summary(
     dateTo: str | None = Query(None),
     categoryId: str | None = Query(None),
     productId: int | None = Query(None, ge=1),
+    _user: User = Depends(require_permission("dashboard:view")),
     db: Session = Depends(get_db),
 ):
     cache_parts = {

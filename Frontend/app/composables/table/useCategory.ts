@@ -13,6 +13,7 @@ export function useTotalRevenue() {
   const { formattedRange } = useGlobalFilter();
   const { t, toast, rowSelection, columnVisibility, isConfirmOpen } =
     useBaseTable({});
+  const perms = useModulePermissions('category');
 
   const { sorting, columnFilters, pagination, serverQuery } = useTableQuery({
     initialSorting: [{ id: "id", desc: false }],
@@ -70,42 +71,47 @@ export function useTotalRevenue() {
 
   // --- Row Actions ---
   function getDropdownActions(entry: Category): DropdownMenuItem[][] {
-    return [
-      [
-        {
-          label: t("actions.edit"),
-          icon: "i-lucide-edit",
-          onSelect: () => {
-            newName.value = entry.name;
-            newDescription.value = entry.description;
-            editingId.value = entry.id;
-          },
+    const items: DropdownMenuItem[] = []
+    if (perms.canUpdate.value) {
+      items.push({
+        label: t("actions.edit"),
+        icon: "i-lucide-edit",
+        onSelect: () => {
+          newName.value = entry.name;
+          newDescription.value = entry.description;
+          editingId.value = entry.id;
         },
-        {
-          label: t("actions.delete"),
-          icon: "i-lucide-trash",
-          color: "error" as const,
-          onSelect: () => {
-            pendingDeleteId.value = entry.id;
-            confirmMode.value = "delete";
-            isConfirmOpen.value = true;
-          },
+      });
+    }
+    if (perms.canDelete.value) {
+      items.push({
+        label: t("actions.delete"),
+        icon: "i-lucide-trash",
+        color: "error" as const,
+        onSelect: () => {
+          pendingDeleteId.value = entry.id;
+          confirmMode.value = "delete";
+          isConfirmOpen.value = true;
         },
-      ],
-    ];
+      });
+    }
+    return items.length ? [items] : [];
   }
 
   // --- Request Intent (open confirm first) ---
   async function handleAdd() {
     const name = newName.value.trim();
     if (!name) return;
+    const isEdit = editingId.value !== null;
+    if (isEdit && !perms.canUpdate.value) return;
+    if (!isEdit && !perms.canCreate.value) return;
 
     pendingPayload.value = {
       id: editingId.value ?? undefined,
       name,
       description: newDescription.value.trim(),
     };
-    confirmMode.value = editingId.value !== null ? "edit" : "add";
+    confirmMode.value = isEdit ? "edit" : "add";
     isConfirmOpen.value = true;
   }
 
@@ -215,5 +221,8 @@ export function useTotalRevenue() {
     finalizeAction,
     // Row actions
     getDropdownActions,
+    canCreate: perms.canCreate,
+    canUpdate: perms.canUpdate,
+    showCategoryForm: computed(() => perms.canCreate.value || perms.canUpdate.value),
   };
 }

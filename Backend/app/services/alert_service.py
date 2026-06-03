@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.models import Product
+from app.utils.backup_errors import shorten_backup_error
 from app.utils.timezone import cambodia_now
 
 logger = logging.getLogger(__name__)
@@ -42,37 +43,67 @@ def format_low_stock_message(products: list[Product]) -> str:
 
 
 def format_backup_success_message(results: list[dict]) -> str:
-    total_new = sum(int(r.get("new_rows") or 0) for r in results)
+    total_rows = sum(int(r.get("total_rows") or r.get("new_rows") or 0) for r in results)
     lines = [
         "✅ <b>Google Sheets Backup Success</b>",
         f"Time: {cambodia_now().strftime('%Y-%m-%d %H:%M')} (Asia/Phnom_Penh)",
         f"Scheduled: daily at {settings.google_backup_time}",
         "",
-        f"Sheets updated: {len(results)} | New rows: {total_new}",
+        f"Tables synced: {len(results)} | Total rows: {total_rows}",
+        "<i>Each tab has header, filters, and banded rows.</i>",
+        "",
     ]
-    for r in results[:8]:
+    for r in results:
         status = r.get("status", "ok")
         sheet = r.get("sheet_name", r.get("backup_name", "?"))
-        rows = int(r.get("new_rows") or 0)
+        rows = int(r.get("total_rows") or r.get("new_rows") or 0)
         icon = "✅" if status == "success" else "⚠️"
-        lines.append(f"{icon} {sheet}: +{rows} rows")
-    if len(results) > 8:
-        lines.append(f"… and {len(results) - 8} more")
+        lines.append(f"{icon} {sheet}: {rows} rows")
+    return "\n".join(lines)
+
+
+def _escape_telegram_html(text: str) -> str:
+    return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+
+def format_backup_partial_message(results: list[dict]) -> str:
+    ok = [r for r in results if r.get("status") == "success"]
+    bad = [r for r in results if r.get("status") != "success"]
+    lines = [
+        "⚠️ <b>Google Sheets Backup — Partial</b>",
+        f"Time: {cambodia_now().strftime('%Y-%m-%d %H:%M')} (Asia/Phnom_Penh)",
+        "",
+        f"✅ Synced: {len(ok)} tab(s)",
+        f"❌ Failed: {len(bad)} tab(s)",
+        "",
+    ]
+    for r in ok:
+        sheet = r.get("sheet_name", "?")
+        rows = int(r.get("total_rows") or r.get("new_rows") or 0)
+        lines.append(f"✅ {sheet}: {rows} rows")
+    lines.append("")
+    for r in bad:
+        sheet = r.get("sheet_name", "?")
+        err = _escape_telegram_html(shorten_backup_error(r.get("error", "unknown")))
+        lines.append(f"❌ {sheet}: {err}")
+    lines.append("")
+    lines.append("<i>Tip: wait 1–2 minutes before running backup again.</i>")
     return "\n".join(lines)
 
 
 def format_backup_failure_message(error: str) -> str:
+    safe_error = _escape_telegram_html(shorten_backup_error(error))
     return (
         "❌ <b>Google Sheets Backup Failed</b>\n"
         f"Time: {cambodia_now().strftime('%Y-%m-%d %H:%M')} (Asia/Phnom_Penh)\n"
-        f"Error: {error[:500]}"
+        f"Error: {safe_error}"
     )
 
 
 def run_google_backup_with_notify(db: Session) -> dict:
     from app.services.backup_service import backup_service
     from app.services.telegram_service import telegram_service
-    import asyncio
+    from app.utils.async_run import run_coro
 
     if not settings.google_backup_enabled or not settings.google_sheet_id:
         return {"status": "skipped", "reason": "backup_disabled"}
@@ -85,23 +116,35 @@ def run_google_backup_with_notify(db: Session) -> dict:
         errors = [r for r in results if r.get("status") != "success"]
         if notify:
             if errors:
-                msg = format_backup_failure_message(
-                    "; ".join(f"{r.get('sheet_name')}: {r.get('error', r.get('status'))}" for r in errors)
+                ok_count = len(results) - len(errors)
+                msg = (
+                    format_backup_partial_message(results)
+                    if ok_count > 0
+                    else format_backup_failure_message(
+                        "; ".join(
+                            f"{r.get('sheet_name')}: {r.get('error', r.get('status'))}"
+                            for r in errors
+                        )
+                    )
                 )
             else:
                 msg = format_backup_success_message(results)
-            asyncio.run(telegram_service.send_message(chat_id, msg))
+            run_coro(telegram_service.send_message(chat_id, msg))
         return {"status": "ok" if not errors else "partial", "results": results}
     except Exception as exc:
         logger.exception("Scheduled backup failed")
         if notify:
-            asyncio.run(telegram_service.send_message(chat_id, format_backup_failure_message(str(exc))))
+            run_coro(
+                telegram_service.send_message(
+                    chat_id, format_backup_failure_message(shorten_backup_error(exc))
+                )
+            )
         return {"status": "error", "error": str(exc)}
 
 
 def run_low_stock_alert(db: Session) -> dict:
     from app.services.telegram_service import telegram_service
-    import asyncio
+    from app.utils.async_run import run_coro
 
     if not settings.LOW_STOCK_ALERT_ENABLED:
         return {"status": "skipped", "reason": "low_stock_disabled"}
@@ -117,5 +160,5 @@ def run_low_stock_alert(db: Session) -> dict:
         return {"status": "ok", "alerted": 0}
 
     msg = format_low_stock_message(products)
-    asyncio.run(telegram_service.send_message(chat_id, msg))
+    run_coro(telegram_service.send_message(chat_id, msg))
     return {"status": "ok", "alerted": len(products)}

@@ -14,6 +14,7 @@ export function usePos() {
   const toast = useToast()
   const route = useRoute()
   const router = useRouter()
+  const posPerms = useModulePermissions('pos')
 
   const products = usePosProducts()
   const cartState = usePosCart()
@@ -35,6 +36,9 @@ export function usePos() {
   const viewMode = ref<'grid' | 'list'>('grid')
 
   const hasReportPreviewInvoices = preview.hasReportPreviewInvoices
+  const isInvoicePreviewMode = computed(
+    () => hasReportPreviewInvoices.value && !reopenHandled.value,
+  )
   const displaySubtotal = computed(() => {
     if (preview.selectedReportInvoiceLines.value.length > 0) {
       return preview.selectedReportInvoiceLines.value.reduce((sum, line) => sum + Number(line.price || 0) * Number(line.qty || 1), 0)
@@ -57,6 +61,7 @@ export function usePos() {
   })
 
   function requestFinish() {
+    if (isInvoicePreviewMode.value) return
     if (currentStep.value === 0) {
       if (cartState.cart.value.length === 0 && !hasReportPreviewInvoices.value) {
         toast.add({ title: t('common.error'), description: 'Cart is empty', color: 'error' })
@@ -67,6 +72,10 @@ export function usePos() {
     }
 
     if (currentStep.value === 1) {
+      if (!posPerms.canCheckout.value) {
+        toast.add({ title: t('common.error'), description: 'You do not have permission to checkout', color: 'error' })
+        return
+      }
       // Validate customer form
       if (!customer.customerName.value) {
         toast.add({ title: t('common.error'), description: 'Customer name is required', color: 'error' })
@@ -90,6 +99,10 @@ export function usePos() {
     }
 
     if (cartState.cart.value.length === 0 && !hasReportPreviewInvoices.value) return
+    if (!posPerms.canCheckout.value) {
+      toast.add({ title: t('common.error'), description: 'You do not have permission to checkout', color: 'error' })
+      return
+    }
     printing.openCheckoutConfirm()
   }
 
@@ -116,6 +129,7 @@ export function usePos() {
   }
 
   async function finishWithoutPrint() {
+    if (!posPerms.canCheckout.value) return
     try {
       if (cartState.cart.value.length > 0) {
         await checkout.checkout({
@@ -142,6 +156,7 @@ export function usePos() {
   }
 
   async function finishWithPrint(onPrint: () => Promise<void> | void) {
+    if (!posPerms.canCheckout.value) return
     try {
       if (cartState.cart.value.length > 0) {
         await checkout.checkout({
@@ -189,10 +204,7 @@ export function usePos() {
     await preview.loadPreviewFromRoute()
 
     if (reopenHandled.value) return
-    if (preview.shouldAutoOpenPrintDialog.value && hasReportPreviewInvoices.value) {
-      printing.openPrintDialog()
-      currentStep.value = 2
-    } else if (hasReportPreviewInvoices.value) {
+    if (hasReportPreviewInvoices.value) {
       currentStep.value = 2
     }
   })
@@ -265,6 +277,7 @@ export function usePos() {
     selectedReportInvoiceLines: preview.selectedReportInvoiceLines,
     selectedReportInvoices: preview.selectedReportInvoices,
     hasReportPreviewInvoices,
+    isInvoicePreviewMode,
     checkoutInvoiceNo: checkout.checkoutInvoiceNo,
     displaySubtotal,
     displayDiscount,
@@ -282,6 +295,7 @@ export function usePos() {
     requestFinish,
     finishWithoutPrint,
     finishWithPrint,
+    canCheckout: posPerms.canCheckout,
     isInCart: cartState.isInCart,
     getCartQty: cartState.getCartQty,
     setLineUnitPrice: cartState.setLineUnitPrice,

@@ -11,6 +11,7 @@ import { useAuthStore } from '~/stores/auth'
 export type ReportRowActionHandlers = {
   onRefund: (row: ReportRow) => void
   onCheckout: (row: ReportRow) => void
+  onPreview?: (row: ReportRow) => void
 }
 
 export function useReport(handlers?: ReportRowActionHandlers) {
@@ -141,11 +142,18 @@ export function useReport(handlers?: ReportRowActionHandlers) {
         onSelect: () => handlers.onRefund(row)
       })
     }
-    if (auth.hasPermission('pos:checkout') || auth.hasPermission('pos:view')) {
+    if (handlers.onPreview && (auth.hasPermission('pos:view') || auth.hasPermission('pos:checkout'))) {
+      items.push({
+        label: t('pages.report.actions.preview'),
+        icon: 'i-lucide-eye',
+        onSelect: () => handlers.onPreview!(row),
+      })
+    }
+    if (auth.hasPermission('pos:checkout')) {
       items.push({
         label: t('pages.report.actions.checkout'),
         icon: 'i-lucide-shopping-cart',
-        onSelect: () => handlers.onCheckout(row)
+        onSelect: () => handlers.onCheckout(row),
       })
     }
     return items.length ? [items] : []

@@ -1,6 +1,7 @@
 import { useRoutePermissionMap } from '~/utils/auth/routes'
+import { fetchNeedsSetup } from '~/utils/auth/setup'
 
-export default defineNuxtRouteMiddleware((to) => {
+export default defineNuxtRouteMiddleware(async (to) => {
   const auth = useAuthStore()
   const path = to.path
   const routePermissionMap = useRoutePermissionMap()
@@ -14,10 +15,21 @@ export default defineNuxtRouteMiddleware((to) => {
   const firstAllowed = () => routePermissionMap.find(isAllowed)
 
   // Define public pages
-  const isPublicPage = ['/login', '/otp'].includes(to.path)
+  const isPublicPage = ['/login', '/otp', '/setup'].includes(to.path)
+
+  if (!auth.isLoggedIn && isPublicPage && to.path !== '/setup') {
+    const needsSetup = await fetchNeedsSetup()
+    if (needsSetup) {
+      return navigateTo('/setup')
+    }
+  }
 
   // Redirect if not logged in and trying to access a private page
   if (!auth.isLoggedIn && !isPublicPage) {
+    const needsSetup = await fetchNeedsSetup()
+    if (needsSetup) {
+      return navigateTo('/setup')
+    }
     return navigateTo('/login')
   }
 

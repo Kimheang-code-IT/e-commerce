@@ -64,13 +64,6 @@ def main() -> int:
     if "INVOICE_PDF_DIR" not in vals:
         issues.append("missing INVOICE_PDF_DIR (e.g. uploads/invoices)")
 
-    seed = str(vals.get("DEFAULT_ADMIN_SEED_ENABLED", "true")).lower() in ("1", "true", "yes")
-    if seed:
-        if not (vals.get("DEFAULT_ADMIN_EMAIL") or "").strip():
-            issues.append("DEFAULT_ADMIN_SEED_ENABLED but DEFAULT_ADMIN_EMAIL empty")
-        if not (vals.get("DEFAULT_ADMIN_PASSWORD") or "").strip():
-            issues.append("DEFAULT_ADMIN_SEED_ENABLED but DEFAULT_ADMIN_PASSWORD empty")
-
     allow_lan = str(vals.get("CORS_ALLOW_LAN", "")).lower() in ("1", "true", "yes")
     cors = vals.get("CORS_ORIGINS", "")
     if not allow_lan and cors and "192.168" not in cors and "10." not in cors:

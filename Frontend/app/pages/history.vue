@@ -13,6 +13,7 @@ const {
     selectedLog, filteredLogs,
     actionItems, selectedActions,
     getDropdownActions,
+    canExport,
 } = useAuditHistory()
 
 const isExportOpen = ref(false)
@@ -30,7 +31,7 @@ const localColumns = computed(() => [
     <div class="flex flex-col h-full bg-background overflow-hidden text-foreground tracking-tight">
         <LayoutAppHeader :title="$t('pages.history.title')" show-datepicker>
             <template #right>
-                <UButton @click="isExportOpen = true" icon="i-lucide-download" color="neutral" variant="subtle" class="font-normal shadow-sm shrink-0">
+                <UButton v-if="canExport" @click="isExportOpen = true" icon="i-lucide-download" color="neutral" variant="subtle" class="font-normal shadow-sm shrink-0">
                     <span class="hidden sm:inline">{{ $t('common.export') }}</span>
                 </UButton>
             </template>

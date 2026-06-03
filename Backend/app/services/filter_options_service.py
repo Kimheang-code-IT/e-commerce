@@ -4,7 +4,7 @@ from __future__ import annotations
 from sqlalchemy import distinct, select
 from sqlalchemy.orm import Session
 
-from app.models import CheckoutItem, History, Invoice
+from app.models import CheckoutItem, History, Invoice, RefundRecord
 from app.services.data_service import apply_created_at_range
 
 
@@ -52,27 +52,46 @@ def invoice_field_options(
     return _sorted_non_empty(rows)
 
 
+def _refunded_checkout_item_ids_subquery():
+    return select(RefundRecord.checkout_item_id).where(RefundRecord.checkout_item_id.isnot(None))
+
+
+def _non_refunded_report_items_query(*, date_from: str | None = None, date_to: str | None = None):
+    refunded_ids = _refunded_checkout_item_ids_subquery()
+    q = (
+        select(CheckoutItem, Invoice)
+        .join(Invoice, CheckoutItem.invoice_id == Invoice.id)
+        .where(Invoice.status == "paid")
+        .where(~CheckoutItem.id.in_(refunded_ids))
+    )
+    return apply_created_at_range(q, date_from, date_to, Invoice.created_at)
+
+
 def report_filter_options(
     db: Session,
     *,
     date_from: str | None = None,
     date_to: str | None = None,
 ) -> dict[str, list[str]]:
-    q = (
-        select(distinct(CheckoutItem.product_name))
-        .join(Invoice, CheckoutItem.invoice_id == Invoice.id)
-        .where(Invoice.status == "paid")
-    )
-    q = apply_created_at_range(q, date_from, date_to, Invoice.created_at)
-    rows = db.execute(q.order_by(CheckoutItem.product_name)).all()
+    base = _non_refunded_report_items_query(date_from=date_from, date_to=date_to)
+    pairs = db.execute(base.order_by(CheckoutItem.product_name)).all()
+    products: set[str] = set()
+    sources: set[str] = set()
+    provinces: set[str] = set()
+    for ci, inv in pairs:
+        name = str(ci.product_name or "").strip()
+        if name:
+            products.add(name)
+        src = str(inv.source or "").strip()
+        if src:
+            sources.add(src)
+        addr = str(inv.customer_address or "").strip()
+        if addr:
+            provinces.add(addr)
     return {
-        "products": _sorted_non_empty(rows),
-        "sources": invoice_field_options(
-            db, Invoice.source, date_from=date_from, date_to=date_to, paid_only=True
-        ),
-        "provinces": invoice_field_options(
-            db, Invoice.customer_address, date_from=date_from, date_to=date_to, paid_only=True
-        ),
+        "products": sorted(products),
+        "sources": sorted(sources),
+        "provinces": sorted(provinces),
     }
 
 

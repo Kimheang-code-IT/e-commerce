@@ -28,8 +28,8 @@ function onSubmitRole(data: Record<string, any>) {
     <div class="flex flex-col h-full bg-background overflow-hidden text-foreground tracking-tight">
         <LayoutAppHeader :title="$t('pages.roleManagement.title')">
             <template #right>
-                <UButton icon="i-lucide-shield-plus" color="primary" variant="solid"
-                    class="font-normal shadow-sm shrink-0" :disabled="!canUpdateRole" @click="handleAddNew">
+                <UButton v-if="auth.hasPermission('role:create')" icon="i-lucide-shield-plus" color="primary" variant="solid"
+                    class="font-normal shadow-sm shrink-0" @click="handleAddNew">
                     <span class="hidden sm:inline">{{ $t('pages.roleManagement.addBtn') }}</span>
                 </UButton>
             </template>

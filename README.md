@@ -40,7 +40,7 @@ Or manually:
 .\docker-update.ps1
 ```
 
-Open the URL printed (e.g. `http://192.168.x.x:8080/`). Default admin: see `Backend/.env` (`DEFAULT_ADMIN_EMAIL` / `DEFAULT_ADMIN_PASSWORD`).
+Open the URL printed (e.g. `http://192.168.x.x:8080/`). On first run (no users), open `/setup` to create the administrator account.
 
 ### Telegram (same bot everywhere)
 

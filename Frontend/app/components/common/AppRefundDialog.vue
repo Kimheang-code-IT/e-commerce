@@ -2,7 +2,7 @@
 import { watch } from 'vue'
 import { formatCurrency } from '~/utils/format/currency'
 import type { ReportRow } from '~/types'
-import { sanitizeKhmer } from '~/utils/validation/textRules'
+import { sanitizeByTextRule } from '~/utils/validation/textRules'
 
 const open = defineModel<boolean>('open', { default: false })
 const refundReason = defineModel<string>('reason', { default: '' })
@@ -19,7 +19,7 @@ const emit = defineEmits<{
 const { t } = useI18n()
 
 watch(refundReason, (value) => {
-  const sanitized = sanitizeKhmer(String(value || ''))
+  const sanitized = sanitizeByTextRule('text', String(value || ''))
   if (sanitized !== value) refundReason.value = sanitized
 })
 </script>
@@ -71,12 +71,13 @@ watch(refundReason, (value) => {
           {{ t('actions.cancel') }}
         </UButton>
         <UButton
+          type="button"
           color="warning"
           variant="solid"
           icon="i-lucide-rotate-ccw"
           :loading="submitting"
           :disabled="!refundReason.trim() || submitting"
-          @click="emit('confirm')"
+          @click.stop="emit('confirm')"
         >
           {{ t('pages.report.refundDialog.confirm') }}
         </UButton>

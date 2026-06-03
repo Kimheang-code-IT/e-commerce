@@ -80,24 +80,32 @@ export function useUserMenu() {
 
   const router = useRouter()
 
-  const items = computed<DropdownMenuItem[][]>(() => [
-    [
-      {
-        type: 'label',
-        label: user.value.name,
-        avatar: user.value.avatar,
+  const historyItem = computed<DropdownMenuItem | null>(() => {
+    if (!auth.hasPermission('history:view')) return null
+    return {
+      label: t('settings.history'),
+      icon: 'i-lucide-scroll-text',
+      onSelect(e: Event) {
+        e.preventDefault()
+        router.push('/history')
       },
-    ],
-    [
-      {
-        label: t('settings.history'),
-        icon: 'i-lucide-clock',
-        onSelect(e: Event) {
-          e.preventDefault()
-          router.push('/history')
+    }
+  })
+
+  const items = computed<DropdownMenuItem[][]>(() => {
+    const groups: DropdownMenuItem[][] = [
+      [
+        {
+          type: 'label',
+          label: user.value.name,
+          avatar: user.value.avatar,
         },
-      },
-    ],
+      ],
+    ]
+    if (historyItem.value) {
+      groups.push([historyItem.value])
+    }
+    groups.push(
     [
       {
         label: t('settings.language'),
@@ -206,7 +214,9 @@ export function useUserMenu() {
         },
       },
     ],
-  ])
+    )
+    return groups
+  })
 
   return {
     user,

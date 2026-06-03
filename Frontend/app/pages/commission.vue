@@ -4,7 +4,7 @@ import { formatCurrency } from '~/utils/format/currency'
 import { formatDate } from '~/utils/format/date'
 import { useCommissionApi } from '~/utils/api'
 
-const { data, columns, groupingOptions, grouping, isLoading, sorting, searchQuery, columnFilters, pagination, totalRows, productItems, sourceItems, selectedProducts, selectedSources } = useCommission()
+const { data, columns, groupingOptions, grouping, isLoading, sorting, searchQuery, columnFilters, pagination, totalRows, productItems, sourceItems, selectedProducts, selectedSources, canExport } = useCommission()
 const { t } = useI18n()
 const isExportOpen = ref(false)
 const commissionApi = useCommissionApi()
@@ -24,7 +24,7 @@ async function fetchCommissionExportData(args: { startDate?: string; endDate?: s
   <div class="flex flex-col h-full bg-background overflow-hidden text-foreground tracking-tight">
     <LayoutAppHeader :title="t('pages.commission.title')" show-datepicker>
       <template #right>
-        <UButton icon="i-lucide-download" color="neutral" variant="subtle" class="font-normal shadow-sm shrink-0"
+        <UButton v-if="canExport" icon="i-lucide-download" color="neutral" variant="subtle" class="font-normal shadow-sm shrink-0"
           @click="isExportOpen = true">
           <span class="hidden sm:inline">{{ $t('common.export') }}</span>
         </UButton>

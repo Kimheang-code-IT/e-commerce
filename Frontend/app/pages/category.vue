@@ -10,16 +10,21 @@ const {
     newName, newDescription, handleAdd,
     isConfirmOpen, confirmConfig, finalizeAction,
     getDropdownActions,
+    canCreate,
+    showCategoryForm,
 } = useTotalRevenue()
 
 const isExportOpen = ref(false)
 const mobileView = ref<'table' | 'form'>('table')
 const nameError = ref('')
 const descriptionError = ref('')
-const mobileViewItems = computed(() => [
-    { label: $t('category.tableTitle'), value: 'table' },
-    { label: $t('category.addTitle'), value: 'form' }
-])
+const mobileViewItems = computed(() => {
+    const items = [{ label: $t('category.tableTitle'), value: 'table' }]
+    if (showCategoryForm.value) {
+        items.push({ label: $t('category.addTitle'), value: 'form' })
+    }
+    return items
+})
 
 // Generate avatar color from name
 function getAvatarColor(name: string) {
@@ -47,7 +52,7 @@ watch(newDescription, (value) => {
 <template>
     <div class="flex flex-col h-full bg-background overflow-hidden text-foreground tracking-tight">
         <LayoutAppHeader :title="$t('category.tableTitle')" show-datepicker />
-        <div class="lg:hidden px-2 pt-2">
+        <div v-if="showCategoryForm" class="lg:hidden px-2 pt-2">
             <UTabs
                 v-model="mobileView"
                 :items="mobileViewItems"
@@ -60,6 +65,7 @@ watch(newDescription, (value) => {
         <div class="flex flex-col lg:flex-row flex-1 gap-3 p-2 overflow-hidden min-h-0">
             <!-- Left: Add Form Panel -->
             <div
+                v-if="showCategoryForm"
                 :class="[
                     mobileView === 'form' ? 'flex' : 'hidden',
                     'lg:flex w-full lg:w-[30%] lg:shrink-0 flex-col gap-4 p-5 border border-default overflow-y-auto'
@@ -100,6 +106,7 @@ watch(newDescription, (value) => {
                 </div>
                 <!-- Add Button -->
                 <UButton
+                    v-if="canCreate"
                     block
                     color="primary"
                     variant="solid"

@@ -2,6 +2,7 @@ from datetime import datetime
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from app.models.backup_tracker import BackupTracker
+from app.utils.backup_errors import shorten_backup_error
 from app.utils.timezone import cambodia_now
 
 class BackupTrackerRepository:
@@ -16,6 +17,8 @@ class BackupTrackerRepository:
         
         tracker.last_backup_id = last_backup_id
         tracker.status = status
+        if error_message:
+            error_message = shorten_backup_error(error_message)
         tracker.error_message = error_message
         tracker.last_run_at = cambodia_now()
         

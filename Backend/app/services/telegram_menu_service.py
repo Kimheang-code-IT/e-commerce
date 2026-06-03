@@ -10,7 +10,7 @@ class TelegramMenuService:
                 [{"text": "💳 Price by Payment", "callback_data": "main_payment_price"}],
                 [{"text": "👤 Commission by User", "callback_data": "main_commission_user"}],
                 [{"text": "🚚 Price by Delivery Type", "callback_data": "main_delivery_type"}],
-                [{"text": "❓ Help", "callback_data": "main_help"}]
+                [{"text": "📊 Backup Google Sheets", "callback_data": "main_google_backup"}]
             ]
         }
 
@@ -43,7 +43,7 @@ class TelegramMenuService:
                 [{"text": "📦 Product"}, {"text": "📍 Source"}],
                 [{"text": "💳 Payment"}, {"text": "👤 Commission"}],
                 [{"text": "🚚 Delivery"}, {"text": "📦 Product Report"}],
-                [{"text": "❓ Help"}]
+                [{"text": "📊 Backup Google Sheets"}]
             ],
             "resize_keyboard": True,
             "persistent": True

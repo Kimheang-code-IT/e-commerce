@@ -3,7 +3,7 @@ from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.models import CheckoutItem, Invoice, User
+from app.models import CheckoutItem, Invoice, RefundRecord, User
 from app.services.auth_service import get_current_user, require_permission
 from app.services.data_service import (
     apply_created_at_range,
@@ -19,12 +19,18 @@ from app.services.filter_options_service import report_filter_options
 router = APIRouter(prefix="/reports-view", tags=["reports-view"], dependencies=[Depends(get_current_user)])
 
 
+def _refunded_checkout_item_ids_subquery():
+    return select(RefundRecord.checkout_item_id).where(RefundRecord.checkout_item_id.isnot(None))
+
+
 def _base_report_query():
+    refunded_ids = _refunded_checkout_item_ids_subquery()
     return (
         select(CheckoutItem, Invoice, User)
         .join(Invoice, CheckoutItem.invoice_id == Invoice.id)
         .outerjoin(User, Invoice.user_id == User.id)
         .where(Invoice.status == "paid")
+        .where(~CheckoutItem.id.in_(refunded_ids))
     )
 
 

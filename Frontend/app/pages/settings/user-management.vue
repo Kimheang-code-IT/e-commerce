@@ -8,7 +8,7 @@ const {
     totalRows,
     selectedUser, filteredUsers, confirmConfig,
     userFormFields, columns, roleItems, selectedRoles,
-    getDropdownActions, handleSaveRequest, finalizeAction, handleAddNew,
+    getDropdownActions, handleSaveRequest, finalizeAction, handleAddNew, canCreate,
 } = useSystemUserManagement()
 
 function onSubmitUser(data: Record<string, any>) {
@@ -20,7 +20,7 @@ function onSubmitUser(data: Record<string, any>) {
     <div class="flex flex-col h-full bg-background overflow-hidden text-foreground tracking-tight">
         <LayoutAppHeader :title="$t('pages.userManagement.title')" show-datepicker>
             <template #right>
-                <UButton icon="i-lucide-user-plus" color="primary" variant="solid"
+                <UButton v-if="canCreate" icon="i-lucide-user-plus" color="primary" variant="solid"
                     class="font-normal shadow-sm shrink-0" @click="handleAddNew">
                     <span class="hidden sm:inline">{{ $t('pages.userManagement.addBtn') }}</span>
                 </UButton>

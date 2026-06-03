@@ -7,7 +7,8 @@ import { useSystemRoleApi } from '~/utils/api'
 import type { ApiQueryParams } from '~/utils/api'
 import { useServerTableResource } from '~/composables/table/useServerTableResource'
 import { useMutation } from '~/composables/data/useMutation'
-import { ROLE_PAGE_SETTINGS_KEYS, uniqueRolePageLabels } from '~/utils/auth/rolePages'
+import { PAGE_PERMISSION_MAP, ROLE_PAGE_KEYS } from '~/utils/auth/permissionRegistry'
+import { uniqueRolePageLabels } from '~/utils/auth/rolePages'
 
 export function useSystemRoleManagement() {
     const useBackendApi = useBackendMode()
@@ -65,33 +66,8 @@ export function useSystemRoleManagement() {
     })
     const selectedRoles = ref<string[]>([])
 
-    // Mirrors `settings:*` tokens in `Backend/app/security/rbac.py` (stored in role page_access).
-    const pagePermissionMap: Record<string, string[]> = {
-        'settings:dashboard-management': ['view'],
-        'settings:category-management': ['view', 'create', 'update', 'delete'],
-        'settings:supplier-management': ['view', 'create', 'update', 'delete'],
-        'settings:product-management': [
-            'view',
-            'create',
-            'update',
-            'delete',
-            'export',
-            'adjust-stock',
-            'view-adjust-stock',
-            'add-damage',
-            'view-add-damage'
-        ],
-        'settings:pos-management': ['view', 'checkout'],
-        'settings:finance-management': ['view', 'update'],
-        'settings:report-management': ['view', 'export'],
-        'settings:refund-management': ['view', 'create', 'delete'],
-        'settings:delivery-management': ['view', 'update', 'export'],
-        'settings:history-management': ['view', 'export'],
-        'settings:commission-management': ['view', 'export'],
-        'settings:role-management': ['view', 'update'],
-        'settings:user-management': ['view', 'create', 'update', 'delete']
-    }
-    const pageItems = [...ROLE_PAGE_SETTINGS_KEYS]
+    const pagePermissionMap = PAGE_PERMISSION_MAP
+    const pageItems = [...ROLE_PAGE_KEYS]
     const permissionItems = [
         'view',
         'create',

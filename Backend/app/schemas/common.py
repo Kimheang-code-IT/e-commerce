@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator, model_validator
 
 from app.security.input_validation import clean_optional_text, clean_string_list, clean_text
 
@@ -338,6 +338,30 @@ class SystemRoleUpdatePayload(BaseModel):
         if value is None:
             return None
         return clean_string_list(value)
+
+
+class SetupBootstrapPayload(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    name: str = Field(min_length=1, max_length=120)
+    email: EmailStr = Field(max_length=180)
+    password: str = Field(min_length=8, max_length=255)
+    passwordConfirm: str = Field(min_length=8, max_length=255)
+
+    @field_validator("name")
+    @classmethod
+    def normalize_setup_name(cls, value: str) -> str:
+        return clean_text(value)
+
+    @field_validator("email")
+    @classmethod
+    def normalize_setup_email(cls, value: EmailStr) -> str:
+        return str(value).lower()
+
+    @model_validator(mode="after")
+    def passwords_match(self) -> "SetupBootstrapPayload":
+        if self.password != self.passwordConfirm:
+            raise ValueError("Passwords do not match")
+        return self
 
 
 class AuthLoginPayload(BaseModel):

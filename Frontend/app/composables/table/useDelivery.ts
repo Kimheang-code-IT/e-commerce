@@ -9,6 +9,7 @@ import { formatCurrency } from '~/utils/format/currency'
 
 export function useDelivery() {
   const { t } = useI18n()
+  const perms = useModulePermissions('delivery')
   const deliveryApi = useDeliveryApi()
   const { rowSelection, columnVisibility } = useBaseTable({})
   const localRows = ref<DeliveryEntry[]>([])
@@ -96,5 +97,7 @@ export function useDelivery() {
     columns,
     updateStatus,
     updateAllPendingToDelivered,
+    canUpdate: perms.canUpdate,
+    canExport: perms.canExport,
   }
 }

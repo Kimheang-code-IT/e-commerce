@@ -30,26 +30,48 @@ class TelegramCommandService:
         """Reply with a new message only (no editMessage / deleteMessage)."""
         await telegram_service.send_message(chat_id, text, reply_markup)
 
-    def get_help_message(self) -> str:
-        msg = "❓ <b>How to Use Shop Report Bot</b>\n\n"
-        msg += "<b>Method 1: Use Keyboard Buttons</b>\n"
-        msg += "1) Tap a report type: Summary, Category, Product, Source, Payment, Commission, Delivery\n"
-        msg += "2) Select a period: Today, Last 3 Days, Last 7 Days, Last 1 Month, All, or Custom Date Range\n"
-        msg += "3) Bot will return the report\n\n"
-        msg += "<b>Method 2: Use Commands</b>\n"
-        msg += "/summary - Summary Price report\n"
-        msg += "/category - Category report\n"
-        msg += "/product - Product report\n"
-        msg += "/source - Source report\n"
-        msg += "/payment - Payment report\n"
-        msg += "/commission - User commission report\n"
-        msg += "/delivery - Delivery type report\n"
-        msg += "/product_report - Product sold vs stock report\n"
-        msg += "/help - Show this guide\n\n"
-        msg += "<b>Custom Date Range Format</b>\n"
-        msg += "<code>YYYY-MM-DD YYYY-MM-DD</code>\n"
-        msg += "Example: <code>2026-05-01 2026-05-08</code>"
-        return msg
+    def get_backup_info_message(self) -> str:
+        return (
+            "📊 <b>Google Sheets Backup</b>\n\n"
+            "Exports <b>all data</b> from each table to your spreadsheet:\n"
+            "Products, Categories, Invoices, Invoice Details, Deliveries, Users, Roles, "
+            "Suppliers, Supplier Products, Refunds.\n\n"
+            "Each tab is formatted as a real table (header row, filters, banded rows).\n"
+            "Tap <b>📊 Backup Google Sheets</b> or send /backup to run now."
+        )
+
+    async def trigger_google_backup(self, chat_id: str) -> None:
+        if not settings.google_backup_enabled or not settings.google_sheet_id:
+            await telegram_service.send_message(
+                chat_id,
+                "⚠️ Google backup is not configured.\n"
+                "Set <code>GOOGLE_BACKUP_ENABLED=true</code> and <code>GOOGLE_SHEET_ID</code> in Backend/.env.",
+            )
+            return
+        if not settings.google_service_account_file:
+            await telegram_service.send_message(chat_id, "⚠️ <code>GOOGLE_SERVICE_ACCOUNT_FILE</code> is missing.")
+            return
+
+        await telegram_service.send_message(
+            chat_id,
+            "⏳ <b>Backing up all tables to Google Sheets…</b>\nThis may take a minute.",
+        )
+        db = SessionLocal()
+        try:
+            from app.services.alert_service import run_google_backup_with_notify
+
+            run_google_backup_with_notify(db)
+        except Exception as exc:
+            logger.exception("Telegram-triggered backup failed: %s", exc)
+            from app.utils.backup_errors import shorten_backup_error
+
+            err = shorten_backup_error(exc).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+            await telegram_service.send_message(
+                chat_id,
+                f"❌ Backup failed: {err[:400]}",
+            )
+        finally:
+            db.close()
 
     def get_date_range(self, period: str):
         today = cambodia_now().date()
@@ -142,17 +164,8 @@ class TelegramCommandService:
                     await telegram_service.send_message(chat_id, msg)
                 user_states.pop(chat_id, None)
                 return
-            elif command == "/help":
-                keyboard = (
-                    telegram_menu_service.get_reply_keyboard()
-                    if telegram_reports_enabled()
-                    else None
-                )
-                await telegram_service.send_message(
-                    chat_id,
-                    self.get_help_message(),
-                    keyboard,
-                )
+            elif command in ("/backup", "/help"):
+                await self.trigger_google_backup(chat_id)
                 user_states.pop(chat_id, None)
                 return
 
@@ -219,16 +232,19 @@ class TelegramCommandService:
             else:
                 await telegram_service.send_message(
                     chat_id,
-                    "❓ Unknown command. Send /start or /help.",
+                    "❓ Unknown command. Send /start or /backup.",
                 )
                 return
 
-        # Handle Reply Keyboard Text
+        lower_text = text.lower()
+        if "backup" in lower_text or "google sheet" in lower_text:
+            await self.trigger_google_backup(chat_id)
+            return
+
         if not telegram_reports_enabled():
             await self._reply_reports_disabled(chat_id)
             return
 
-        lower_text = text.lower()
         if "product report" in lower_text:
             await self.send_product_report(chat_id)
             return
@@ -289,14 +305,6 @@ class TelegramCommandService:
                     telegram_menu_service.get_delivery_list_menu(types)
                 )
             return
-        elif "help" in lower_text or "❓" in lower_text:
-            await telegram_service.send_message(
-                chat_id,
-                self.get_help_message(),
-                telegram_menu_service.get_reply_keyboard()
-            )
-            return
-
         # Fallback: Restore keyboard for any unknown input
         await telegram_service.send_message(
             chat_id, 
@@ -327,6 +335,10 @@ class TelegramCommandService:
 
         if callback_query_id:
             await telegram_service.answer_callback(callback_query_id)
+
+        if data == "main_google_backup":
+            await self.trigger_google_backup(chat_id)
+            return
 
         if not telegram_reports_enabled():
             await telegram_service.send_message(chat_id, "📴 Report commands are disabled on this server.")
@@ -444,10 +456,8 @@ class TelegramCommandService:
 
         if data.startswith("main_"):
             type_prefix = data.replace("main_", "")
-            if type_prefix == "help":
-                await self._menu_reply(chat_id, self.get_help_message(),
-                    telegram_menu_service.get_main_menu()
-                )
+            if type_prefix == "google_backup":
+                await self.trigger_google_backup(chat_id)
                 return
             if type_prefix == "product_report":
                 await self.send_product_report(chat_id)

@@ -218,6 +218,9 @@
                 "items": "Items",
                 "total": "Total"
             },
+            "preview": {
+                "print": "Print"
+            },
             "printConfirm": {
                 "title": "Finish checkout",
                 "description": "Do you want to print the invoice now?",
@@ -280,7 +283,23 @@
             "loginSuccessDesc": "Welcome back, {name}",
             "loginFailedTitle": "Login Failed",
             "loginFailedDesc": "The email or password you entered is incorrect.",
-            "departmentLine": "Copyright © by Damnaksiksaa"
+            "departmentLine": "Copyright by Damnak Dontrey",
+            "setupTitle": "Create Admin Account",
+            "setupDesc": "No users exist yet. Create the first administrator to manage the system.",
+            "setupName": "Admin name",
+            "setupNamePlaceholder": "Enter administrator name",
+            "setupPasswordPlaceholder": "At least 8 characters",
+            "setupPasswordConfirm": "Confirm password",
+            "setupPasswordConfirmPlaceholder": "Re-enter password",
+            "setupBtn": "Create admin account",
+            "setupGoLogin": "Already have an account? Log in",
+            "setupSuccessTitle": "Admin created",
+            "setupSuccessDesc": "You can now log in with your new account.",
+            "setupFailedTitle": "Setup failed",
+            "setupFailedDesc": "Could not create the admin account. Please try again.",
+            "setupStatusFailed": "Could not check setup status.",
+            "setupBackendRequired": "Connect to the API server to run initial setup.",
+            "setupChecking": "Checking setup status…"
         },
         "dataEntry": {
             "title": "Data Entry",
@@ -355,11 +374,13 @@
             "filterProvince": "Province",
             "actions": {
                 "refund": "Refund",
+                "preview": "Preview invoice",
                 "checkout": "Back to checkout"
             },
             "refundDialog": {
                 "title": "Refund",
                 "reason": "Refund reason",
+                "reasonRequired": "Please enter a refund reason.",
                 "reasonPlaceholder": "Enter reason for this refund...",
                 "confirm": "Confirm refund",
                 "successTitle": "Refund recorded",

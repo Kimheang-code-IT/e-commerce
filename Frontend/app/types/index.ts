@@ -109,6 +109,8 @@ export interface ReportRow {
   source: string
   address: string
   amount: number
+  deliveryPrice?: number
+  discount?: number
 }
 
 export interface DeliveryEntry {

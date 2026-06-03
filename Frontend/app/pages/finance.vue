@@ -18,7 +18,9 @@ const {
   editingRow,
   editFields,
   openEdit,
-  handleUpdate
+  handleUpdate,
+  canUpdate,
+  canView
 } = useFinance()
 const isExportOpen = ref(false)
 const financeApi = useFinanceApi()
@@ -36,7 +38,7 @@ async function fetchFinanceExportData(args: { startDate?: string; endDate?: stri
   <div class="flex flex-col h-full bg-background overflow-hidden text-foreground tracking-tight">
     <LayoutAppHeader :title="t('pages.finance.title')" show-datepicker>
       <template #right>
-        <UButton icon="i-lucide-download" color="neutral" variant="subtle" class="font-normal shadow-sm shrink-0"
+        <UButton v-if="canView" icon="i-lucide-download" color="neutral" variant="subtle" class="font-normal shadow-sm shrink-0"
           @click="isExportOpen = true">
           <span class="hidden sm:inline">{{ $t('common.export') }}</span>
         </UButton>
@@ -59,6 +61,7 @@ async function fetchFinanceExportData(args: { startDate?: string; endDate?: stri
         <template #actions-cell="{ row }">
           <div class="flex justify-end">
             <UButton
+              v-if="canUpdate"
               icon="i-lucide-edit-3"
               variant="ghost"
               color="primary"

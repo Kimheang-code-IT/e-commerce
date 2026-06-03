@@ -130,8 +130,15 @@ export const useMenu = () => {
         })
         .filter((item) => {
           if (!item.to) return true
+          if (item.children) {
+            if (item.children.length === 0) return false
+            const settingsPath = String(item.to)
+            if (settingsPath.startsWith('/settings')) {
+              return auth.hasPermission('user:view') || auth.hasPermission('role:view')
+            }
+            return true
+          }
           const isHome = allowed.has(String(item.to))
-          if (item.children && item.children.length === 0) return false
           return isHome
         })
     )

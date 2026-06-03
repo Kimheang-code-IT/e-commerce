@@ -11,6 +11,7 @@ import { useMutation } from "~/composables/data/useMutation";
 
 export function useSystemUserManagement() {
   const useBackendApi = useBackendMode()
+  const perms = useModulePermissions('user')
   const systemUserApi = useSystemUserApi()
   const systemRoleApi = useSystemRoleApi()
   const { formattedRange } = useGlobalFilter()
@@ -164,28 +165,30 @@ export function useSystemUserManagement() {
 
   // --- Actions ---
   function getDropdownActions(user: SystemUser): DropdownMenuItem[][] {
-    return [
-      [
-        {
-          label: t("actions.edit"),
-          icon: "i-lucide-edit",
-          onSelect: () => {
-            selectedUser.value = { ...user };
-            isFormOpen.value = true;
-          },
+    const items: DropdownMenuItem[] = []
+    if (perms.canUpdate.value) {
+      items.push({
+        label: t("actions.edit"),
+        icon: "i-lucide-edit",
+        onSelect: () => {
+          selectedUser.value = { ...user };
+          isFormOpen.value = true;
         },
-        {
-          label: t("actions.delete"),
-          icon: "i-lucide-trash",
-          color: "error" as const,
-          onSelect: () => {
-            selectedUser.value = user;
-            confirmMode.value = "delete";
-            isConfirmOpen.value = true;
-          },
+      })
+    }
+    if (perms.canDelete.value) {
+      items.push({
+        label: t("actions.delete"),
+        icon: "i-lucide-trash",
+        color: "error" as const,
+        onSelect: () => {
+          selectedUser.value = user;
+          confirmMode.value = "delete";
+          isConfirmOpen.value = true;
         },
-      ],
-    ];
+      })
+    }
+    return items.length ? [items] : []
   }
 
   function handleSaveRequest(data: SystemUser) {
@@ -232,6 +235,7 @@ export function useSystemUserManagement() {
   }
 
   function handleAddNew() {
+    if (!perms.canCreate.value) return
     selectedUser.value = null;
     isFormOpen.value = true;
   }
@@ -264,6 +268,7 @@ export function useSystemUserManagement() {
     handleSaveRequest,
     finalizeAction,
     handleAddNew,
+    canCreate: perms.canCreate,
   };
 }
 

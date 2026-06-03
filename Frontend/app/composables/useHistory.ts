@@ -9,6 +9,7 @@ import { useViewFilterOptions } from '~/composables/useViewFilterOptions'
 
 export function useAuditHistory() {
     const useBackendApi = useBackendMode()
+    const perms = useModulePermissions('history')
     const historyApi = useHistoryApi()
     const { formattedRange } = useGlobalFilter()
     const {
@@ -83,6 +84,7 @@ export function useAuditHistory() {
         actionItems, selectedActions,
         filteredLogs,
         getDropdownActions,
+        canExport: perms.canExport,
     }
 }
 

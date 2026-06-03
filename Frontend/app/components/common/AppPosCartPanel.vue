@@ -26,9 +26,11 @@ const props = withDefaults(
     currentStep: number
     totalSteps: number
     allowFinishWithoutCart?: boolean
+    canCheckout?: boolean
   }>(),
   {
     allowFinishWithoutCart: false,
+    canCheckout: true,
   },
 )
 
@@ -70,8 +72,15 @@ const cartNextDisabled = computed(
   () => props.cart.length === 0 && !props.allowFinishWithoutCart,
 )
 
+const needsCheckoutPermission = computed(
+  () => isLastStep.value || props.currentStep === props.totalSteps - 2,
+)
+
 const summaryNextDisabled = computed(
-  () => cartNextDisabled.value || !!discountValidationKey.value,
+  () =>
+    cartNextDisabled.value ||
+    !!discountValidationKey.value ||
+    (needsCheckoutPermission.value && props.canCheckout === false),
 )
 
 watch(discountMode, () => {

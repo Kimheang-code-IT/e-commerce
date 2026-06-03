@@ -23,7 +23,8 @@ const {
   filteredDeliveryRows,
   columns,
   updateStatus,
-  updateAllPendingToDelivered
+  updateAllPendingToDelivered,
+  canUpdate
 } = useDelivery()
 
 const hasPending = computed(() => filteredDeliveryRows.value.some(r => r.deliveryStatus === 'pending'))
@@ -116,7 +117,7 @@ function goToInvoice(row: any) {
             <span>{{ t('pages.delivery.columns.deliveryStatus') }}</span>
             <UTooltip :text="t('actions.confirm')">
               <UButton
-                v-if="hasPending"
+                v-if="hasPending && canUpdate"
                 icon="i-lucide-check-check"
                 color="success"
                 variant="ghost"
@@ -137,7 +138,7 @@ function goToInvoice(row: any) {
               {{ row.original.deliveryStatus === 'delivered' ? $t('pages.pos.customer.form.statusDelivered') : $t('pages.pos.customer.form.statusPending') }}
             </UBadge>
             <UButton
-              v-if="row.original.deliveryStatus === 'pending'"
+              v-if="canUpdate && row.original.deliveryStatus === 'pending'"
               icon="i-lucide-check-circle"
               color="success"
               variant="ghost"
