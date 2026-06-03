@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref, watch, computed, onBeforeUnmount } from 'vue'
+import { ref, watch, computed, onBeforeUnmount, nextTick } from 'vue'
 import { parseDate } from '@internationalized/date'
 import type { FormField } from '~/types'
+import { sanitizeByTextRule, textRuleErrorMessage, resolveCurrencyPrefix } from '~/utils/validation/textRules'
 const open = defineModel<boolean>('open')
 type FormRecord = Record<string, any>
 
@@ -25,6 +26,8 @@ const filePreviewObjectUrls = ref<Record<string, string>>({})
 const lastSelectedFiles = ref<Record<string, File | null>>({})
 const fileUploadRenderKeys = ref<Record<string, number>>({})
 const showPasswords = ref<Record<string, boolean>>({})
+const validationAttempted = ref(false)
+const formBodyRef = ref<HTMLElement | null>(null)
 
 function togglePassword(key: string) {
     showPasswords.value[key] = !showPasswords.value[key]
@@ -170,9 +173,8 @@ function initializeFormData(source?: FormRecord) {
 
 function normalizeNumberInput(value: unknown) {
     const raw = String(value ?? '')
-    // Allow only digits, optional leading minus, and one decimal point.
-    let cleaned = raw.replace(/[^\d.-]/g, '')
-    cleaned = cleaned.replace(/(?!^)-/g, '')
+    // Allow only non-negative numbers with one decimal point.
+    let cleaned = raw.replace(/[^\d.]/g, '')
     const firstDot = cleaned.indexOf('.')
     if (firstDot !== -1) {
         cleaned = cleaned.slice(0, firstDot + 1) + cleaned.slice(firstDot + 1).replace(/\./g, '')
@@ -255,13 +257,145 @@ function usdFieldError(field: FormField): string {
     return ''
 }
 
+function numberFieldError(field: FormField): string {
+    if (field.type !== 'number') return ''
+    const raw = formData.value[field.key]
+    if (raw === '' || raw === undefined || raw === null) return ''
+    const v = Number(raw)
+    if (!Number.isFinite(v)) return t('pages.pos.validation.numberRequired')
+    const min = field.min ?? 0
+    if (v < min) return t('pages.pos.validation.minUsd', { min })
+    if (field.max != null && v > field.max) return t('pages.pos.validation.maxUsd', { max: field.max })
+    return ''
+}
+
+function languageFieldError(field: FormField): string {
+    if ((field.type !== 'input' && field.type !== 'textarea') || !field.textRule) return ''
+    const raw = String(formData.value[field.key] ?? '')
+    return textRuleErrorMessage(field, raw)
+}
+
+function requiredMessage(field: FormField, kind: 'default' | 'select' | 'multi' | 'file' = 'default') {
+    const label = field.label || field.key
+    if (kind === 'select') return t('components.validation.selectOption', { field: label })
+    if (kind === 'multi') return t('components.validation.selectAtLeastOne', { field: label })
+    if (kind === 'file') return t('components.validation.uploadImage', { field: label })
+    return t('components.validation.required', { field: label })
+}
+
+function isFieldValueEmpty(field: FormField): boolean {
+    const type = field.type || 'input'
+    const value = formData.value[field.key]
+
+    if (type === 'select' && field.multiple) {
+        return !Array.isArray(value) || value.length === 0
+    }
+    if (type === 'select') {
+        return value === undefined || value === null || value === ''
+    }
+    if (type === 'permission-tree') {
+        return !Array.isArray(value) || value.length === 0
+    }
+    if (type === 'date') {
+        return value === undefined || value === null
+    }
+    if (type === 'file') {
+        const hasNew = normalizeFileUploadValue(value).length > 0
+        const hasCurrent = String(formData.value[getCurrentImageKey(field.key)] || '').trim() !== ''
+        return !hasNew && !hasCurrent
+    }
+    if (type === 'money-tabs') {
+        const input = formData.value[moneyTabsInputKey(field.key)]
+        if (input === '' || input === undefined || input === null) return true
+        return !Number.isFinite(Number(input))
+    }
+    if (type === 'number' || type === 'currency' || field.currency === 'USD') {
+        return String(value ?? '').trim() === ''
+    }
+    return String(value ?? '').trim() === ''
+}
+
+function validateField(field: FormField): string {
+    if (field.required) {
+        if (isFieldValueEmpty(field)) {
+            const type = field.type || 'input'
+            if (type === 'select' && field.multiple) return requiredMessage(field, 'multi')
+            if (type === 'select') return requiredMessage(field, 'select')
+            if (type === 'file') return requiredMessage(field, 'file')
+            return requiredMessage(field)
+        }
+    }
+    if (field.type === 'money-tabs') {
+        const err = moneyTabsError(field)
+        if (err) return err
+    }
+    if (isUsdField(field)) {
+        const err = usdFieldError(field)
+        if (err) return err
+    }
+    const numberErr = numberFieldError(field)
+    if (numberErr) return numberErr
+    const langErr = languageFieldError(field)
+    if (langErr) return langErr
+    return ''
+}
+
+function getFieldError(field: FormField): string {
+    if (validationAttempted.value) return validateField(field)
+    if (field.type === 'money-tabs') return moneyTabsError(field)
+    if (isUsdField(field)) return usdFieldError(field)
+    if (field.type === 'number') return numberFieldError(field)
+    return languageFieldError(field)
+}
+
+function onTextInput(field: FormField, event: Event) {
+    if (!field.textRule) return
+    const target = event.target as HTMLInputElement | HTMLTextAreaElement | null
+    if (!target) return
+    const raw = target.value ?? ''
+    const sanitized = sanitizeByTextRule(field.textRule, raw)
+    if (sanitized !== raw) {
+        target.value = sanitized
+    }
+    formData.value[field.key] = sanitized
+}
+
+function currencyPrefix(field: FormField): string {
+    return resolveCurrencyPrefix(field)
+}
+
+function hasFieldError(field: FormField): boolean {
+    return Boolean(getFieldError(field))
+}
+
+function resetValidation() {
+    validationAttempted.value = false
+}
+
+function validateAll(): boolean {
+    validationAttempted.value = true
+    const firstInvalid = activeFields.value.find(field => validateField(field))
+    if (!firstInvalid) return true
+    nextTick(() => {
+        const root = formBodyRef.value
+        if (!root) return
+        const el = root.querySelector('[data-field-error="true"]') as HTMLElement | null
+        el?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+    })
+    return false
+}
+
 // Watch for data changes to sync form data
 watch(() => props.data, (newVal) => {
     initializeFormData(newVal)
 }, { immediate: true })
 
 watch(open, (isOpen) => {
-    if (!isOpen) return
+    if (!isOpen) {
+        resetValidation()
+        return
+    }
+    resetValidation()
     // Re-initialize every open so edit/new file upload always starts clean.
     initializeFormData(props.data)
 })
@@ -280,6 +414,8 @@ onBeforeUnmount(() => {
 })
 
 function onSave() {
+    if (!validateAll()) return
+
     // Process form data back to plain objects (e.g. format dates back to string)
     const result = { ...formData.value }
     activeFields.value.forEach(field => {
@@ -327,10 +463,12 @@ function onSave() {
     </template>
 
     <template #body>
-      <div class="flex flex-col space-y-3 px-1 w-full overflow-hidden">
+      <div ref="formBodyRef" class="flex flex-col space-y-3 px-1 w-full overflow-hidden">
         <template v-for="field in activeFields" :key="field.key">
-            <UFormField 
+            <UFormField
                 class="w-full"
+                :data-field-error="hasFieldError(field) ? 'true' : undefined"
+                :error="getFieldError(field) || undefined"
             >
                 <template #label>
                     <div class="flex items-center gap-1.5">
@@ -347,8 +485,10 @@ function onSave() {
                     :type="field.type === 'password' ? (showPasswords[field.key] ? 'text' : 'password') : 'text'"
                     :placeholder="field.placeholder" 
                     :disabled="field.readonly"
+                    :color="hasFieldError(field) ? 'error' : undefined"
                     size="lg" 
                     class="w-full" 
+                    @input="onTextInput(field, $event)"
                 >
                     <template v-if="field.type === 'password'" #trailing>
                         <UButton
@@ -385,23 +525,20 @@ function onSave() {
                         type="number"
                         inputmode="decimal"
                         :step="isUsdField(field) ? 0.01 : 'any'"
-                        :min="isUsdField(field) ? (field.min ?? 0) : undefined"
+                        :min="field.min ?? 0"
                         :max="field.max"
                         :placeholder="field.placeholder"
                         :disabled="field.readonly"
-                        :color="usdFieldError(field) ? 'error' : undefined"
+                        :color="hasFieldError(field) ? 'error' : undefined"
                         size="lg"
                         class="w-full tabular-nums"
-                        :ui="isUsdField(field) ? { trailing: 'pe-2' } : undefined"
+                        :ui="isUsdField(field) ? { leading: 'ps-2' } : undefined"
                         @input="onNumberInput(field.key, $event)"
                     >
-                        <template v-if="isUsdField(field)" #trailing>
-                            <span class="text-xs font-semibold text-muted-foreground select-none">USD</span>
+                        <template v-if="isUsdField(field)" #leading>
+                            <span class="text-xs font-semibold text-muted-foreground select-none">{{ currencyPrefix(field) }}</span>
                         </template>
                     </UInput>
-                    <p v-if="usdFieldError(field)" class="text-xs text-error">
-                        {{ usdFieldError(field) }}
-                    </p>
                 </div>
 
                 <!-- SELECT TYPE -->
@@ -410,41 +547,51 @@ function onSave() {
                     v-model="formData[field.key]"
                     :items="field.items || []"
                     :placeholder="field.placeholder || $t('components.select')"
-                    class="w-full"
+                    :class="['w-full', hasFieldError(field) ? 'ring-2 ring-error rounded-md' : '']"
                 />
 
                 <USelect 
                     v-else-if="field.type === 'select'"
                     v-model="formData[field.key]"
                     :items="field.items"
+                    :color="hasFieldError(field) ? 'error' : undefined"
                     size="lg" 
                     class="w-full" 
                 />
 
                 <!-- PERMISSION TREE TYPE -->
-                <CommonAppPermissionTreeSelect
+                <div
                     v-else-if="field.type === 'permission-tree'"
-                    v-model="formData[field.key]"
-                    :pages="(field.items || []) as string[]"
-                    :actions="(field.childItems || []) as string[]"
-                    :actions-by-page="field.actionsByPage || {}"
-                />
+                    :class="hasFieldError(field) ? 'rounded-lg ring-2 ring-error p-0.5' : ''"
+                >
+                    <CommonAppPermissionTreeSelect
+                        v-model="formData[field.key]"
+                        :pages="(field.items || []) as string[]"
+                        :actions="(field.childItems || []) as string[]"
+                        :actions-by-page="field.actionsByPage || {}"
+                    />
+                </div>
 
                 <!-- TEXTAREA TYPE -->
                 <UTextarea 
                     v-else-if="field.type === 'textarea'"
                     v-model="formData[field.key]"
                     :placeholder="field.placeholder"
+                    :color="hasFieldError(field) ? 'error' : undefined"
                     autoresize 
                     size="md"
                     class="w-full"
+                    @input="onTextInput(field, $event)"
                 />
 
                 <!-- DATE TYPE -->
                 <UPopover v-else-if="field.type === 'date'" class="w-full">
                     <UButton 
-                        color="neutral" variant="soft" 
-                        size="lg" class="w-full justify-start font-normal text-muted-foreground"
+                        :color="hasFieldError(field) ? 'error' : 'neutral'"
+                        variant="soft" 
+                        size="lg"
+                        class="w-full justify-start font-normal"
+                        :class="hasFieldError(field) ? '' : 'text-muted-foreground'"
                         :label="formData[field.key] ? formData[field.key].toString() : (field.placeholder || $t('components.selectDate'))"
                     />
                     <template #content>
@@ -453,30 +600,34 @@ function onSave() {
                 </UPopover>
 
                 <!-- FILE TYPE (IMAGE ONLY) -->
-                <div v-else-if="field.type === 'file'" class="w-full">
+                <div
+                    v-else-if="field.type === 'file'"
+                    class="w-full"
+                    :class="hasFieldError(field) ? 'rounded-lg ring-2 ring-error' : ''"
+                >
                     <UFileUpload
                         :key="`${field.key}-${fileUploadRenderKeys[field.key] || 0}`"
                         v-model="formData[field.key]"
                         icon="i-lucide-image"
-                        :label="field.placeholder || 'Drop your image here'"
-                        description="SVG, PNG, JPG or GIF (max. 2MB)"
+                        :label="field.placeholder || $t('components.imageUploadReplace')"
+                        :description="$t('components.imageUploadHint')"
                         accept="image/*"
                         :multiple="false"
-                        class="w-full min-h-48 relative"
+                        class="w-full relative **:data-[slot=base]:min-h-0 **:data-[slot=base]:py-3"
                     >
                         <template #default>
                             <div
                                 v-if="filePreviewSources[field.key]"
-                                class="w-full h-full min-h-48 relative rounded-lg overflow-hidden border border-default pointer-events-none"
+                                class="w-full relative rounded-lg overflow-hidden border border-default pointer-events-none"
                             >
                                 <img
                                     :src="filePreviewSources[field.key]"
                                     alt="Current image"
-                                    class="w-full h-full min-h-48 object-cover"
+                                    class="block w-full h-auto max-w-full object-contain"
                                 />
-                                <div class="absolute inset-0 bg-black/25 flex items-end justify-center p-2">
+                                <div class="absolute inset-x-0 bottom-0 bg-black/25 flex items-end justify-center p-2">
                                     <span class="text-white text-xs font-medium">
-                                        Click or drop to replace image
+                                        {{ $t('components.imageUploadReplace') }}
                                     </span>
                                 </div>
                             </div>

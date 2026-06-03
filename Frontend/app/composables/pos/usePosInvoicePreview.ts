@@ -1,4 +1,4 @@
-import { computed, onMounted, ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useRoute } from '#imports'
 import { usePosApi } from '~/utils/api'
 
@@ -11,7 +11,14 @@ export function usePosInvoicePreview() {
   const isLoadingPreview = ref(false)
   const shouldAutoOpenPrintDialog = computed(() => String(route.query.autoPrint || '') === '1')
 
+  function clearPreview() {
+    selectedReportInvoices.value = []
+    selectedReportInvoice.value = null
+    selectedReportInvoiceLines.value = []
+  }
+
   async function loadPreviewFromRoute() {
+    if (String(route.query.reopen || '') === '1') return
     const previewKey = String(route.query.previewKey || '')
     const invoiceNo = String(route.query.invoiceNo || '')
     if (!previewKey && !invoiceNo) return
@@ -63,8 +70,6 @@ export function usePosInvoicePreview() {
     () => selectedReportInvoices.value.length > 0 || Boolean(selectedReportInvoice.value)
   )
 
-  onMounted(loadPreviewFromRoute)
-
   return {
     selectedReportInvoices,
     selectedReportInvoice,
@@ -72,6 +77,7 @@ export function usePosInvoicePreview() {
     hasReportPreviewInvoices,
     isLoadingPreview,
     shouldAutoOpenPrintDialog,
-    loadPreviewFromRoute
+    loadPreviewFromRoute,
+    clearPreview,
   }
 }

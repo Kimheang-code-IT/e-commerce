@@ -38,12 +38,16 @@ export interface FormField {
   multiple?: boolean
   readonly?: boolean
   required?: boolean
-  /** Show trailing "USD" and treat as money (also use type: 'currency'). */
+  /** Show leading currency prefix and treat as money (also use type: 'currency'). */
   currency?: 'USD'
   min?: number
   max?: number
   /** For type `money-tabs`: field key used as base price when mode is % (e.g. outPrice). */
   refPriceKey?: string
+  /** Text language constraint for input/textarea. */
+  textRule?: 'khmer' | 'english' | 'numeric' | 'text'
+  /** Optional override for currency prefix (default: USD). */
+  currencyPrefix?: string
   class?: string
 }
 
@@ -58,8 +62,12 @@ export interface Product {
   category: string
   /** Public category id from the API (`Cat_00001`). */
   categoryId: string
+  /** Selected supplier id when creating/updating product. */
+  supplierId?: number | string
   inPrice: number
   outPrice: number
+  /** FIFO: price of the oldest stock batch still available (POS uses this first). */
+  salePrice?: number
   commission: number
   totalStock: number
   inStock: number
@@ -87,9 +95,13 @@ export interface FinanceEntry {
 }
 
 export interface ReportRow {
+  id?: number
   invoiceNo: string
   date: string
   product: string
+  productId?: number
+  qty?: number
+  price?: number
   customer: string
   phoneCustomer: string
   seller: string
@@ -101,9 +113,12 @@ export interface ReportRow {
 
 export interface DeliveryEntry {
   invoiceId: string
+  invoiceNo?: string
+  customer?: string
   address: string
-  deliveryType: 'VET' | 'Domnaksiiksa' | 'Grap' | 'J&T'
+  deliveryType: 'VET' | 'Domnaksiiksa' | 'Grap' | 'J&T' | string
   deliveryPrice: number
+  total: number
   deliveryStatus: string
   date: string
 }
@@ -118,6 +133,32 @@ export interface CommissionEntry {
   amount: number
   commission: number
   saleCount?: number
+}
+
+export interface SupplierProductItem {
+  id: number
+  productName: string
+  qty: number
+  unitPrice: number
+  amount: number
+  createdAt: string
+}
+
+export interface Supplier {
+  id: number
+  name: string
+  gender: 'Male' | 'Female' | 'Other'
+  address: string
+  phoneNumber: string
+  totalProduct: number
+  totalAmount: number
+  createdAt: string
+}
+
+export interface RefundRecord extends ReportRow {
+  id: number
+  refundedAt: string
+  refundReason: string
 }
 
 export interface SystemRole {

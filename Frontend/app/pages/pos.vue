@@ -55,6 +55,8 @@ const {
     addToCart,
     updateQty,
     removeFromCart,
+    setLineUnitPrice,
+    resetLineUnitPrice,
     clearCart,
     requestFinish,
     finishWithoutPrint,
@@ -143,7 +145,20 @@ const previewCart = computed(() => {
 <template>
     <div class="flex flex-col h-full bg-background text-foreground overflow-hidden tracking-tight">
         <!-- ── Header ── -->
-        <LayoutAppHeader :title="selectedReportInvoice?.invoiceNo ? `${t('pages.pos.invoice.fields.invoiceNo')}: ${selectedReportInvoice.invoiceNo}` : (groupedReportInvoices.length > 0 ? `${t('pages.pos.invoice.title')} (${groupedReportInvoices.length})` : (checkoutInvoiceNo ? `${t('pages.pos.invoice.fields.invoiceNo')}: ${checkoutInvoiceNo}` : t('pages.pos.title')))">
+        <LayoutAppHeader hide-sidebar-toggle title="">
+            <template #leading>
+                <UButton
+                    to="/"
+                    color="primary"
+                    variant="solid"
+                    size="sm"
+                    icon="i-lucide-layout-dashboard"
+                    :aria-label="t('navigation.dashboard')"
+                    class="shrink-0"
+                >
+                    {{ t('navigation.dashboard') }}
+                </UButton>
+            </template>
             <template #right>
                 <div class="flex items-center">
                     <UStepper v-model="currentStep" :items="mobileStepperItems" size="sm"
@@ -242,13 +257,16 @@ const previewCart = computed(() => {
                 </div>
             </div>
 
-            <div :class="[mobilePanel === 'right' ? 'flex' : 'hidden', 'lg:flex w-full lg:w-[35%]']">
+            <div
+                :class="[mobilePanel === 'right' ? 'flex' : 'hidden', 'lg:flex w-full lg:w-[35%] min-h-0 h-full flex-col']">
                 <CommonAppPosCartPanel :cart="cart" :item-count="itemCount" :subtotal="subtotal"
                     v-model:discount-mode="discountMode" v-model:discount-input="discountInput"
                     :discount-amount="discountAmount" :total="total"
                     :current-step="currentStep" :total-steps="items.length"
                     :allow-finish-without-cart="hasReportPreviewInvoices" @clear-cart="clearCart"
-                    @update-qty="updateQty" @remove-item="removeFromCart" @next="requestFinish" />
+                    @update-qty="updateQty" @remove-item="removeFromCart"
+                    @set-line-price="setLineUnitPrice" @reset-line-price="resetLineUnitPrice"
+                    @next="requestFinish" />
             </div>
         </div>
 

@@ -2,10 +2,13 @@
 interface Props {
   title: string
   showDatepicker?: boolean
+  /** Hide menu toggle (e.g. POS fullscreen uses Dashboard link instead). */
+  hideSidebarToggle?: boolean
 }
 
 withDefaults(defineProps<Props>(), {
-  showDatepicker: false
+  showDatepicker: false,
+  hideSidebarToggle: false,
 })
 </script>
 
@@ -13,7 +16,9 @@ withDefaults(defineProps<Props>(), {
   <ClientOnly>
     <UDashboardNavbar :title="title">
       <template #leading>
-        <UDashboardSidebarCollapse />
+        <slot name="leading">
+          <UDashboardSidebarCollapse v-if="!hideSidebarToggle" />
+        </slot>
       </template>
 
       <div class="flex-1" />

@@ -1,14 +1,21 @@
 import { computed, ref, watch } from 'vue'
-import type { TableColumn } from '@nuxt/ui'
+import type { DropdownMenuItem, TableColumn } from '@nuxt/ui'
 import { useBaseTable } from '~/composables/table/useBaseTable'
 import { useReportApi } from '~/utils/api'
 import { formatCurrency } from '~/utils/format/currency'
 import type { ReportRow } from '~/types'
 import { useServerListTable } from '~/features/shared/useServerListTable'
 import { useViewFilterOptions } from '~/composables/useViewFilterOptions'
+import { useAuthStore } from '~/stores/auth'
 
-export function useReport() {
+export type ReportRowActionHandlers = {
+  onRefund: (row: ReportRow) => void
+  onCheckout: (row: ReportRow) => void
+}
+
+export function useReport(handlers?: ReportRowActionHandlers) {
   const { t } = useI18n()
+  const auth = useAuthStore()
   const reportApi = useReportApi()
   const { rowSelection, columnVisibility } = useBaseTable({})
   const reportRows = ref<ReportRow[]>([])
@@ -92,7 +99,8 @@ export function useReport() {
     { accessorKey: 'seller', header: t('pages.report.columns.seller') },
     { accessorKey: 'source', header: t('pages.report.columns.source') },
     { accessorKey: 'address', header: t('pages.report.columns.address') },
-    { accessorKey: 'amount', header: t('pages.report.columns.amount'), footer: formatCurrency(reportSummary.value.amountSum, 'USD') }
+    { accessorKey: 'amount', header: t('pages.report.columns.amount'), footer: formatCurrency(reportSummary.value.amountSum, 'USD') },
+    { id: 'action', header: t('common.actions') }
   ])
 
   function toggleSelectAllFiltered(checked: boolean) {
@@ -122,6 +130,27 @@ export function useReport() {
     rowSelection.value = next
   })
 
+  function getDropdownActions(row: ReportRow): DropdownMenuItem[][] {
+    if (!handlers) return []
+    const items: DropdownMenuItem[] = []
+    if (auth.hasPermission('refund:create')) {
+      items.push({
+        label: t('pages.report.actions.refund'),
+        icon: 'i-lucide-rotate-ccw',
+        color: 'warning',
+        onSelect: () => handlers.onRefund(row)
+      })
+    }
+    if (auth.hasPermission('pos:checkout') || auth.hasPermission('pos:view')) {
+      items.push({
+        label: t('pages.report.actions.checkout'),
+        icon: 'i-lucide-shopping-cart',
+        onSelect: () => handlers.onCheckout(row)
+      })
+    }
+    return items.length ? [items] : []
+  }
+
   return {
     rowSelection,
     sorting,
@@ -143,6 +172,8 @@ export function useReport() {
     someFilteredSelected,
     toggleSelectAllFiltered,
     columns,
-    totalRows: resource.totalRows
+    getDropdownActions,
+    totalRows: resource.totalRows,
+    refresh: () => resource.refresh()
   }
 }

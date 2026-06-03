@@ -7,6 +7,7 @@ import { useSystemRoleApi } from '~/utils/api'
 import type { ApiQueryParams } from '~/utils/api'
 import { useServerTableResource } from '~/composables/table/useServerTableResource'
 import { useMutation } from '~/composables/data/useMutation'
+import { ROLE_PAGE_SETTINGS_KEYS, uniqueRolePageLabels } from '~/utils/auth/rolePages'
 
 export function useSystemRoleManagement() {
     const useBackendApi = useBackendMode()
@@ -68,6 +69,7 @@ export function useSystemRoleManagement() {
     const pagePermissionMap: Record<string, string[]> = {
         'settings:dashboard-management': ['view'],
         'settings:category-management': ['view', 'create', 'update', 'delete'],
+        'settings:supplier-management': ['view', 'create', 'update', 'delete'],
         'settings:product-management': [
             'view',
             'create',
@@ -82,14 +84,26 @@ export function useSystemRoleManagement() {
         'settings:pos-management': ['view', 'checkout'],
         'settings:finance-management': ['view', 'update'],
         'settings:report-management': ['view', 'export'],
+        'settings:refund-management': ['view', 'create', 'delete'],
         'settings:delivery-management': ['view', 'update', 'export'],
         'settings:history-management': ['view', 'export'],
         'settings:commission-management': ['view', 'export'],
         'settings:role-management': ['view', 'update'],
         'settings:user-management': ['view', 'create', 'update', 'delete']
     }
-    const pageItems = Object.keys(pagePermissionMap)
-    const permissionItems = ['view'] as const
+    const pageItems = [...ROLE_PAGE_SETTINGS_KEYS]
+    const permissionItems = [
+        'view',
+        'create',
+        'update',
+        'delete',
+        'export',
+        'checkout',
+        'adjust-stock',
+        'view-adjust-stock',
+        'add-damage',
+        'view-add-damage',
+    ] as const
 
     // --- Computed Logic ---
     const filteredRoles = computed(() => {
@@ -107,7 +121,7 @@ export function useSystemRoleManagement() {
         if (confirmMode.value === 'delete') {
             return {
                 title: t('actions.delete'),
-                description: `Confirm permanent removal of the "${selectedRole.value?.name || ""}" role policy?`,
+                description: `You are about to delete role "${selectedRole.value?.name || ""}".\nUsers with this role may lose access permissions.\nThis action is permanent and cannot be undone.`,
                 type: 'error' as const,
                 submitLabel: t('actions.delete'),
                 icon: 'i-lucide-shield-off'
@@ -116,7 +130,7 @@ export function useSystemRoleManagement() {
         if (confirmMode.value === 'edit') {
             return {
                 title: t('actions.save'),
-                description: `Confirm updating role policy for "${pendingRole.value?.name || ""}"?`,
+                description: `You updated role "${pendingRole.value?.name || ""}".\nPlease review page access permissions carefully.\nClick save to apply this policy.`,
                 submitLabel: t('actions.save'),
                 type: 'primary' as const,
                 icon: 'i-lucide-save'
@@ -124,7 +138,7 @@ export function useSystemRoleManagement() {
         }
         return {
             title: t('pages.roleManagement.addBtn'),
-            description: `Confirm creating new role policy "${pendingRole.value?.name || ""}"?`,
+            description: `You are creating role "${pendingRole.value?.name || ""}".\nSet the correct permissions for this role.\nClick confirm to create it.`,
             submitLabel: t('actions.confirm'),
             type: 'primary' as const,
             icon: 'i-lucide-shield-plus'
@@ -145,7 +159,7 @@ export function useSystemRoleManagement() {
 
     // --- Form Fields ---
     const roleFormFields = computed<FormField[]>(() => [
-        { key: 'name', label: t('pages.roleManagement.columns.name'), type: 'input', icon: 'i-lucide-shield', required: true },
+        { key: 'name', label: t('pages.roleManagement.columns.name'), type: 'input', icon: 'i-lucide-shield', required: true, textRule: 'english' },
         {
             key: 'pageAccess',
             label: t('pages.roleManagement.columns.pageAccess'),
@@ -231,6 +245,10 @@ export function useSystemRoleManagement() {
         isFormOpen.value = true
     }
 
+    function formatPageAccessForDisplay(tokens: string[]) {
+        return uniqueRolePageLabels(tokens, t)
+    }
+
     return {
         // Table States
         rowSelection, sorting, searchQuery, columnVisibility, columnFilters, pagination,
@@ -244,5 +262,6 @@ export function useSystemRoleManagement() {
         columns, roleFormFields,
         // Actions
         getDropdownActions, handleSaveRequest, finalizeAction, handleAddNew,
+        formatPageAccessForDisplay,
     }
 }

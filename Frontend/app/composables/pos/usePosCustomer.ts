@@ -31,6 +31,24 @@ export function usePosCustomer() {
     sellerId.value = next.sellerId
   }
 
+  function applyInvoiceHeader(invoice: Record<string, unknown>) {
+    customerName.value = String(invoice.customer || '')
+    customerPhone.value = String(invoice.phoneCustomer || '')
+    customerAddress.value = String(invoice.address || '')
+    const src = String(invoice.source ?? '').trim()
+    source.value = !src || src.toLowerCase() === 'other' ? 'Other' : src
+    if (invoice.deliveryType) deliveryType.value = String(invoice.deliveryType)
+    if (invoice.deliveryPrice != null) deliveryPrice.value = Number(invoice.deliveryPrice)
+    if (invoice.deliveryDate) {
+      const raw = String(invoice.deliveryDate)
+      deliveryDate.value = raw.includes('T') ? formatDate(new Date(raw)) : raw
+    }
+    if (invoice.paymentMethod) paymentMethod.value = String(invoice.paymentMethod)
+    if (invoice.deliveryStatus) deliveryStatus.value = String(invoice.deliveryStatus)
+    const sid = invoice.sellerId
+    sellerId.value = sid != null && sid !== '' ? Number(sid) : undefined
+  }
+
   return {
     customerType,
     customerName,
@@ -43,6 +61,7 @@ export function usePosCustomer() {
     paymentMethod,
     deliveryStatus,
     sellerId,
-    reset
+    reset,
+    applyInvoiceHeader,
   }
 }

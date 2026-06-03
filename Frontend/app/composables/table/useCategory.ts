@@ -169,7 +169,7 @@ export function useTotalRevenue() {
     if (confirmMode.value === "delete") {
       return {
         title: t("actions.delete"),
-        description: "Are you sure you want to delete this category? This action is permanent.",
+        description: `You are about to delete this category.\nProducts linked to this category may be affected.\nThis action is permanent and cannot be undone.`,
         type: "error" as const,
         submitLabel: t("actions.delete"),
       };
@@ -177,14 +177,14 @@ export function useTotalRevenue() {
     if (confirmMode.value === "edit") {
       return {
         title: t("actions.save"),
-        description: `Confirm updating category "${pendingPayload.value?.name || ""}"?`,
+        description: `You updated category "${pendingPayload.value?.name || ""}".\nPlease verify name and description are correct.\nClick save to apply these changes.`,
         type: "primary" as const,
         submitLabel: t("actions.save"),
       };
     }
     return {
       title: t("actions.add"),
-      description: `Confirm adding category "${pendingPayload.value?.name || ""}"?`,
+      description: `You are creating category "${pendingPayload.value?.name || ""}".\nMake sure the details are correct.\nClick confirm to add this category.`,
       type: "primary" as const,
       submitLabel: t("actions.confirm"),
     };

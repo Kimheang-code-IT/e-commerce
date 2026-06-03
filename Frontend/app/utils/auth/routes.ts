@@ -10,9 +10,11 @@ export type RoutePermissionEntry = {
 export const routePermissionMap: RoutePermissionEntry[] = [
   { home: '/', match: (path) => path === '/', permission: PERMISSIONS.dashboardView },
   { home: '/category', match: (path) => path.startsWith('/category'), permission: PERMISSIONS.categoryView },
+  { home: '/supplier', match: (path) => path.startsWith('/supplier'), permission: PERMISSIONS.supplierView },
   { home: '/product', match: (path) => path.startsWith('/product'), permission: PERMISSIONS.productView },
   { home: '/pos', match: (path) => path.startsWith('/pos'), permission: PERMISSIONS.posView },
   { home: '/report', match: (path) => path.startsWith('/report'), permission: PERMISSIONS.reportView },
+  { home: '/refund', match: (path) => path.startsWith('/refund'), permission: PERMISSIONS.refundView },
   { home: '/commission', match: (path) => path.startsWith('/commission'), permission: PERMISSIONS.commissionView },
   { home: '/finance', match: (path) => path.startsWith('/finance'), permission: PERMISSIONS.financeView },
   { home: '/delivery', match: (path) => path.startsWith('/delivery'), permission: PERMISSIONS.deliveryView },

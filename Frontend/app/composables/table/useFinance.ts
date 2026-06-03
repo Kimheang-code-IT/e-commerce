@@ -1,6 +1,6 @@
 import { ref, computed } from 'vue'
 import type { TableColumn } from '@nuxt/ui'
-import type { FinanceEntry } from '~/types'
+import type { FinanceEntry, FormField } from '~/types'
 import { useFinanceApi } from '~/utils/api'
 import { useServerListTable } from '~/features/shared/useServerListTable'
 
@@ -48,10 +48,10 @@ export function useFinance() {
   const isSlideoverOpen = ref(false)
   const editingRow = ref<FinanceEntry | null>(null)
 
-  const editFields = computed(() => [
-    { key: 'productName', label: t('pages.finance.columns.productName'), type: 'input', readonly: true },
-    { key: 'facebook', label: t('pages.finance.columns.facebook'), type: 'currency', min: 0 },
-    { key: 'other', label: t('pages.finance.columns.other'), type: 'currency', min: 0 },
+  const editFields = computed<FormField[]>(() => [
+    { key: 'productName', label: t('pages.finance.columns.productName'), type: 'input', readonly: true, textRule: 'english' },
+    { key: 'facebook', label: t('pages.finance.columns.facebook'), type: 'currency', min: 0, currencyPrefix: 'USD' },
+    { key: 'other', label: t('pages.finance.columns.other'), type: 'currency', min: 0, currencyPrefix: 'USD' },
     { key: 'totalCommission', label: t('pages.finance.columns.totalCommission'), type: 'number', readonly: true },
     { key: 'inPriceForPos', label: t('pages.finance.columns.inPriceForPos'), type: 'number', readonly: true },
   ])

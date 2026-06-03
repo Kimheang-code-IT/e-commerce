@@ -23,4 +23,14 @@ def setup_logging() -> None:
         diagnose=False,
     )
 
-    logging.basicConfig(handlers=[InterceptHandler()], level=logging.getLevelName(settings.log_level.upper()))
+    logging.basicConfig(
+        handlers=[InterceptHandler()],
+        level=logging.getLevelName(settings.log_level.upper()),
+        force=True,
+    )
+
+    # Route common framework logs through Loguru as well.
+    for name in ("uvicorn", "uvicorn.error", "uvicorn.access", "fastapi"):
+        framework_logger = logging.getLogger(name)
+        framework_logger.handlers = [InterceptHandler()]
+        framework_logger.propagate = False

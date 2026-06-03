@@ -2,42 +2,56 @@
 import type { Product } from '~/types'
 import { formatCurrency } from '~/utils/format/currency'
 import {
+  getCatalogUnitPrice,
+  getLineTotal,
+  getLineUnitPrice,
+  isLinePriceCustom,
+  type PosCartItem,
+} from '~/composables/pos/helpers'
+import {
   validateDiscountInput,
-  type DiscountMode
+  type DiscountMode,
 } from '~/composables/pos/discountHelpers'
-
-interface CartItem {
-  product: Product
-  qty: number
-}
 
 const discountMode = defineModel<DiscountMode>('discountMode', { default: 'usd' })
 const discountInput = defineModel<number>('discountInput', { required: true })
 
-const props = withDefaults(defineProps<{
-  cart: CartItem[]
-  itemCount: number
-  subtotal: number
-  discountAmount: number
-  total: number
-  currentStep: number
-  totalSteps: number
-  allowFinishWithoutCart?: boolean
-}>(), {
-  allowFinishWithoutCart: false
-})
+const props = withDefaults(
+  defineProps<{
+    cart: PosCartItem[]
+    itemCount: number
+    subtotal: number
+    discountAmount: number
+    total: number
+    currentStep: number
+    totalSteps: number
+    allowFinishWithoutCart?: boolean
+  }>(),
+  {
+    allowFinishWithoutCart: false,
+  },
+)
 
 const emit = defineEmits<{
   (e: 'clear-cart'): void
   (e: 'update-qty', productId: number, delta: number): void
   (e: 'remove-item', productId: number): void
+  (e: 'set-line-price', productId: number, price: number): void
+  (e: 'reset-line-price', productId: number): void
   (e: 'next'): void
 }>()
 
 const { t } = useI18n()
 
+const editingProductId = ref<number | null>(null)
+const priceDraft = ref(0)
+
+const isCartStep = computed(() => props.currentStep === 0)
+const isSummaryStep = computed(() => props.currentStep > 0)
+const isLastStep = computed(() => props.currentStep === props.totalSteps - 1)
+
 const discountValidationKey = computed(() =>
-  validateDiscountInput(discountMode.value, discountInput.value, props.subtotal)
+  validateDiscountInput(discountMode.value, discountInput.value, props.subtotal),
 )
 
 const discountErrorMessage = computed(() => {
@@ -49,20 +63,67 @@ const discountErrorMessage = computed(() => {
 })
 
 const discountInputMax = computed(() =>
-  discountMode.value === 'percent' ? 100 : props.subtotal
+  discountMode.value === 'percent' ? 100 : props.subtotal,
+)
+
+const cartNextDisabled = computed(
+  () => props.cart.length === 0 && !props.allowFinishWithoutCart,
+)
+
+const summaryNextDisabled = computed(
+  () => cartNextDisabled.value || !!discountValidationKey.value,
 )
 
 watch(discountMode, () => {
   if (discountInput.value < 0) discountInput.value = 0
 })
+
+function isEditingItem(item: PosCartItem) {
+  return editingProductId.value === item.product.id
+}
+
+function openPriceEdit(item: PosCartItem) {
+  editingProductId.value = item.product.id
+  priceDraft.value = getLineUnitPrice(item)
+}
+
+function commitPriceEdit(item: PosCartItem) {
+  if (!isEditingItem(item)) return
+  const price = Number(priceDraft.value)
+  if (Number.isFinite(price) && price >= 0) {
+    emit('set-line-price', item.product.id, price)
+  }
+  editingProductId.value = null
+}
+
+function cancelPriceEdit() {
+  editingProductId.value = null
+}
+
+function resetInlinePrice(item: PosCartItem) {
+  emit('reset-line-price', item.product.id)
+  editingProductId.value = null
+}
+
+function catalogPrice(product: Product) {
+  return getCatalogUnitPrice(product)
+}
 </script>
 
 <template>
-  <div class="w-full flex flex-col bg-card overflow-hidden">
+  <div class="w-full h-full min-h-0 flex flex-col bg-card overflow-hidden">
     <div class="flex items-center justify-between px-4 py-3.5 border-b border-default shrink-0">
       <div class="flex items-center gap-2">
         <UIcon name="i-lucide-shopping-cart" class="size-4 text-primary" />
         <span class="font-semibold text-base text-foreground">{{ $t('pages.pos.cart.title') }}</span>
+        <UBadge
+          v-if="isCartStep && itemCount > 0"
+          color="primary"
+          variant="soft"
+          size="sm"
+        >
+          {{ itemCount }}
+        </UBadge>
       </div>
       <div class="flex items-center gap-1.5">
         <UButton
@@ -78,10 +139,10 @@ watch(discountMode, () => {
       </div>
     </div>
 
-    <div class="flex-1 overflow-y-auto min-h-0">
+    <div class="flex-1 min-h-0 overflow-y-auto">
       <div
         v-if="cart.length === 0"
-        class="flex flex-col items-center justify-center h-full gap-3 text-muted-foreground px-4"
+        class="flex flex-col items-center justify-center min-h-48 gap-3 text-muted-foreground px-4 py-8"
       >
         <UIcon name="i-lucide-shopping-cart" class="size-10 opacity-20" />
         <p class="text-sm text-center">{{ $t('pages.pos.cart.empty') }}</p>
@@ -91,57 +152,142 @@ watch(discountMode, () => {
         <div
           v-for="item in cart"
           :key="item.product.id"
-          class="flex items-start gap-3 px-4 py-3 hover:bg-muted/30 transition-colors border-b border-default"
+          class="px-4 py-3 border-b border-default transition-colors"
+          :class="[
+            isEditingItem(item) ? 'bg-primary/5 ring-1 ring-inset ring-primary/20 py-3.5' : 'hover:bg-muted/30',
+          ]"
         >
-          <div class="flex-1 min-w-32">
-            <p class="text-xs font-medium text-foreground leading-tight line-clamp-1">
-              {{ item.product.name }}
-            </p>
-            <UBadge color="primary" variant="soft">
-              {{ formatCurrency(item.product.outPrice, 'USD') }}
-            </UBadge>
-          </div>
-
-          <div class="flex items-center justify-between gap-4 shrink-0">
-            <div class="flex items-center">
-              <UButton
-                size="xs"
-                color="neutral"
-                variant="outline"
-                icon="i-lucide-minus"
-                class="size-6 p-0 min-w-0 items-center justify-center"
-                @click="emit('update-qty', item.product.id, -1)"
-              />
-              <span class="w-7 text-center text-sm font-medium tabular-nums">
-                {{ item.qty }}
-              </span>
-              <UButton
-                size="xs"
-                color="neutral"
-                variant="outline"
-                icon="i-lucide-plus"
-                class="size-6 p-0 min-w-0 items-center justify-center"
-                :disabled="item.qty >= item.product.inStock"
-                @click="emit('update-qty', item.product.id, 1)"
-              />
+          <div class="flex items-start gap-3">
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium text-foreground leading-tight line-clamp-2">
+                {{ item.product.name }}
+              </p>
+              <p
+                v-if="!isEditingItem(item)"
+                class="text-xs text-muted-foreground mt-0.5 tabular-nums"
+              >
+                {{ formatCurrency(getLineUnitPrice(item), 'USD') }} × {{ item.qty }}
+              </p>
             </div>
-            <p class="text-sm font-semibold text-foreground">
-              {{ formatCurrency(item.product.outPrice * item.qty, 'USD') }}
-            </p>
-            <UButton
-              size="xs"
-              color="error"
-              variant="ghost"
-              icon="i-lucide-trash-2"
-              class="size-6 p-0 min-w-0 ml-1 items-center justify-center"
-              @click="emit('remove-item', item.product.id)"
-            />
+
+            <div class="flex flex-col items-end gap-2 shrink-0 min-w-0">
+              <!-- Row A: qty + line total + actions (always visible) -->
+              <div class="flex items-center gap-1">
+                <div class="flex items-center">
+                  <UButton
+                    size="xs"
+                    color="neutral"
+                    variant="outline"
+                    icon="i-lucide-minus"
+                    class="size-6 p-0 min-w-0 items-center justify-center"
+                    @click="emit('update-qty', item.product.id, -1)"
+                  />
+                  <span class="w-7 text-center text-sm font-medium tabular-nums">
+                    {{ item.qty }}
+                  </span>
+                  <UButton
+                    size="xs"
+                    color="neutral"
+                    variant="outline"
+                    icon="i-lucide-plus"
+                    class="size-6 p-0 min-w-0 items-center justify-center"
+                    :disabled="item.qty >= item.product.inStock"
+                    @click="emit('update-qty', item.product.id, 1)"
+                  />
+                </div>
+
+                <p
+                  v-if="!(isCartStep && isEditingItem(item))"
+                  class="text-sm font-semibold text-foreground tabular-nums min-w-18 text-right"
+                >
+                  {{ formatCurrency(getLineTotal(item), 'USD') }}
+                </p>
+                <UInput
+                  v-else
+                  v-model.number="priceDraft"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  size="xs"
+                  class="w-24 min-w-18"
+                  autofocus
+                  @keyup.enter="commitPriceEdit(item)"
+                  @keyup.escape="cancelPriceEdit"
+                />
+
+                <template v-if="isCartStep && isEditingItem(item)">
+                  <UButton
+                    size="xs"
+                    color="primary"
+                    variant="soft"
+                    icon="i-lucide-check"
+                    class="size-6 p-0 min-w-0 items-center justify-center"
+                    @mousedown.prevent
+                    @click="commitPriceEdit(item)"
+                  />
+                  <UButton
+                    v-if="isLinePriceCustom(item) || priceDraft !== catalogPrice(item.product)"
+                    size="xs"
+                    color="neutral"
+                    variant="ghost"
+                    icon="i-lucide-rotate-ccw"
+                    class="size-6 p-0 min-w-0 items-center justify-center"
+                    :aria-label="$t('pages.pos.cart.resetPrice')"
+                    @mousedown.prevent
+                    @click="resetInlinePrice(item)"
+                  />
+                </template>
+                <template v-else>
+                  <UButton
+                    v-if="isCartStep"
+                    size="xs"
+                    color="neutral"
+                    variant="ghost"
+                    icon="i-lucide-pencil"
+                    class="size-6 p-0 min-w-0 items-center justify-center"
+                    :aria-label="$t('pages.pos.cart.editLinePrice')"
+                    @click.stop="openPriceEdit(item)"
+                  />
+                  <UButton
+                    size="xs"
+                    color="error"
+                    variant="ghost"
+                    icon="i-lucide-trash-2"
+                    class="size-6 p-0 min-w-0 items-center justify-center"
+                    @click="emit('remove-item', item.product.id)"
+                  />
+                </template>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="border-t border-default px-4 py-3 flex flex-col gap-2.5 bg-card shrink-0 mt-auto sticky bottom-0 z-10">
+    <!-- Step 0: Next only -->
+    <div
+      v-if="isCartStep"
+      class="border-t border-default px-4 py-3 bg-card shrink-0"
+    >
+      <UButton
+        block
+        size="md"
+        icon="i-lucide-corner-down-right"
+        color="primary"
+        variant="solid"
+        :disabled="cartNextDisabled"
+        class="font-semibold"
+        @click="emit('next')"
+      >
+        {{ $t('pages.pos.cart.next') }}
+      </UButton>
+    </div>
+
+    <!-- Steps 1–2: full summary + Next / Finish -->
+    <div
+      v-else-if="isSummaryStep"
+      class="border-t border-default px-4 py-3 flex flex-col gap-2.5 bg-card shrink-0"
+    >
       <div class="flex justify-between text-sm text-muted-foreground">
         <span>{{ $t('pages.pos.cart.items') }}</span>
         <UBadge v-if="itemCount > 0" color="primary" variant="solid" size="sm">
@@ -184,14 +330,20 @@ watch(discountMode, () => {
       <UButton
         block
         size="md"
-        :icon="currentStep === totalSteps - 1 ? (cart.length === 0 && props.allowFinishWithoutCart ? 'i-lucide-printer' : 'i-lucide-check') : 'i-lucide-corner-down-right'"
+        :icon="isLastStep ? (cart.length === 0 && props.allowFinishWithoutCart ? 'i-lucide-printer' : 'i-lucide-check') : 'i-lucide-corner-down-right'"
         color="primary"
         variant="solid"
-        :disabled="(cart.length === 0 && !props.allowFinishWithoutCart) || !!discountValidationKey"
+        :disabled="summaryNextDisabled"
         class="font-semibold"
         @click="emit('next')"
       >
-        {{ currentStep === totalSteps - 1 ? (cart.length === 0 && props.allowFinishWithoutCart ? 'Print' : $t('pages.pos.cart.finish')) : $t('pages.pos.cart.next') }}
+        {{
+          isLastStep
+            ? cart.length === 0 && props.allowFinishWithoutCart
+              ? 'Print'
+              : $t('pages.pos.cart.finish')
+            : $t('pages.pos.cart.next')
+        }}
       </UButton>
     </div>
   </div>

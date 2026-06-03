@@ -8,6 +8,7 @@ import {
   useCategoryApi,
   useProductApi,
   useProductsViewApi,
+  useSupplierApi,
 } from "~/utils/api";
 import type { ApiQueryParams } from "~/utils/api";
 import { useServerTableResource } from "~/composables/table/useServerTableResource";
@@ -20,6 +21,7 @@ type ProductFormPayload = Omit<Product, "image"> & {
 type ProductApiPayload = {
   name: string;
   categoryId: string;
+  supplierId?: number;
   inPrice: number;
   outPrice: number;
   commission: number;
@@ -48,6 +50,7 @@ export function useProduct() {
   const productApi = useProductApi();
   const productsViewApi = useProductsViewApi();
   const categoryApi = useCategoryApi();
+  const supplierApi = useSupplierApi();
   const { formattedRange } = useGlobalFilter();
   const {
     t,
@@ -74,6 +77,8 @@ export function useProduct() {
   const isStockAdjustOpen = ref(false);
   const stockAdjustMode = ref<"added" | "damaged">("added");
   const stockAdjustQty = ref<number>(0);
+  const stockAdjustInPrice = ref<number>(0);
+  const stockAdjustOutPrice = ref<number>(0);
   const stockAdjustNote = ref("");
   const stockAdjustTarget = ref<Product | null>(null);
   const isHistoryOpen = ref(false);
@@ -89,6 +94,7 @@ export function useProduct() {
 
   // --- Filter States ---
   const categoryItems = ref<{ label: string; value: string }[]>([]);
+  const supplierItems = ref<{ label: string; value: string }[]>([]);
   const selectedCategories = ref<
     Array<string | { label: string; value: string }>
   >([]);
@@ -157,7 +163,55 @@ export function useProduct() {
 
   onMounted(() => {
     loadCategoryItems();
+    loadSupplierItems();
   });
+
+  async function loadSupplierItems() {
+    try {
+      const res = await supplierApi.list({
+        page: 1,
+        limit: 200,
+        sortBy: "name",
+        sortOrder: "asc",
+      });
+      supplierItems.value = (res.data || [])
+        .map((item: any) => ({
+          label: String(item?.name || "").trim(),
+          value: String(item?.id || "").trim(),
+        }))
+        .filter((item: { label: string; value: string }) => Boolean(item.label && item.value));
+    } catch {
+      supplierItems.value = [];
+    }
+  }
+
+  async function resolveSupplierIdForProduct(entry: Product): Promise<number | undefined> {
+    const currentSupplierId =
+      entry.supplierId !== undefined && entry.supplierId !== null && String(entry.supplierId).trim()
+        ? Number(entry.supplierId)
+        : undefined;
+    if (currentSupplierId) return currentSupplierId;
+
+    const productName = String(entry.name || "").trim().toLowerCase();
+    if (!productName) return undefined;
+
+    const suppliers = supplierItems.value
+      .map((item) => Number(item.value))
+      .filter((id) => Number.isFinite(id));
+
+    for (const supplierId of suppliers) {
+      try {
+        const res = await supplierApi.listProducts(supplierId, { page: 1, limit: 200 });
+        const match = (res.data || []).find(
+          (p: any) => String(p?.productName || "").trim().toLowerCase() === productName,
+        );
+        if (match) return supplierId;
+      } catch {
+        // Ignore per-supplier lookup errors and continue scanning.
+      }
+    }
+    return undefined;
+  }
 
   // --- Computed ---
   const filteredEntries = computed(() => {
@@ -189,7 +243,7 @@ export function useProduct() {
     if (confirmMode.value === "delete") {
       return {
         title: t("actions.delete"),
-        description: `Are you sure you want to remove product #${selectedEntry.value?.id}? This action is permanent.`,
+        description: `You are about to delete product #${selectedEntry.value?.id}.\nThis will remove the product from your catalog.\nThis action is permanent and cannot be undone.`,
         type: "error" as const,
         submitLabel: t("actions.delete"),
         icon: "i-lucide-trash-2",
@@ -200,8 +254,8 @@ export function useProduct() {
         ? t("pages.dataEntry.formTitleEdit")
         : t("pages.dataEntry.formTitleNew"),
       description: selectedEntry.value
-        ? `Save changes to product #${pendingEntry.value?.id}?`
-        : `Confirm adding new product "${pendingEntry.value?.name}"?`,
+        ? `You updated product #${pendingEntry.value?.id}.\nPlease verify stock, prices, and category.\nClick save to apply changes.`
+        : `You are creating product "${pendingEntry.value?.name}".\nPlease verify all fields before submit.\nClick confirm to add this product.`,
       type: "primary" as const,
       submitLabel: selectedEntry.value
         ? t("actions.save")
@@ -275,6 +329,7 @@ export function useProduct() {
       type: "input",
       placeholder: "ឧ. កុំព្យូទ័រយួរដៃ, គ្រឿងបន្លាស់",
       required: true,
+      textRule: "english",
     },
     {
       key: "categoryId",
@@ -284,12 +339,20 @@ export function useProduct() {
       required: true,
     },
     {
+      key: "supplierId",
+      label: "Supplier",
+      type: "select",
+      items: supplierItems.value,
+      required: false,
+    },
+    {
       key: "inPrice",
       label: t("product.inPrice"),
       type: "currency",
       placeholder: "0.00",
       required: true,
       min: 0,
+      currencyPrefix: "USD",
     },
     {
       key: "outPrice",
@@ -298,6 +361,7 @@ export function useProduct() {
       placeholder: "0.00",
       required: true,
       min: 0,
+      currencyPrefix: "USD",
     },
     {
       key: "commission",
@@ -314,7 +378,7 @@ export function useProduct() {
       type: "number",
       placeholder: "0",
       required: !Boolean(selectedEntry.value?.id),
-      readonly: Boolean(selectedEntry.value?.id),
+      readonly: false,
     },
     {
       key: "stockNote",
@@ -332,8 +396,12 @@ export function useProduct() {
         {
           label: t("actions.edit"),
           icon: "i-lucide-edit",
-          onSelect: () => {
-            selectedEntry.value = { ...entry };
+          onSelect: async () => {
+            const resolvedSupplierId = await resolveSupplierIdForProduct(entry);
+            selectedEntry.value = {
+              ...entry,
+              supplierId: resolvedSupplierId,
+            };
             isFormOpen.value = true;
           },
         },
@@ -400,14 +468,15 @@ export function useProduct() {
     pendingImageFile.value = resolveFirstUploadFile(data.image);
     const { imageCurrent: _imageCurrent, ...restData } = data;
     const parsedInStock = Number(data.inStock ?? 0);
-    const rawTotal = (data as Record<string, unknown>).totalStock;
-    const totalStock =
-      rawTotal !== undefined && rawTotal !== null && rawTotal !== ""
-        ? Number(rawTotal)
-        : parsedInStock;
+    // Keep total stock synchronized with current in-stock value.
+    const totalStock = parsedInStock;
     pendingEntry.value = {
       ...(restData as Partial<Product>),
       image: resolveImageForSave(data),
+      supplierId:
+        data.supplierId !== undefined && data.supplierId !== null && String(data.supplierId).trim()
+          ? Number(data.supplierId)
+          : undefined,
       inStock: parsedInStock,
       sold: Number(data.sold ?? 0),
       added: Number(data.added ?? 0),
@@ -427,6 +496,10 @@ export function useProduct() {
     return {
       name: String(data?.name || "").trim(),
       categoryId: String(data?.categoryId ?? "").trim(),
+      supplierId:
+        data?.supplierId !== undefined && data?.supplierId !== null && String(data.supplierId).trim()
+          ? Number(data.supplierId)
+          : undefined,
       inPrice: Number(data?.inPrice ?? 0),
       outPrice: Number(data?.outPrice ?? 0),
       commission: Number(data?.commission ?? 0),
@@ -507,6 +580,9 @@ export function useProduct() {
     stockAdjustTarget.value = entry;
     stockAdjustMode.value = mode;
     stockAdjustQty.value = 0;
+    stockAdjustInPrice.value = Number(entry.inPrice || 0);
+    stockAdjustOutPrice.value = Number(entry.salePrice ?? entry.outPrice ?? 0);
+    stockAdjustNote.value = "";
     isStockAdjustOpen.value = true;
   }
 
@@ -515,24 +591,13 @@ export function useProduct() {
     const qty = Number(stockAdjustQty.value);
     if (!target || !Number.isFinite(qty) || qty <= 0) return;
 
-    const deltaAdded = stockAdjustMode.value === "added" ? qty : 0;
-    const deltaDamaged = stockAdjustMode.value === "damaged" ? qty : 0;
-
-    const nextAdded = Number(target.added || 0) + deltaAdded;
-    const nextDamaged = Number(target.damaged || 0) + deltaDamaged;
-    const nextInStock = Number(target.inStock || 0) + deltaAdded - deltaDamaged;
-    const nextTotalStock = Number(target.totalStock || 0) + deltaAdded;
-
-    const payload = toProductApiPayload({
-      ...target,
-      added: nextAdded,
-      damaged: nextDamaged,
-      inStock: nextInStock,
-      totalStock: nextTotalStock,
-      stockNote: stockAdjustNote.value,
+    await productApi.adjustStock(target.id, {
+      mode: stockAdjustMode.value,
+      qty,
+      inPrice: stockAdjustMode.value === "added" ? Number(stockAdjustInPrice.value) : 0,
+      outPrice: stockAdjustMode.value === "added" ? Number(stockAdjustOutPrice.value) : 0,
+      note: stockAdjustNote.value || undefined,
     });
-
-    await productApi.update(target.id, payload);
     await resource.refresh();
 
     toast.add({
@@ -547,6 +612,8 @@ export function useProduct() {
     isStockAdjustOpen.value = false;
     stockAdjustTarget.value = null;
     stockAdjustQty.value = 0;
+    stockAdjustInPrice.value = 0;
+    stockAdjustOutPrice.value = 0;
     stockAdjustNote.value = "";
   }
 
@@ -599,6 +666,11 @@ export function useProduct() {
     { deep: true },
   );
 
+  async function onHistorySaved() {
+    await loadHistory();
+    await resource.refresh();
+  }
+
   return {
     // Table States
     rowSelection,
@@ -631,6 +703,8 @@ export function useProduct() {
     handleAddNew,
     stockAdjustMode,
     stockAdjustQty,
+    stockAdjustInPrice,
+    stockAdjustOutPrice,
     stockAdjustNote,
     stockAdjustTarget,
     openStockAdjustDialog,
@@ -645,5 +719,6 @@ export function useProduct() {
     historyDateRange,
     openHistory,
     loadHistory,
+    onHistorySaved,
   };
 }

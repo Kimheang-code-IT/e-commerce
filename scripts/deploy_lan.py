@@ -11,6 +11,7 @@ Or double-click / run: start-lan.ps1
 from __future__ import annotations
 
 import argparse
+import os
 import socket
 import subprocess
 import sys
@@ -77,12 +78,59 @@ def _read_backend_replicas() -> int:
     return 1
 
 
+def detect_compose_project_name() -> str:
+    """Reuse the original project name so existing volumes/containers (ecom-postgres) attach."""
+    # 1) If shared postgres container already exists, follow its owning compose project label.
+    try:
+        owner = subprocess.run(
+            [
+                "docker",
+                "inspect",
+                "ecom-postgres",
+                "--format",
+                "{{ index .Config.Labels \"com.docker.compose.project\" }}",
+            ],
+            capture_output=True,
+            text=True,
+            check=False,
+        ).stdout.strip()
+        if owner:
+            return owner
+    except OSError:
+        pass
+
+    # 2) Otherwise respect current .env.
+    if ENV_PATH.is_file():
+        for line in ENV_PATH.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if line.startswith("COMPOSE_PROJECT_NAME=") and not line.endswith("="):
+                name = line.split("=", 1)[1].strip()
+                if name:
+                    return name
+    # 3) Fallback to known volumes.
+    try:
+        out = subprocess.run(
+            ["docker", "volume", "ls", "-q"],
+            capture_output=True,
+            text=True,
+            check=False,
+        ).stdout
+    except OSError:
+        out = ""
+    if "e-comerce_pg_data" in out:
+        return "e-comerce"
+    if "e-commerce_pg_data" in out:
+        return "e-commerce"
+    return "e-comerce"
+
+
 def write_compose_env(*, host_ip: str, http_port: int, https_port: int, backend_replicas: int) -> str:
+    project = detect_compose_project_name()
     public_url = f"http://{host_ip}:{http_port}"
     lines = [
         "# Auto-generated — do not edit; regenerated on each start (scripts/deploy_lan.py).",
-        "# Docker volume prefix: e-commerce_pg_data (set e-comerce after folder rename only).",
-        "COMPOSE_PROJECT_NAME=e-commerce",
+        f"# Docker volume prefix: {project}_pg_data",
+        f"COMPOSE_PROJECT_NAME={project}",
         f"HOST_LAN_IP={host_ip}",
         f"PUBLIC_HTTP_PORT={http_port}",
         f"PUBLIC_HTTPS_PORT={https_port}",
@@ -119,18 +167,22 @@ def run_env_check() -> int:
 def compose_up(*, build: bool, profile_beat: bool = False, backend_replicas: int = 1) -> int:
     if run_env_check() != 0:
         return 1
+    compose_project = detect_compose_project_name()
+    run_env = dict(**os.environ)
+    run_env["COMPOSE_PROJECT_NAME"] = compose_project
     if build:
         print("Building:", ", ".join(COMPOSE_BUILD_SERVICES))
         code = subprocess.run(
             ["docker", "compose", "build", *COMPOSE_BUILD_SERVICES],
             cwd=ROOT,
+            env=run_env,
         ).returncode
         if code != 0:
             return code
     cmd = ["docker", "compose", "up", "-d", "--scale", f"backend={backend_replicas}"]
     if profile_beat:
         cmd = ["docker", "compose", "--profile", "beat", "up", "-d", "--scale", f"backend={backend_replicas}"]
-    return subprocess.run(cmd, cwd=ROOT).returncode
+    return subprocess.run(cmd, cwd=ROOT, env=run_env).returncode
 
 
 def main() -> int:

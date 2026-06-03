@@ -80,7 +80,7 @@ export function useSystemUserManagement() {
     if (confirmMode.value === "delete") {
       return {
         title: t("actions.delete"),
-        description: `Confirm permanent removal of account for "${selectedUser.value?.name || ""}"?`,
+        description: `You are about to delete account "${selectedUser.value?.name || ""}".\nThis user will no longer be able to sign in.\nThis action is permanent and cannot be undone.`,
         type: "error" as const,
         submitLabel: t("actions.delete"),
         icon: "i-lucide-user-minus",
@@ -89,7 +89,7 @@ export function useSystemUserManagement() {
     if (confirmMode.value === "edit") {
       return {
         title: t("actions.save"),
-        description: `Confirm updating account for "${pendingUser.value?.name || ""}"?`,
+        description: `You updated account "${pendingUser.value?.name || ""}".\nPlease verify role, email, and permissions.\nClick save to apply these updates.`,
         submitLabel: t("actions.save"),
         type: "primary" as const,
         icon: "i-lucide-user-check",
@@ -97,7 +97,7 @@ export function useSystemUserManagement() {
     }
     return {
       title: t("pages.userManagement.addBtn"),
-      description: `Confirm creating a new account for "${pendingUser.value?.name || ""}"?`,
+      description: `You are creating a new account for "${pendingUser.value?.name || ""}".\nPlease verify user details and assigned role.\nClick confirm to create this account.`,
       submitLabel: t("actions.confirm"),
       type: "primary" as const,
       icon: "i-lucide-user-plus",
@@ -133,6 +133,7 @@ export function useSystemUserManagement() {
       type: "input",
       icon: "i-lucide-user",
       required: true,
+      textRule: "english",
     },
     {
       key: "role",
@@ -148,6 +149,7 @@ export function useSystemUserManagement() {
       type: "input",
       icon: "i-lucide-mail",
       required: true,
+      textRule: "english",
     },
     {
       key: "password",
@@ -155,6 +157,7 @@ export function useSystemUserManagement() {
       type: "password",
       icon: "i-lucide-lock",
       placeholder: "Min 8 chars...",
+      required: !selectedUser.value,
       showIfEdit: false,
     }
   ]);

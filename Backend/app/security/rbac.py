@@ -8,6 +8,11 @@ ALIASES: dict[str, tuple[str, ...]] = {
     "category:create": ("settings:category-management:create",),
     "category:update": ("settings:category-management:update",),
     "category:delete": ("settings:category-management:delete",),
+    # Supplier permissions
+    "supplier:view": ("settings:supplier-management:view",),
+    "supplier:create": ("settings:supplier-management:create",),
+    "supplier:update": ("settings:supplier-management:update",),
+    "supplier:delete": ("settings:supplier-management:delete",),
     # Product permissions
     "product:view": ("settings:product-management:view",),
     "product:create": ("settings:product-management:create",),
@@ -39,6 +44,10 @@ ALIASES: dict[str, tuple[str, ...]] = {
     # Commission permissions
     "commission:view": ("settings:commission-management:view",),
     "commission:export": ("settings:commission-management:export",),
+    # Refund permissions
+    "refund:view": ("settings:refund-management:view",),
+    "refund:create": ("settings:refund-management:create",),
+    "refund:delete": ("settings:refund-management:delete",),
     # dashboard permissions
     "dashboard:view": ("settings:dashboard-management:view",),
     "role:view": ("settings:role-management:view",),

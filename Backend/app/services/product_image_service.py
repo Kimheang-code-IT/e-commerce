@@ -1,4 +1,5 @@
 import base64
+import binascii
 import re
 import uuid
 from pathlib import Path
@@ -8,6 +9,13 @@ DATA_URL_RE = re.compile(
     r"^data:image/(png|jpeg|jpg|gif|webp);base64,(.+)$",
     re.IGNORECASE | re.DOTALL,
 )
+
+IMAGE_SIGNATURES = {
+    "png": (b"\x89PNG\r\n\x1a\n",),
+    "jpg": (b"\xff\xd8\xff",),
+    "gif": (b"GIF87a", b"GIF89a"),
+    "webp": (b"RIFF",),
+}
 
 
 def upload_root() -> Path:
@@ -40,10 +48,18 @@ def save_data_url_as_file(data_url: str, product_id: int) -> str:
     ext = m.group(1).lower()
     if ext == "jpeg":
         ext = "jpg"
-    image_bytes = base64.b64decode(m.group(2), validate=True)
+    try:
+        image_bytes = base64.b64decode(m.group(2), validate=True)
+    except (binascii.Error, ValueError) as exc:
+        raise ValueError("Invalid image data") from exc
     max_bytes = 3 * 1024 * 1024
     if len(image_bytes) > max_bytes:
         raise ValueError("Image too large")
+    signatures = IMAGE_SIGNATURES.get(ext, ())
+    if not any(image_bytes.startswith(signature) for signature in signatures):
+        raise ValueError("Image content does not match declared type")
+    if ext == "webp" and b"WEBP" not in image_bytes[:16]:
+        raise ValueError("Image content does not match declared type")
 
     products_dir = upload_root() / "products"
     products_dir.mkdir(parents=True, exist_ok=True)
@@ -81,7 +97,7 @@ def public_image_url(stored: str | None) -> str:
     if stored.startswith("/uploads/"):
         # Keep local upload paths relative so nginx can serve them for any host/domain.
         return stored
-    if stored.startswith(("http://", "https://", "data:")):
+    if stored.startswith(("http://", "https://")):
         return stored
     base = (settings.file_base_url or "").rstrip("/")
     path = stored if stored.startswith("/") else f"/{stored}"

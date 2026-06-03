@@ -11,6 +11,8 @@ from app.api.v1 import (
     pos,
     products,
     reports,
+    refunds,
+    suppliers,
     system_roles,
     system_users,
     tasks,
@@ -23,10 +25,12 @@ router.include_router(backup.router)
 router.include_router(telegram.router)
 router.include_router(categories.router)
 router.include_router(products.router)
+router.include_router(suppliers.router)
 router.include_router(system_users.router)
 router.include_router(system_roles.router)
 router.include_router(finance.router)
 router.include_router(reports.router)
+router.include_router(refunds.router)
 router.include_router(history.router)
 router.include_router(commission.router)
 router.include_router(delivery.router)

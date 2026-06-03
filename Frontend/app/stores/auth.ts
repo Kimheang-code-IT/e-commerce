@@ -5,10 +5,19 @@ import type { AuthUser } from '~/types'
 import type { Permission } from '~/utils/auth/permissions'
 
 export const useAuthStore = defineStore('auth', () => {
-  // Use cookies for both token and user data to ensure SSR compatibility
-  const token = useCookie<string | null>('auth_token', { default: () => null })
-  const refreshToken = useCookie<string | null>('refresh_token', { default: () => null })
-  const user = useCookie<AuthUser | null>('auth_user', { default: () => null })
+  const cookieOptions = {
+    default: () => null,
+    sameSite: 'strict' as const,
+    secure: import.meta.env.PROD,
+    path: '/',
+    maxAge: 60 * 60 * 24 * 14
+  }
+
+  // Tokens are sent as Authorization headers, not ambient auth cookies.
+  // sameSite/secure reduces CSRF exposure and accidental token leakage in production.
+  const token = useCookie<string | null>('auth_token', cookieOptions)
+  const refreshToken = useCookie<string | null>('refresh_token', cookieOptions)
+  const user = useCookie<AuthUser | null>('auth_user', cookieOptions)
 
   const isLoggedIn = computed(() => !!token.value)
   const pageAccess = computed<string[]>(() => {

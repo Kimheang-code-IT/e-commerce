@@ -11,7 +11,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.middleware.rate_limit import RateLimitMiddleware
 from app.middleware.security_headers import SecurityHeadersMiddleware
-from sqlalchemy import select
+from sqlalchemy import select, text
 from sqlalchemy.exc import IntegrityError
 
 from app.api.v1.routes import router as api_router
@@ -60,7 +60,15 @@ app.add_middleware(RateLimitMiddleware)
 
 def init_db() -> None:
     """Create tables from SQLAlchemy models (aligned with `e-commerce.sql`)."""
-    Base.metadata.create_all(bind=engine)
+    # Prevent replica startup races (e.g. duplicate *_id_seq) by serializing schema init.
+    with engine.begin() as conn:
+        conn.execute(text("SELECT pg_advisory_lock(572901, 1)"))
+        try:
+            Base.metadata.create_all(bind=conn)
+            from app.core.stock_lot_migration import ensure_stock_lot_schema
+            ensure_stock_lot_schema()
+        finally:
+            conn.execute(text("SELECT pg_advisory_unlock(572901, 1)"))
 
 
 def _legacy_admin_email_tuple(raw: str | None) -> tuple[str, ...]:

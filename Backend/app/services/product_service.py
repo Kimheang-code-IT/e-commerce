@@ -1,7 +1,7 @@
 from fastapi import status
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
-from app.models import Product, ProductDamage, ProductStockAddition
+from app.models import Product, ProductDamage, ProductStockAddition, Supplier, SupplierProduct
 from app.repositories.product_repository import (
     adjust_category_product_count,
     create_product_record,
@@ -22,6 +22,7 @@ from app.services.data_service import (
     record_history,
 )
 from app.services.product_image_service import delete_stored_file_if_local, normalize_stored_image
+from app.services.stock_fifo_service import allocate_fifo, batch_fifo_head_out_prices, create_stock_lot
 from app.services.cache_service import cached_response, invalidate_products_and_dashboard, PREFIX_PRODUCTS
 from app.shared.api_response import error_response
 
@@ -39,11 +40,84 @@ def _sync_stock_history(
     if new_added is not None:
         diff = int(new_added) - prev_added
         if diff > 0:
-            db.add(ProductStockAddition(product_id=row.id, product_name=row.name, qty=diff, note=note or "adjust"))
+            create_stock_lot(
+                db,
+                product=row,
+                qty=diff,
+                in_price=float(row.in_price or 0),
+                out_price=float(row.out_price or 0),
+                note=note or "adjust",
+            )
     if new_damaged is not None:
         diff = int(new_damaged) - prev_damaged
         if diff > 0:
+            if not allocate_fifo(db, row.id, diff, consume=True):
+                raise ValueError("Not enough FIFO stock for damage adjustment")
             db.add(ProductDamage(product_id=row.id, product_name=row.name, qty=diff, note=note or "adjust"))
+
+
+def _sync_manual_in_stock_fifo(
+    db: Session,
+    row: Product,
+    *,
+    target_in_stock: int,
+    note: str | None = None,
+) -> bool:
+    """Keep FIFO lots aligned when in_stock is edited directly."""
+    current = int(row.in_stock or 0)
+    target = max(0, int(target_in_stock or 0))
+    if target == current:
+        row.in_stock = target
+        return True
+
+    diff = target - current
+    if diff > 0:
+        create_stock_lot(
+            db,
+            product=row,
+            qty=diff,
+            in_price=float(row.in_price or 0),
+            out_price=float(row.out_price or 0),
+            note=note or "manual-in-stock",
+        )
+    else:
+        if not allocate_fifo(db, row.id, abs(diff), consume=True):
+            return False
+
+    row.in_stock = target
+    return True
+
+
+def _upsert_supplier_product(
+    db: Session,
+    *,
+    supplier_id: int,
+    product_name: str,
+    qty: int,
+    unit_price: float,
+    user_id: int,
+) -> None:
+    row = db.execute(
+        select(SupplierProduct).where(
+            SupplierProduct.supplier_id == supplier_id,
+            SupplierProduct.product_name == product_name,
+        )
+    ).scalar_one_or_none()
+    if row is None:
+        row = SupplierProduct(
+            supplier_id=supplier_id,
+            product_name=product_name,
+            qty=max(0, int(qty or 0)),
+            unit_price=max(0.0, float(unit_price or 0)),
+            amount=max(0, int(qty or 0)) * max(0.0, float(unit_price or 0)),
+            updated_by=user_id,
+        )
+        db.add(row)
+        return
+    row.qty = max(0, int(qty or 0))
+    row.unit_price = max(0.0, float(unit_price or 0))
+    row.amount = row.qty * row.unit_price
+    row.updated_by = user_id
 
 
 def list_products_service(*, db: Session, query: ListQuery, category: str | None):
@@ -88,7 +162,19 @@ def _list_products_uncached(*, db: Session, query: ListQuery, category: str | No
     products = [row[0] for row in rows]
     ids = [row.id for row in products]
     amap, dmap = batch_stock_totals(db, ids)
-    return list_response([serialize_product(row, added=amap.get(row.id, 0), damaged=dmap.get(row.id, 0)) for row in products], total)
+    sale_map = batch_fifo_head_out_prices(db, ids)
+    return list_response(
+        [
+            serialize_product(
+                row,
+                added=amap.get(row.id, 0),
+                damaged=dmap.get(row.id, 0),
+                sale_price=sale_map.get(row.id),
+            )
+            for row in products
+        ],
+        total,
+    )
 
 
 def create_product_service(*, db: Session, body: ProductCreatePayload, user_id: int):
@@ -97,6 +183,10 @@ def create_product_service(*, db: Session, body: ProductCreatePayload, user_id: 
         return error_response(status.HTTP_400_BAD_REQUEST, "Invalid category", "BAD_REQUEST")
     if find_duplicate_product(db, name=body.name, category_id=category_row.id):
         return error_response(status.HTTP_409_CONFLICT, "Product already exists in this category", "CONFLICT")
+    if body.supplierId is not None:
+        supplier_row = db.get(Supplier, int(body.supplierId))
+        if not supplier_row:
+            return error_response(status.HTTP_400_BAD_REQUEST, "Invalid supplier", "BAD_REQUEST")
 
     row = create_product_record(
         db,
@@ -117,11 +207,38 @@ def create_product_service(*, db: Session, body: ProductCreatePayload, user_id: 
         except ValueError:
             db.rollback()
             return error_response(status.HTTP_400_BAD_REQUEST, "Invalid image", "BAD_REQUEST")
-    if body.added and int(body.added) > 0:
-        db.add(ProductStockAddition(product_id=row.id, product_name=row.name, qty=int(body.added), note=body.stockNote or "initial"))
+    added_qty = int(body.added or 0)
+    if added_qty > 0:
+        create_stock_lot(
+            db,
+            product=row,
+            qty=added_qty,
+            in_price=body.inPrice,
+            out_price=body.outPrice,
+            note=body.stockNote or "initial",
+        )
+    elif int(row.in_stock or 0) > 0:
+        # Keep FIFO ready even when product starts with inStock but no explicit "added" value.
+        create_stock_lot(
+            db,
+            product=row,
+            qty=int(row.in_stock or 0),
+            in_price=body.inPrice,
+            out_price=body.outPrice,
+            note=body.stockNote or "initial-sync",
+        )
     if body.damaged and int(body.damaged) > 0:
         db.add(ProductDamage(product_id=row.id, product_name=row.name, qty=int(body.damaged), note=body.stockNote or "initial"))
     adjust_category_product_count(db, category_row.id, 1)
+    if body.supplierId is not None:
+        _upsert_supplier_product(
+            db,
+            supplier_id=int(body.supplierId),
+            product_name=row.name,
+            qty=int(row.in_stock or 0),
+            unit_price=float(row.in_price or 0),
+            user_id=user_id,
+        )
     ensure_finance_for_product(db, row.id)
     db.commit()
     db.refresh(row)
@@ -132,7 +249,15 @@ def create_product_service(*, db: Session, body: ProductCreatePayload, user_id: 
 
     row_out = db.execute(select(Product).options(joinedload(Product.category_rel)).where(Product.id == row.id)).unique().scalar_one()
     amap, dmap = batch_stock_totals(db, [row_out.id])
-    return {"data": serialize_product(row_out, added=amap.get(row_out.id, 0), damaged=dmap.get(row_out.id, 0))}
+    sale_map = batch_fifo_head_out_prices(db, [row_out.id])
+    return {
+        "data": serialize_product(
+            row_out,
+            added=amap.get(row_out.id, 0),
+            damaged=dmap.get(row_out.id, 0),
+            sale_price=sale_map.get(row_out.id),
+        )
+    }
 
 
 def update_product_service(*, db: Session, item_id: int, body: ProductUpdatePayload, user_id: int):
@@ -153,6 +278,10 @@ def update_product_service(*, db: Session, item_id: int, body: ProductUpdatePayl
     next_name = body.name if body.name is not None else row.name
     if find_duplicate_product(db, name=next_name, category_id=next_category_id, exclude_id=row.id):
         return error_response(status.HTTP_409_CONFLICT, "Product already exists in this category", "CONFLICT")
+    if body.supplierId is not None:
+        supplier_row = db.get(Supplier, int(body.supplierId))
+        if not supplier_row:
+            return error_response(status.HTTP_400_BAD_REQUEST, "Invalid supplier", "BAD_REQUEST")
 
     row.name = next_name
     row.category_id = next_category_id
@@ -167,7 +296,13 @@ def update_product_service(*, db: Session, item_id: int, body: ProductUpdatePayl
     if body.totalStock is not None:
         row.total_stock = body.totalStock
     if body.inStock is not None:
-        row.in_stock = body.inStock
+        if not _sync_manual_in_stock_fifo(
+            db,
+            row,
+            target_in_stock=int(body.inStock or 0),
+            note=body.stockNote or "manual-in-stock",
+        ):
+            return error_response(status.HTTP_400_BAD_REQUEST, "Not enough FIFO stock for inStock reduction", "NOT_ENOUGH_STOCK")
     if body.sold is not None:
         row.sold = body.sold
     _sync_stock_history(db, row, prev_added=prev_added, prev_damaged=prev_damaged, new_added=body.added, new_damaged=body.damaged, note=body.stockNote)
@@ -179,6 +314,15 @@ def update_product_service(*, db: Session, item_id: int, body: ProductUpdatePayl
     if next_category_id != previous_category_id:
         adjust_category_product_count(db, previous_category_id, -1)
         adjust_category_product_count(db, next_category_id, 1)
+    if body.supplierId is not None:
+        _upsert_supplier_product(
+            db,
+            supplier_id=int(body.supplierId),
+            product_name=row.name,
+            qty=int(row.in_stock or 0),
+            unit_price=float(row.in_price or 0),
+            user_id=user_id,
+        )
     ensure_finance_for_product(db, row.id)
     db.commit()
     db.refresh(row)
@@ -189,7 +333,15 @@ def update_product_service(*, db: Session, item_id: int, body: ProductUpdatePayl
 
     row_out = db.execute(select(Product).options(joinedload(Product.category_rel)).where(Product.id == item_id)).unique().scalar_one()
     amap, dmap = batch_stock_totals(db, [row_out.id])
-    return {"data": serialize_product(row_out, added=amap.get(row_out.id, 0), damaged=dmap.get(row_out.id, 0))}
+    sale_map = batch_fifo_head_out_prices(db, [row_out.id])
+    return {
+        "data": serialize_product(
+            row_out,
+            added=amap.get(row_out.id, 0),
+            damaged=dmap.get(row_out.id, 0),
+            sale_price=sale_map.get(row_out.id),
+        )
+    }
 
 
 def delete_product_service(*, db: Session, item_id: int, user_id: int):

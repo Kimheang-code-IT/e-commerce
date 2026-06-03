@@ -48,6 +48,7 @@ export function useApi() {
         const key = toRequestKey(method, url, options.query)
         const dedupe = Boolean(options.dedupe)
         const skipAuthRefresh = Boolean(options.skipAuthRefresh)
+        const suppressErrorToast = Boolean(options.suppressErrorToast)
         if (dedupe && inFlight.value.has(key)) {
             return (await inFlight.value.get(key)) as T
         }
@@ -60,6 +61,7 @@ export function useApi() {
           }
         }
         delete (requestOptions as Record<string, unknown>).skipAuthRefresh
+        delete (requestOptions as Record<string, unknown>).suppressErrorToast
 
         const execute = () => $fetch<T>(url, requestOptions)
         const request = execute()
@@ -77,7 +79,7 @@ export function useApi() {
               authStore.logout()
               throw err
             }
-            if (fetchErr?.name === 'FetchError') {
+            if (fetchErr?.name === 'FetchError' && !suppressErrorToast) {
               const statusCode = fetchErr.response?.status
               if (statusCode) {
                 toast.add({
@@ -99,6 +101,7 @@ export function useApi() {
         get: <T>(url: string, opt?: Record<string, unknown>) => fetch<T>(url, { method: 'GET', ...opt }),
         post: <T>(url: string, body: unknown, opt?: Record<string, unknown>) => fetch<T>(url, { method: 'POST', body, ...opt }),
         put: <T>(url: string, body: unknown, opt?: Record<string, unknown>) => fetch<T>(url, { method: 'PUT', body, ...opt }),
+        patch: <T>(url: string, body: unknown, opt?: Record<string, unknown>) => fetch<T>(url, { method: 'PATCH', body, ...opt }),
         delete: <T>(url: string, opt?: Record<string, unknown>) => fetch<T>(url, { method: 'DELETE', ...opt }),
     }
 }

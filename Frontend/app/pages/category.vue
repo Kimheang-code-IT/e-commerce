@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useTotalRevenue } from '~/composables/table/useCategory'
 import { formatDate } from '~/utils/format/date'
+import { sanitizeEnglish } from '~/utils/validation/textRules'
 
 const {
     rowSelection, sorting, searchQuery, columnVisibility, columnFilters,
@@ -13,6 +14,8 @@ const {
 
 const isExportOpen = ref(false)
 const mobileView = ref<'table' | 'form'>('table')
+const nameError = ref('')
+const descriptionError = ref('')
 const mobileViewItems = computed(() => [
     { label: $t('category.tableTitle'), value: 'table' },
     { label: $t('category.addTitle'), value: 'form' }
@@ -29,6 +32,16 @@ function getAvatarColor(name: string) {
 function getInitial(name: string) {
     return name.charAt(0).toUpperCase()
 }
+
+watch(newName, (value) => {
+    const sanitized = sanitizeEnglish(String(value || ''))
+    if (sanitized !== value) newName.value = sanitized
+    nameError.value = sanitized.trim() ? '' : ''
+})
+
+watch(newDescription, (value) => {
+    descriptionError.value = String(value || '').trim() ? '' : ''
+})
 </script>
 
 <template>
@@ -65,7 +78,9 @@ function getInitial(name: string) {
                         :placeholder="$t('category.namePlaceholder')"
                         class="w-full"
                         size="md"
+                        :color="nameError ? 'error' : undefined"
                     />
+                    <p v-if="nameError" class="text-xs text-error">{{ nameError }}</p>
                 </div>
 
                 <!-- Description -->
@@ -79,7 +94,9 @@ function getInitial(name: string) {
                         :rows="7"
                         class="w-full resize-y"
                         size="md"
+                        :color="descriptionError ? 'error' : undefined"
                     />
+                    <p v-if="descriptionError" class="text-xs text-error">{{ descriptionError }}</p>
                 </div>
                 <!-- Add Button -->
                 <UButton

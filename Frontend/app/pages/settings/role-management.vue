@@ -7,6 +7,7 @@ const {
     selectedRole, filteredRoles, confirmConfig,
     roleFormFields, columns, roleFilterItems, selectedRoles,
     getDropdownActions, handleSaveRequest, finalizeAction, handleAddNew,
+    formatPageAccessForDisplay,
 } = useSystemRoleManagement()
 const auth = useAuthStore()
 /** Backend maps role:create/update/delete to the same stored token; any grants management UI. */
@@ -50,12 +51,21 @@ function onSubmitRole(data: Record<string, any>) {
                 </template>
                 <template #pageAccess-cell="{ row }">
                     <div class="flex flex-wrap gap-1 max-w-md">
-                        <template v-if="row.original.pageAccess.includes('ALL_PAGES')">
-                            <UBadge variant="solid" color="primary" size="md">Full System Access</UBadge>
+                        <template v-if="row.original.pageAccess.includes('ALL_PAGES') || row.original.pageAccess.includes('admin:*')">
+                            <UBadge variant="solid" color="primary" size="md">
+                                {{ $t('pages.roleManagement.allPages') }}
+                            </UBadge>
                         </template>
                         <template v-else>
-                            <UBadge v-for="page in row.original.pageAccess" :key="page" variant="soft" color="neutral"
-                                size="md">{{ page }}</UBadge>
+                            <UBadge
+                                v-for="label in formatPageAccessForDisplay(row.original.pageAccess)"
+                                :key="label"
+                                variant="soft"
+                                color="neutral"
+                                size="md"
+                            >
+                                {{ label }}
+                            </UBadge>
                         </template>
                     </div>
                 </template>

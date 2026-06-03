@@ -63,6 +63,8 @@ def list_deliveries_view(
             "invoiceId": Invoice.invoice_no,
             "address": Invoice.customer_address,
             "deliveryType": Invoice.delivery_type,
+            "deliveryPrice": Invoice.delivery_price,
+            "total": Invoice.total,
             "date": Invoice.created_at,
         },
     )

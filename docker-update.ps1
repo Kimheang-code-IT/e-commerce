@@ -14,15 +14,20 @@ param(
 Set-Location $PSScriptRoot
 $ErrorActionPreference = "Stop"
 
+if (Test-Path ".env") {
+    $projectFromFile = $null
+    Get-Content ".env" | ForEach-Object {
+        if ($_ -match '^\s*COMPOSE_PROJECT_NAME=(.+)$') { $projectFromFile = $Matches[1].Trim() }
+    }
+    if ($projectFromFile) {
+        if ($env:COMPOSE_PROJECT_NAME -and $env:COMPOSE_PROJECT_NAME -ne $projectFromFile) {
+            Write-Host "Overriding stale COMPOSE_PROJECT_NAME=$($env:COMPOSE_PROJECT_NAME) -> $projectFromFile" -ForegroundColor Yellow
+        }
+        $env:COMPOSE_PROJECT_NAME = $projectFromFile
+    }
+}
 if ($env:COMPOSE_PROJECT_NAME) {
     Write-Host "Keeping existing data volumes: $($env:COMPOSE_PROJECT_NAME)_pg_data" -ForegroundColor Green
-} elseif (Test-Path ".env") {
-    Get-Content ".env" | ForEach-Object {
-        if ($_ -match '^\s*COMPOSE_PROJECT_NAME=(.+)$') { $env:COMPOSE_PROJECT_NAME = $Matches[1].Trim() }
-    }
-    if ($env:COMPOSE_PROJECT_NAME) {
-        Write-Host "Keeping existing data volumes: $($env:COMPOSE_PROJECT_NAME)_pg_data" -ForegroundColor Green
-    }
 }
 
 Write-Host "Checking Backend/.env for Docker..." -ForegroundColor Cyan

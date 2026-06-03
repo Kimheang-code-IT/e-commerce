@@ -6,8 +6,6 @@ import logging
 from functools import lru_cache
 from typing import TYPE_CHECKING
 
-import redis
-
 from app.core.config import settings
 
 if TYPE_CHECKING:
@@ -18,6 +16,14 @@ logger = logging.getLogger(__name__)
 
 @lru_cache
 def get_redis() -> Redis:
+    try:
+        import redis
+    except ModuleNotFoundError as exc:
+        # Keep app startup alive when Redis dependency is missing
+        # (cache/celery code paths can handle unavailable redis).
+        logger.warning("Redis package is not installed: %s", exc)
+        raise RuntimeError("Redis package is not installed") from exc
+
     client = redis.from_url(
         settings.redis_url,
         decode_responses=True,

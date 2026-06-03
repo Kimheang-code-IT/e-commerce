@@ -67,7 +67,7 @@ function onSubmit() {
 <template>
   <UModal v-model:open="open" :dismissible="false" :ui="modalUi">
     <template #header>
-      <div class="flex items-center justify-between w-full p-4">
+      <div class="flex items-center justify-between w-full px-3 py-2">
         <div class="flex items-center gap-2">
           <h3 class="text-xl font-bold text-highlighted tracking-tight leading-tight">
             {{ resolvedTitle }}
@@ -78,13 +78,12 @@ function onSubmit() {
     </template>
 
     <template #body>
-      <div class="space-y-4 px-4">
+      <div class="px-3">
         <!-- Message -->
         <p class="text-sm text-muted-foreground font-medium leading-relaxed ">
           {{ resolvedDescription }}
         </p>
 
-        <!-- Optional Custom Content Slot -->
         <div v-if="$slots.default" class="w-full">
           <slot />
         </div>

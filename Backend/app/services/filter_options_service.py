@@ -58,21 +58,20 @@ def report_filter_options(
     date_from: str | None = None,
     date_to: str | None = None,
 ) -> dict[str, list[str]]:
-    products: set[str] = set()
-    for name in invoice_field_options(
-        db, Invoice.product_name, date_from=date_from, date_to=date_to
-    ):
-        for part in name.split(","):
-            token = part.strip()
-            if token:
-                products.add(token)
+    q = (
+        select(distinct(CheckoutItem.product_name))
+        .join(Invoice, CheckoutItem.invoice_id == Invoice.id)
+        .where(Invoice.status == "paid")
+    )
+    q = apply_created_at_range(q, date_from, date_to, Invoice.created_at)
+    rows = db.execute(q.order_by(CheckoutItem.product_name)).all()
     return {
-        "products": sorted(products),
+        "products": _sorted_non_empty(rows),
         "sources": invoice_field_options(
-            db, Invoice.source, date_from=date_from, date_to=date_to
+            db, Invoice.source, date_from=date_from, date_to=date_to, paid_only=True
         ),
         "provinces": invoice_field_options(
-            db, Invoice.customer_address, date_from=date_from, date_to=date_to
+            db, Invoice.customer_address, date_from=date_from, date_to=date_to, paid_only=True
         ),
     }
 

@@ -1,15 +1,92 @@
 import type { Product } from '~/types'
 
+export type InvoiceReopenLine = {
+  productId?: number
+  product?: string
+  qty?: number
+  price?: number
+  total?: number
+  inStock?: number
+  outPrice?: number
+  salePrice?: number
+  image?: string
+  categoryId?: string
+  category?: string
+  status?: string
+}
+
 export type PosCartItem = {
   product: Product
   qty: number
+  /** Per-customer sale price override for this cart line (invoice/report use this). */
+  unitPrice?: number
+}
+
+export function getCatalogUnitPrice(product: Product): number {
+  return Number(product.salePrice ?? product.outPrice ?? 0)
+}
+
+export function productFromInvoiceLine(line: InvoiceReopenLine, index: number): Product | null {
+  const id = Number(line.productId || 0)
+  if (!id || id <= 0) return null
+  const status = String(line.status || 'active')
+  const normalizedStatus: Product['status'] =
+    status === 'inactive' || status === 'out_of_stock' ? status : 'active'
+  return {
+    id,
+    image: String(line.image || ''),
+    name: String(line.product || `Product ${id}`),
+    category: String(line.category || ''),
+    categoryId: String(line.categoryId || ''),
+    inPrice: 0,
+    outPrice: Number(line.outPrice ?? line.price ?? 0),
+    salePrice: Number(line.salePrice ?? line.outPrice ?? line.price ?? 0),
+    commission: 0,
+    totalStock: 0,
+    inStock: Number(line.inStock ?? 0),
+    sold: 0,
+    added: 0,
+    damaged: 0,
+    status: normalizedStatus,
+    createdAt: new Date().toISOString(),
+  }
+}
+
+export function unitPriceFromLine(line: InvoiceReopenLine, product: Product): number | undefined {
+  const catalog = getCatalogUnitPrice(product)
+  const linePrice = Number(line.price ?? 0)
+  if (linePrice > 0 && Math.abs(linePrice - catalog) > 0.001) {
+    return linePrice
+  }
+  return undefined
+}
+
+export function getLineUnitPrice(item: PosCartItem): number {
+  if (item.unitPrice != null && Number.isFinite(item.unitPrice)) {
+    return Number(item.unitPrice)
+  }
+  return getCatalogUnitPrice(item.product)
+}
+
+export function isLinePriceCustom(item: PosCartItem): boolean {
+  return item.unitPrice != null && Number.isFinite(item.unitPrice)
+}
+
+export function getLineTotal(item: PosCartItem): number {
+  return getLineUnitPrice(item) * Number(item.qty || 0)
 }
 
 export function mapCartToApiLines(cart: PosCartItem[]) {
-  return cart.map((item) => ({
-    productId: item.product.id,
-    qty: item.qty
-  }))
+  return cart.map((item) => {
+    const line: { productId: number; qty: number; unitPrice?: number } = {
+      productId: item.product.id,
+      qty: item.qty,
+    }
+    if (isLinePriceCustom(item)) {
+      line.unitPrice = Number(item.unitPrice)
+    }
+    return line
+  })
 }
 
 export function buildCheckoutPayload(input: {
@@ -24,7 +101,7 @@ export function buildCheckoutPayload(input: {
   paymentMethod: string
   deliveryStatus: string
   sellerId?: number
-  lines: Array<{ productId: number; qty: number }>
+  lines: Array<{ productId: number; qty: number; unitPrice?: number }>
 }) {
   return {
     customerName: input.customerName,

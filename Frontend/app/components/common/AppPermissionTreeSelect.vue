@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { roleActionLabel, rolePageLabel } from '~/utils/auth/rolePages'
 
 const modelValue = defineModel<string[] | undefined>({ default: undefined })
+const { t } = useI18n()
 
 const props = withDefaults(defineProps<{
   pages: string[]
@@ -68,11 +70,12 @@ function toggleExpand(page: string) {
   }
 }
 
-function prettyName(value: string) {
-  return value
-    .replaceAll(':', ' / ')
-    .replaceAll('-', ' ')
-    .replaceAll('_', ' ')
+function pageTitle(pageKey: string) {
+  return rolePageLabel(pageKey, t)
+}
+
+function actionTitle(action: string) {
+  return roleActionLabel(action, t)
 }
 </script>
 
@@ -86,7 +89,7 @@ function prettyName(value: string) {
       <div class="flex items-center justify-between px-2 py-1.5">
         <label class="flex items-center gap-2 cursor-pointer">
           <UCheckbox :model-value="hasAnyAction(page)" @update:model-value="togglePage(page)" />
-          <span class="text-sm font-medium">{{ prettyName(page) }}</span>
+          <span class="text-sm font-medium">{{ pageTitle(page) }}</span>
         </label>
         <UButton
           icon="i-lucide-chevron-down"
@@ -110,7 +113,7 @@ function prettyName(value: string) {
               :model-value="hasAction(page, action)"
               @update:model-value="toggleAction(page, action)"
             />
-            <span class="text-sm capitalize">{{ action }}</span>
+            <span class="text-sm">{{ actionTitle(action) }}</span>
           </label>
         </div>
       </div>

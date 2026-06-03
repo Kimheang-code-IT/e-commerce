@@ -1,22 +1,45 @@
 <script setup lang="ts">
 const open = defineModel<boolean>("open", { default: false });
 const qty = defineModel<number>("qty", { default: 0 });
+const inPrice = defineModel<number>("inPrice", { default: 0 });
+const outPrice = defineModel<number>("outPrice", { default: 0 });
 const note = defineModel<string>("note", { default: "" });
 
 const props = withDefaults(
   defineProps<{
     mode?: "added" | "damaged";
     productName?: string;
+    defaultInPrice?: number;
+    defaultOutPrice?: number;
   }>(),
   {
     mode: "added",
     productName: "",
-  }
+    defaultInPrice: 0,
+    defaultOutPrice: 0,
+  },
 );
 
 const emit = defineEmits<{
   (e: "apply"): void;
 }>();
+
+watch(open, (isOpen) => {
+  if (!isOpen || props.mode !== "added") return;
+  if (!inPrice.value) inPrice.value = Number(props.defaultInPrice || 0);
+  if (!outPrice.value) outPrice.value = Number(props.defaultOutPrice || 0);
+});
+
+const canApply = computed(() => {
+  const q = Number(qty.value);
+  if (!Number.isFinite(q) || q <= 0) return false;
+  if (props.mode === "added") {
+    const cost = Number(inPrice.value);
+    const sale = Number(outPrice.value);
+    return Number.isFinite(cost) && cost >= 0 && Number.isFinite(sale) && sale >= 0;
+  }
+  return true;
+});
 </script>
 
 <template>
@@ -41,7 +64,6 @@ const emit = defineEmits<{
 
     <template #body>
       <div class="space-y-3">
-
         <UFormField :label="mode === 'added' ? $t('components.stockAdjust.qtyToAdd') : $t('components.stockAdjust.qtyDamaged')">
           <UInput
             v-model.number="qty"
@@ -52,6 +74,38 @@ const emit = defineEmits<{
             class="w-full"
           />
         </UFormField>
+
+        <template v-if="mode === 'added'">
+          <UFormField :label="$t('product.inPrice')">
+            <UInput
+              v-model.number="inPrice"
+              type="number"
+              min="0"
+              step="0.01"
+              class="w-full"
+              :ui="{ leading: 'ps-2' }"
+            >
+              <template #leading>
+                <span class="text-xs font-semibold text-muted-foreground select-none">USD</span>
+              </template>
+            </UInput>
+          </UFormField>
+
+          <UFormField :label="$t('product.outPrice')">
+            <UInput
+              v-model.number="outPrice"
+              type="number"
+              min="0"
+              step="0.01"
+              class="w-full"
+              :ui="{ leading: 'ps-2' }"
+            >
+              <template #leading>
+                <span class="text-xs font-semibold text-muted-foreground select-none">USD</span>
+              </template>
+            </UInput>
+          </UFormField>
+        </template>
 
         <UFormField :label="$t('product.note')">
           <UTextarea
@@ -71,7 +125,7 @@ const emit = defineEmits<{
         </UButton>
         <UButton
           :color="mode === 'added' ? 'primary' : 'warning'"
-          :disabled="!qty || qty <= 0"
+          :disabled="!canApply"
           @click="emit('apply')"
         >
           {{ $t("actions.confirm") }}

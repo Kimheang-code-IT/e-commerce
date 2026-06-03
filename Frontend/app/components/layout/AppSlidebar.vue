@@ -1,14 +1,19 @@
 <script setup lang="ts">
 import logo from '~/assets/images/logo.png'
 import { useMenu } from '~/composables/layout/useMenu'
-const { open, links } = useMenu()
+import { useLayoutSidebar } from '~/composables/layout/useLayoutSidebar'
+
+const { links } = useMenu()
+const { open, collapsed } = useLayoutSidebar()
 </script>
 
 <template>
   <UDashboardSidebar
     id="default"
     v-model:open="open"
+    v-model:collapsed="collapsed"
     collapsible
+    :collapsed-size="0"
     class="bg-white dark:bg-gray-900"
     :ui="{ 
       header: 'h-auto flex-col items-stretch gap-4 px-4 shrink-0 bg-white dark:bg-gray-900',

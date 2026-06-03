@@ -2,6 +2,26 @@
 import { useReport } from '~/composables/table/useReport'
 import { formatCurrency } from '~/utils/format/currency'
 import { useReportApi } from '~/utils/api'
+import type { ReportRow } from '~/types'
+
+const router = useRouter()
+const { t } = useI18n()
+function goToInvoice(row: ReportRow) {
+  router.push({
+    path: '/pos',
+    query: { invoiceNo: row.invoiceNo, reopen: '1' },
+  })
+}
+
+function goToRefund(row: ReportRow) {
+  router.push({
+    path: '/refund',
+    query: {
+      invoiceNo: row.invoiceNo,
+      ...(row.id != null ? { itemId: String(row.id) } : {}),
+    },
+  })
+}
 
 const {
   rowSelection,
@@ -22,20 +42,14 @@ const {
   selectedProducts,
   selectedSources,
   selectedProvinces,
-  columns
-} = useReport()
-const { t } = useI18n()
-const router = useRouter()
+  columns,
+  getDropdownActions,
+  isLoading,
+  refresh: refreshReports
+} = useReport({ onRefund: goToRefund, onCheckout: goToInvoice })
+
 const isExportOpen = ref(false)
 const reportApi = useReportApi()
-
-
-function goToInvoice(row: any) {
-  router.push({
-    path: '/pos',
-    query: { invoiceNo: row.invoiceNo }
-  })
-}
 
 async function goToSelectedInvoices() {
   if (!selectedReportRows.value.length) return
@@ -87,7 +101,8 @@ async function fetchReportExportData(args: { startDate?: string; endDate?: strin
         :filter-placeholder-secondary="$t('pages.report.filterSource')"
         :filter-placeholder-third="$t('pages.report.filterProvince')"
         :data="filteredReportRows" :total-rows="totalRows" :columns="columns"
-        :selectable="true">
+        :selectable="true" :loading="isLoading"
+        :get-row-actions="getDropdownActions">
         <template #no-header>
           <div class="flex items-center gap-2">
             <UCheckbox :model-value="allFilteredSelected" :indeterminate="someFilteredSelected"
@@ -127,15 +142,12 @@ async function fetchReportExportData(args: { startDate?: string; endDate?: strin
           </UBadge>
         </template>
         <template #invoiceNo-cell="{ row }">
-          <div class="flex items-center gap-2">
-            <span class="text-sm font-medium">{{ row.original.invoiceNo }}</span>
-            <UButton icon="i-lucide-receipt-text" color="primary" variant="ghost" size="xs"
-              @click="goToInvoice(row.original)" />
-          </div>
+          <span class="text-sm font-medium">{{ row.original.invoiceNo }}</span>
         </template>
       </TableApptable>
       <CommonAppExport v-model:open="isExportOpen" :data="filteredReportRows" :fetch-export-data="fetchReportExportData"
         filename="report" date-field="date" />
     </div>
+
   </div>
 </template>

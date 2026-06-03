@@ -5,6 +5,7 @@ import { useDeliveryApi } from '~/utils/api'
 import { useBaseTable } from '~/composables/table/useBaseTable'
 import { useServerListTable } from '~/features/shared/useServerListTable'
 import { useViewFilterOptions } from '~/composables/useViewFilterOptions'
+import { formatCurrency } from '~/utils/format/currency'
 
 export function useDelivery() {
   const { t } = useI18n()
@@ -37,18 +38,27 @@ export function useDelivery() {
 
   const effectiveRows = computed(() => resource.rows.value)
   const filteredDeliveryRows = computed<DeliveryEntry[]>(() => effectiveRows.value)
+  const deliverySummary = computed(() => {
+    const rows = filteredDeliveryRows.value
+    return {
+      count: rows.length,
+      deliveryPriceSum: rows.reduce((sum, row) => sum + Number(row.deliveryPrice || 0), 0),
+      totalSum: rows.reduce((sum, row) => sum + Number(row.total || 0), 0),
+    }
+  })
 
   watch([selectedAddresses, selectedDeliveryTypes, selectedStatuses], () => {
     pagination.value.pageIndex = 0
   })
 
   const columns = computed<TableColumn<DeliveryEntry>[]>(() => [
-    { accessorKey: 'invoiceNo', header: t('pages.delivery.columns.invoiceNo') },
+    { accessorKey: 'invoiceNo', header: t('pages.delivery.columns.invoiceNo'), footer: `Count: ${deliverySummary.value.count}` },
     { accessorKey: 'customer', header: t('pages.delivery.columns.customer') },
     { accessorKey: 'address', header: t('pages.delivery.columns.address') },
     { accessorKey: 'deliveryType', header: t('pages.delivery.columns.deliveryType') },
     { accessorKey: 'deliveryStatus', header: t('pages.delivery.columns.deliveryStatus') },
-    { accessorKey: 'deliveryPrice', header: t('pages.delivery.columns.deliveryPrice') },
+    { accessorKey: 'deliveryPrice', header: t('pages.delivery.columns.deliveryPrice'), footer: formatCurrency(deliverySummary.value.deliveryPriceSum, 'USD') },
+    { accessorKey: 'total', header: t('pages.delivery.columns.total'), footer: formatCurrency(deliverySummary.value.totalSum, 'USD') },
     { accessorKey: 'date', header: t('pages.delivery.columns.date') },
     { id: 'actions', header: '' },
   ])

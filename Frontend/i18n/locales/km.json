@@ -41,6 +41,14 @@
         "saveChanges": "រក្សាទុកការផ្លាស់ប្តូរ",
         "selectDate": "ជ្រើសរើសកាលបរិច្ឆេទ",
         "select": "ជ្រើសរើស...",
+        "validation": {
+            "required": "សូមបំពេញ \"{field}\"",
+            "selectOption": "សូមជ្រើសរើសជម្រើសសម្រាប់ \"{field}\"",
+            "selectAtLeastOne": "សូមជ្រើសរើសយ៉ាងហោចណាស់មួយសម្រាប់ \"{field}\"",
+            "uploadImage": "សូមផ្ទុករូបភាពសម្រាប់ \"{field}\""
+        },
+        "imageUploadHint": "SVG, PNG, JPG ឬ GIF",
+        "imageUploadReplace": "ចុច ឬទម្លាក់ដើម្បីផ្លាស់ប្តូររូបភាព",
         "loadingMap": "កំពុងផ្ទុកទិន្នន័យផែនទីកម្ពុជា...",
         "scale": "មាត្រដ្ឋាន",
         "min": "តិចតួច",
@@ -59,7 +67,9 @@
             "titleDamaged": "បន្ថែមស្តុកខូច",
             "productLabel": "ផលិតផល",
             "qtyToAdd": "ចំនួនត្រូវបន្ថែម",
-            "qtyDamaged": "ចំនួនខូច"
+            "qtyDamaged": "ចំនួនខូច",
+            "fifoHint": "គ្នាស្តុកមានតម្លៃចូល/លក់ផ្សេងគ្នា។ POS លក់ស្តុកចាស់មុន (FIFO)។",
+            "damagedFifoHint": "ខូចផ្តាច់ពីស្តុកចាស់បំផុតមុន។"
         }
     },
     "provinces": {
@@ -111,6 +121,9 @@
         "category": {
             "title": "ប្រភេទផលិតផល"
         },
+        "supplier": {
+            "title": "អ្នកផ្គត់ផ្គង់"
+        },
         "product": {
             "title": "ផលិតផល"
         },
@@ -145,6 +158,7 @@
                     "deliveryTypeDomnaksiiksa": "ដំណាក់សិក្សា",
                     "deliveryTypeGrap": "Grap",
                     "deliveryTypeJNT": "J&T",
+                    "deliveryTypeOther": "ផ្សេងៗ",
                     "paymentCash": "សាច់ប្រាក់",
                     "paymentAcleda": "ធនាគារACLEDA",
                     "paymentABA": "ធនាគារABA",
@@ -182,7 +196,14 @@
                 "discountPercent": "%",
                 "total": "សរុប",
                 "next": "បន្ទាប់",
-                "finish": "បញ្ចប់"
+                "finish": "បញ្ចប់",
+                "editLinePrice": "កែតម្លៃលក់",
+                "editLinePriceHint": "តម្លៃពិសេសសម្រាប់អតិថិជននេះតែប៉ុណ្ណោះ។ រក្សាទុកលើវិក្កយបត្រ និងរបាយការណ៍។",
+                "lineTotal": "សរុបជួរ",
+                "catalogPrice": "តម្លៃក្នុងប្រព័ន្ធ",
+                "resetPrice": "ដើម",
+                "customPrice": "ពិសេស",
+                "unitPrice": "តម្លៃលក់ (ការបញ្ជាទិញនេះ)"
             },
             "checkoutConfirm": {
                 "title": "បញ្ជាក់ការទូទាត់",
@@ -332,6 +353,18 @@
             "tableTitle": "របាយការណ៍",
             "filterSource": "ប្រភព",
             "filterProvince": "ខេត្ត",
+            "actions": {
+                "refund": "សងប្រាក់",
+                "checkout": "ត្រឡប់ទៅគិតលុយ"
+            },
+            "refundDialog": {
+                "title": "សងប្រាក់",
+                "reason": "មូលហេតុសងប្រាក់",
+                "reasonPlaceholder": "បញ្ចូលមូលហេតុសងប្រាក់...",
+                "confirm": "បញ្ជាក់សងប្រាក់",
+                "successTitle": "បានរក្សាទុកការសងប្រាក់",
+                "successDescription": "ផលិតផលត្រូវបានសងប្រាក់ និងស្តុកត្រូវបានបន្ថែមវិញ។"
+            },
             "columns": {
                 "no": "ល.រ",
                 "invoiceNo": "លេខវិក្កយបត្រ",
@@ -347,15 +380,25 @@
                 "sold": "ចំនួនលក់បាន"
             }
         },
+        "refund": {
+            "title": "ការសងប្រាក់",
+            "recordsTitle": "កំណត់ត្រាសងប្រាក់",
+            "pending": {
+                "title": "សងប្រាក់វិក្កយបត្រ"
+            }
+        },
         "delivery": {
             "title": "ដឹកជញ្ជូន",
             "tableTitle": "បញ្ជីដឹកជញ្ជូន",
             "columns": {
                 "no": "ល.រ",
                 "invoiceId": "លេខវិក្កយបត្រ",
+                "invoiceNo": "លេខវិក្កយបត្រ",
+                "customer": "អតិថិជន",
                 "address": "អាសយដ្ឋាន",
                 "deliveryType": "ប្រភេទដឹកជញ្ជូន",
                 "deliveryPrice": "តម្លៃដឹកជញ្ជូន",
+                "total": "សរុប",
                 "deliveryStatus": "ស្ថានភាពដឹកជញ្ជូន",
                 "date": "កាលបរិច្ឆេទ"
             }
@@ -364,6 +407,34 @@
             "title": "គ្រប់គ្រងតួនាទី",
             "tableTitle": "សិទ្ធិចូលប្រើប្រាស់ទំព័រ",
             "addBtn": "បន្ថែមតួនាទី",
+            "allPages": "ចូលប្រើប្រាស់ពេញលេញ",
+            "pages": {
+                "dashboard": "ផ្ទាំងគ្រប់គ្រង",
+                "category": "ប្រភេទទំនិញ",
+                "supplier": "អ្នកផ្គត់ផ្គង់",
+                "product": "ផលិតផល",
+                "pos": "លក់ (POS)",
+                "finance": "ហិរញ្ញវត្ថុ",
+                "report": "របាយការណ៍",
+                "refund": "ការសងប្រាក់",
+                "delivery": "ដឹកជញ្ជូន",
+                "history": "ប្រវត្តិ",
+                "commission": "កម្រៃជើងសារ",
+                "role": "គ្រប់គ្រងតួនាទី",
+                "user": "គ្រប់គ្រងអ្នកប្រើ"
+            },
+            "actions": {
+                "view": "មើល",
+                "create": "បង្កើត",
+                "update": "កែប្រែ",
+                "delete": "លុប",
+                "export": "នាំចេញ",
+                "checkout": "ទូទាត់",
+                "adjustStock": "កែស្តុក",
+                "viewAdjustStock": "មើលប្រវត្តិស្តុក",
+                "addDamage": "បន្ថែមស្តុកខូច",
+                "viewAddDamage": "មើលស្តុកខូច"
+            },
             "analyticsRoles": "តួនាទីសរុប",
             "analyticsPermissions": "ការអនុញ្ញាតសកម្មភាព",
             "analyticsPolicies": "គោលការណ៍សកម្មភាព",
@@ -406,11 +477,18 @@
             "out": "អស់ពីស្តុក"
         },
         "qty": "បរិមាណ",
+        "qtyRemaining": "នៅសល់ក្នុងឡូ",
         "note": "ចំណាំ",
         "viewAddedStock": "មើលប្រវត្តិបន្ថែមស្តុក",
         "viewDamagedStock": "មើលប្រវត្តិស្តុកខូច",
         "historyTitleAdded": "ប្រវត្តិបន្ថែមស្តុក",
-        "historyTitleDamaged": "ប្រវត្តិស្តុកខូច"
+        "historyTitleDamaged": "ប្រវត្តិស្តុកខូច",
+        "historyPageQtyTotal": "សរុបបរិមាណ (ទំព័រនេះ)",
+        "historyRecordsTotal": "{count} កំណត់ត្រា",
+        "historyEditBatch": "កែឡូស្តុក",
+        "historyEditDamage": "កែកំណត់ត្រាខូច",
+        "historyUpdateSuccess": "បានធ្វើបច្ចុប្បន្នភាពកំណត់ត្រា",
+        "historyUpdateFailed": "មិនអាចធ្វើបច្ចុប្បន្នភាពបានទេ"
     },
     "settings": {
         "language": "ភាសា",

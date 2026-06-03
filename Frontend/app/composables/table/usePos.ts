@@ -1,4 +1,5 @@
 import { computed, onMounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from '#imports'
 import type { StepperItem } from '@nuxt/ui'
 import { usePosProducts } from '~/composables/pos/usePosProducts'
 import { usePosCart } from '~/composables/pos/usePosCart'
@@ -6,10 +7,13 @@ import { usePosCustomer } from '~/composables/pos/usePosCustomer'
 import { usePosCheckout } from '~/composables/pos/usePosCheckout'
 import { usePosInvoicePreview } from '~/composables/pos/usePosInvoicePreview'
 import { usePosPrint } from '~/composables/pos/usePosPrint'
+import { usePosReopen } from '~/composables/pos/usePosReopen'
 
 export function usePos() {
   const { t } = useI18n()
   const toast = useToast()
+  const route = useRoute()
+  const router = useRouter()
 
   const products = usePosProducts()
   const cartState = usePosCart()
@@ -17,6 +21,8 @@ export function usePos() {
   const checkout = usePosCheckout()
   const preview = usePosInvoicePreview()
   const printing = usePosPrint()
+  const reopen = usePosReopen()
+  const reopenHandled = ref(false)
 
   const items = ref<StepperItem[]>([
     { title: t('pages.pos.steps.addToCart'), icon: 'i-lucide-house' },
@@ -162,7 +168,27 @@ export function usePos() {
     }
   }
 
-  onMounted(() => {
+  onMounted(async () => {
+    const isReopen = String(route.query.reopen || '') === '1'
+    const invoiceNo = String(route.query.invoiceNo || '').trim()
+
+    if (isReopen && invoiceNo) {
+      preview.clearPreview()
+      const ok = await reopen.loadInvoiceForReopen(invoiceNo, { cart: cartState, customer })
+      if (ok) {
+        reopenHandled.value = true
+        currentStep.value = 0
+        mobilePanel.value = 'right'
+        await products.loadProducts()
+        const { reopen: _reopen, ...rest } = route.query
+        await router.replace({ path: route.path, query: rest })
+      }
+      return
+    }
+
+    await preview.loadPreviewFromRoute()
+
+    if (reopenHandled.value) return
     if (preview.shouldAutoOpenPrintDialog.value && hasReportPreviewInvoices.value) {
       printing.openPrintDialog()
       currentStep.value = 2
@@ -174,6 +200,7 @@ export function usePos() {
   watch(
     () => preview.selectedReportInvoices.value,
     (invoices) => {
+      if (reopenHandled.value) return
       if (invoices.length > 0) {
         currentStep.value = 2
         checkout.checkoutInvoiceNo.value = ''
@@ -186,6 +213,7 @@ export function usePos() {
   watch(
     () => preview.selectedReportInvoice.value,
     (invoice) => {
+      if (reopenHandled.value) return
       if (invoice) {
         currentStep.value = 2
         customer.customerName.value = String(invoice.customer || '')
@@ -256,6 +284,8 @@ export function usePos() {
     finishWithPrint,
     isInCart: cartState.isInCart,
     getCartQty: cartState.getCartQty,
-    loadProducts: products.loadProducts
+    setLineUnitPrice: cartState.setLineUnitPrice,
+    resetLineUnitPrice: cartState.resetLineUnitPrice,
+    loadProducts: products.loadProducts,
   }
 }

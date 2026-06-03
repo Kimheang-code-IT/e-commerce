@@ -50,12 +50,12 @@
         animation: 'carousel'
       }" 
       :virtualize="virtualize ? { estimateSize: 44, overscan: 10 } : false"
-      :sticky="virtualize ? false : ($attrs.sticky as any ?? 'header')" 
+      :sticky="tableSticky"
       class="flex-1 overflow-auto min-h-0 relative scroll-shadow-right"
       :ui="{
-        thead: 'sticky top-0 inset-x-0 z-10 bg-neutral-100 dark:bg-slate-800',
+        thead: 'sticky top-0 inset-x-0 z-20 bg-neutral-100 dark:bg-slate-800',
         th: 'py-2 px-3 text-sm font-normal text-muted-foreground bg-neutral-100 dark:bg-slate-800 whitespace-nowrap',
-        tfoot: 'sticky bottom-0 inset-x-0 z-10 bg-muted/70 backdrop-blur-sm',
+        tfoot: 'sticky bottom-0 inset-x-0 z-20 bg-neutral-100 dark:bg-slate-800 border-t border-default shadow-[0_-2px_8px_rgba(0,0,0,0.06)] dark:shadow-[0_-2px_8px_rgba(0,0,0,0.25)]',
         tr: 'border-b border-accented/50 last:border-b-0',
         td: 'py-2 px-3 text-sm font-normal'
       }">
@@ -114,7 +114,7 @@
 </template>
 
 <script setup lang="ts" generic="T">
-import { h, computed, onMounted, useTemplateRef, resolveComponent } from 'vue'
+import { h, computed, onMounted, useTemplateRef, resolveComponent, useAttrs } from 'vue'
 import { useInfiniteScroll } from '@vueuse/core'
 import type { TableColumn, DropdownMenuItem } from '@nuxt/ui'
 import { getPaginationRowModel } from '@tanstack/vue-table'
@@ -167,6 +167,25 @@ const emit = defineEmits<{
 }>()
 
 const table = useTemplateRef<any>('table')
+const attrs = useAttrs()
+
+function columnsHaveFooter(cols: any[]): boolean {
+  for (const col of cols) {
+    if (col.columns?.length) {
+      if (columnsHaveFooter(col.columns)) return true
+    } else if (col.footer != null && col.footer !== '') {
+      return true
+    }
+  }
+  return false
+}
+
+/** Sticky header always; sticky footer when columns define totals. Works with virtualize. */
+const tableSticky = computed((): boolean | 'header' | 'footer' => {
+  const override = attrs.sticky
+  if (override !== undefined) return override as boolean | 'header' | 'footer'
+  return columnsHaveFooter(props.columns) ? true : 'header'
+})
 
 /**
  * Recursive logic to allow merged headers and apply Cell Registry.
@@ -209,7 +228,7 @@ function processColumnDefinitions(cols: any[]): any[] {
     // Footer: allow simple string footer values in column definitions.
     if (typeof processed.footer === 'string') {
       const footerLabel = processed.footer
-      processed.footer = () => h('span', { class: 'text-sm font-semibold whitespace-nowrap' }, footerLabel)
+      processed.footer = () => h('span', { class: 'text-sm font-semibold whitespace-nowrap text-foreground' }, footerLabel)
     }
     return processed
   })

@@ -1,10 +1,14 @@
 import type { NavigationMenuItem } from '@nuxt/ui'
+import { useLayoutSidebar } from '~/composables/layout/useLayoutSidebar'
 import { useRoutePermissionMap } from '~/utils/auth/routes'
-
 export const useMenu = () => {
-  const open = ref(false)
+  const { open, collapseForPos, closeSidebar } = useLayoutSidebar()
   const { t } = useI18n()
   const auth = useAuthStore()
+
+  const closeNav = () => {
+    closeSidebar()
+  }
 
   const rawLinks = computed(() => [[
     {
@@ -12,56 +16,73 @@ export const useMenu = () => {
       icon: 'i-lucide-home', // updated icon name
       to: '/',
       class: 'text-md gap-2',
-      onSelect: () => { open.value = false }
+      onSelect: closeNav
     },
     {
       label: t('pages.category.title'),
       icon: 'i-lucide-swatch-book', // updated icon name
       to: '/category',
       class: 'my-2 text-md gap-2',
-      onSelect: () => { open.value = false }
+      onSelect: closeNav
+    },
+    {
+      label: t('pages.supplier.title'),
+      icon: 'i-lucide-users',
+      to: '/supplier',
+      class: 'my-2 text-md gap-2',
+      onSelect: closeNav
     },
     {
       label: t('pages.product.title'),
       icon: 'i-lucide-package-search',
       to: '/product',
       class: 'my-2 text-md gap-2',
-      onSelect: () => { open.value = false }
+      onSelect: closeNav
     },
     {
       label: t('pages.pos.title'),
       icon: 'i-lucide-store', // updated icon name
       to: '/pos',
       class: 'my-2 text-md gap-2',
-      onSelect: () => { open.value = false }
+      onSelect: () => {
+        collapseForPos()
+        closeNav()
+      },
     },
     {
       label: t('pages.report.title'),
       icon: 'i-lucide-file-bar-chart', // updated icon name
       to: '/report',
       class: 'my-2 text-md gap-2',
-      onSelect: () => { open.value = false }
+      onSelect: closeNav
+    },
+    {
+      label: t('pages.refund.title'),
+      icon: 'i-lucide-arrow-left-right',
+      to: '/refund',
+      class: 'my-2 text-md gap-2',
+      onSelect: closeNav
     },
     {
       label: t('pages.commission.title'),
       icon: 'i-lucide-badge-percent', // updated icon name
       to: '/commission',
       class: 'my-2 text-md gap-2',
-      onSelect: () => { open.value = false }
+      onSelect: closeNav
     },
     {
       label: t('pages.finance.title'),
       icon: 'i-lucide-landmark', // updated icon name
       to: '/finance',
       class: 'my-2 text-md gap-2',
-      onSelect: () => { open.value = false }
+      onSelect: closeNav
     },
     {
       label: t('pages.delivery.title'),
       icon: 'i-lucide-truck',
       to: '/delivery',
       class: 'my-2 text-md gap-2',
-      onSelect: () => { open.value = false }
+      onSelect: closeNav
     },
     {
       label: t('navigation.settings'),
@@ -75,16 +96,16 @@ export const useMenu = () => {
           label: t('pages.userManagement.title'),
           to: '/settings/user-management',
           class: 'text-md gap-2',
-          onSelect: () => { open.value = false }
+          onSelect: closeNav
         },
         {
           label: t('pages.roleManagement.title'),
           to: '/settings/role-management',
           class: 'my-2 text-md gap-2',
-          onSelect: () => { open.value = false }
+          onSelect: closeNav
         }
       ],
-      onSelect: () => { open.value = false }
+      onSelect: closeNav
     }
   ], []] as NavigationMenuItem[][])
 

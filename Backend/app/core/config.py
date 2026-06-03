@@ -27,6 +27,11 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440
     REFRESH_TOKEN_EXPIRE_DAYS: int = 14
+    # Local-mode convenience: keep users logged in for a very long time and disable rate limits.
+    # This is automatically ignored in production.
+    LOCAL_PERSISTENT_LOGIN: bool = True
+    LOCAL_ACCESS_TOKEN_EXPIRE_MINUTES: int = 5256000  # 10 years
+    LOCAL_REFRESH_TOKEN_EXPIRE_DAYS: int = 3650  # 10 years
     JWT_ISSUER: str = "e-comerce-backend"
     JWT_AUDIENCE: str = ""
 
@@ -120,10 +125,14 @@ class Settings(BaseSettings):
 
     @property
     def access_token_expire_minutes(self) -> int:
+        if self.LOCAL_PERSISTENT_LOGIN and not self.is_production:
+            return self.LOCAL_ACCESS_TOKEN_EXPIRE_MINUTES
         return self.ACCESS_TOKEN_EXPIRE_MINUTES
 
     @property
     def refresh_token_expire_days(self) -> int:
+        if self.LOCAL_PERSISTENT_LOGIN and not self.is_production:
+            return self.LOCAL_REFRESH_TOKEN_EXPIRE_DAYS
         return self.REFRESH_TOKEN_EXPIRE_DAYS
 
     @property
@@ -176,6 +185,8 @@ class Settings(BaseSettings):
 
     @property
     def rate_limit_enabled(self) -> bool:
+        if self.LOCAL_PERSISTENT_LOGIN and not self.is_production:
+            return False
         return self.RATE_LIMIT_ENABLED
 
     @property

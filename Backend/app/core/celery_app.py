@@ -15,8 +15,10 @@ def _get_result_backend() -> str:
 def _parse_backup_cron() -> tuple[int, int]:
     try:
         hour, minute = map(int, (settings.google_backup_time or "19:00").split(":"))
+        if not (0 <= hour <= 23 and 0 <= minute <= 59):
+            raise ValueError("Hour/minute out of cron range")
         return hour, minute
-    except ValueError:
+    except (TypeError, ValueError):
         return 19, 0
 
 
@@ -45,6 +47,7 @@ celery_app = Celery(
     broker=_get_broker_url(),
     backend=_get_result_backend(),
     include=[
+        "app.tasks",
         "app.tasks.checkout_tasks",
     ],
 )

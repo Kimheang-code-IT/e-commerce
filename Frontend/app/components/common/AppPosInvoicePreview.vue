@@ -7,10 +7,6 @@ import logo from '~/assets/images/logo.png'
 const { t, locale } = useI18n()
 const authStore = useAuthStore()
 
-const telegramPriceUrl = 'https://t.me/REANCOMPUTERFREE'
-const telegramBrandUrl = 'https://t.me/damanksiksaa'
-const buildQrUrl = (value: string) =>
-  `https://api.qrserver.com/v1/create-qr-code/?size=160x160&margin=0&data=${encodeURIComponent(value)}`
 interface ReportInvoice {
   invoiceNo: string
   date: string
@@ -129,27 +125,10 @@ defineProps<{
           <div class="w-[133.333%] sm:w-full origin-top-left scale-[0.75] sm:scale-100">
             <div class="grid grid-cols-[1fr_250px] gap-8">
               <div class="space-y-4">
-                <div class="space-y-1">
-                  <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{{ t('pages.pos.invoice.terms.title') }}</h3>
-                  <p class="text-[11px] text-slate-600 font-bold">{{ t('pages.pos.invoice.terms.km') }}</p>
-                  <p class="text-[11px] text-slate-400 font-bold">{{ t('pages.pos.invoice.terms.en') }}</p>
-                </div>
-
-                <div class="flex gap-4">
-                  <div class="space-y-1 text-center">
-                    <div class="size-20 border border-slate-200 p-1 bg-white">
-                      <img :src="buildQrUrl(telegramPriceUrl)" alt="Telegram price QR" class="size-full object-contain"
-                        loading="eager" decoding="sync">
-                    </div>
-                    <p class="text-[9px] font-bold text-slate-500 mt-1">រៀនកុំព្យូទ័រក្រៅសាលា</p>
-                  </div>
-                  <div class="space-y-1 text-center">
-                    <div class="size-20 border border-slate-200 p-1 bg-white">
-                      <img :src="buildQrUrl(telegramBrandUrl)" alt="Telegram brand QR" class="size-full object-contain"
-                        loading="eager" decoding="sync">
-                    </div>
-                    <p class="text-[9px] font-bold text-slate-500 mt-1">ដំណាក់សិក្សា</p>
-                  </div>
+                <div class="space-y-2 mt-4">
+                  <h3 class="text-[12px] font-bold text-slate-500 uppercase tracking-widest">{{ t('pages.pos.invoice.terms.title') }}</h3>
+                  <p class="text-[14px] text-slate-600 font-bold">{{ t('pages.pos.invoice.terms.km') }}</p>
+                  <p class="text-[14px] text-slate-400 font-bold">{{ t('pages.pos.invoice.terms.en') }}</p>
                 </div>
               </div>
 
@@ -192,11 +171,11 @@ defineProps<{
             <div class="bg-primary text-white px-2 py-2.5 flex justify-between items-center gap-3 text-[10px] font-bold">
               <span class="font-bold text-sm flex items-center gap-1.5">
                 <UIcon name="i-lucide-phone-call" class="size-3.5 shrink-0" />
-                098720123
+                015222723
               </span>
               <span class="font-bold text-xs flex items-center gap-1.5 text-right">
                 <UIcon name="i-lucide-map-pin" class="size-3.5 shrink-0" />
-                ផ្ទះលេខ ១១៦ ផ្លូវ ២៦១ សង្កាត់ទឹកល្អក់៣ ខណ្ឌទួលគោក រាជធានីភ្នំពេញ
+                ផ្ទះលេខ ១៤៨B, ផ្លូវ ១៤៦, សង្កាត់ទឹកល្អក់២, ខណ្ឌទួលគោក រាជធានីភ្នំពេញ
               </span>
             </div>
           </div>

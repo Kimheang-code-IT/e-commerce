@@ -15,12 +15,16 @@ const {
     filteredEntries, confirmConfig,
     columns, entryFormFields,
     getDropdownActions, handleSaveRequest, finalizeAction, handleAddNew,
-    stockAdjustMode, stockAdjustQty, stockAdjustNote, stockAdjustTarget,
+    stockAdjustMode, stockAdjustQty, stockAdjustInPrice, stockAdjustOutPrice,
+    stockAdjustNote, stockAdjustTarget,
     openStockAdjustDialog, applyStockAdjust,
     // History
     isHistoryOpen, historyType, historyEntries, isHistoryLoading, historyTotalRows,
-    historyPagination, historyDateRange, openHistory, loadHistory,
+    historyPagination, historyDateRange, openHistory, loadHistory, onHistorySaved,
 } = useProduct()
+
+const auth = useAuthStore()
+const canAdjustStock = computed(() => auth.hasPermission('product:adjust-stock'))
 
 const isExportOpen = ref(false)
 
@@ -178,9 +182,13 @@ function onProductImageError(event: Event) {
         <CommonAppStockAdjustModal
             v-model:open="isStockAdjustOpen"
             v-model:qty="stockAdjustQty"
+            v-model:in-price="stockAdjustInPrice"
+            v-model:out-price="stockAdjustOutPrice"
             v-model:note="stockAdjustNote"
             :mode="stockAdjustMode"
             :product-name="stockAdjustTarget?.name || ''"
+            :default-in-price="stockAdjustTarget?.inPrice"
+            :default-out-price="stockAdjustTarget?.salePrice ?? stockAdjustTarget?.outPrice"
             @apply="applyStockAdjust"
         />
         
@@ -189,10 +197,13 @@ function onProductImageError(event: Event) {
             v-model:range="historyDateRange"
             v-model:pagination="historyPagination"
             :type="historyType"
+            :product-id="selectedEntry?.id"
             :product-name="selectedEntry?.name"
             :data="historyEntries"
             :loading="isHistoryLoading"
             :total="historyTotalRows"
+            :can-edit="canAdjustStock"
+            @saved="onHistorySaved"
         />
 
         <CommonAppExport v-model:open="isExportOpen" :data="filteredEntries" filename="products" date-field="createdAt" />

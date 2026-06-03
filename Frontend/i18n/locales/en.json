@@ -41,6 +41,14 @@
         "saveChanges": "Save Changes",
         "selectDate": "Select Date",
         "select": "Select...",
+        "validation": {
+            "required": "Please complete \"{field}\"",
+            "selectOption": "Please select an option for \"{field}\"",
+            "selectAtLeastOne": "Please select at least one item for \"{field}\"",
+            "uploadImage": "Please upload an image for \"{field}\""
+        },
+        "imageUploadHint": "SVG, PNG, JPG or GIF",
+        "imageUploadReplace": "Click or drop to replace image",
         "loadingMap": "Loading Cambodia Map Data...",
         "scale": "Scale",
         "min": "MIN",
@@ -59,7 +67,9 @@
             "titleDamaged": "Add Damaged Stock",
             "productLabel": "Product",
             "qtyToAdd": "Quantity to add",
-            "qtyDamaged": "Damaged quantity"
+            "qtyDamaged": "Damaged quantity",
+            "fifoHint": "Each batch keeps its own cost and sale price. POS sells oldest stock first (FIFO).",
+            "damagedFifoHint": "Damaged units are removed from the oldest stock batch first."
         }
     },
     "provinces": {
@@ -111,6 +121,9 @@
         "category": {
             "title": "Category"
         },
+        "supplier": {
+            "title": "Supplier"
+        },
         "product": {
             "title": "Product"
         },
@@ -145,6 +158,7 @@
                     "deliveryTypeDomnaksiiksa": "Domnaksiiksa",
                     "deliveryTypeGrap": "Grap",
                     "deliveryTypeJNT": "J&T",
+                    "deliveryTypeOther": "Other",
                     "paymentCash": "Cash",
                     "paymentAcleda": "ACLEDA Bank",
                     "paymentABA": "ABA Bank",
@@ -182,7 +196,14 @@
                 "discountPercent": "%",
                 "total": "Total",
                 "next": "Next",
-                "finish": "Finish"
+                "finish": "Finish",
+                "editLinePrice": "Edit sale price",
+                "editLinePriceHint": "Custom price for this customer only. Saved on invoice and reports.",
+                "lineTotal": "Line total",
+                "catalogPrice": "Catalog price",
+                "resetPrice": "Reset",
+                "customPrice": "Custom",
+                "unitPrice": "Sale price (this order)"
             },
             "checkoutConfirm": {
                 "title": "Confirm checkout",
@@ -332,6 +353,18 @@
             "tableTitle": "Report",
             "filterSource": "Source",
             "filterProvince": "Province",
+            "actions": {
+                "refund": "Refund",
+                "checkout": "Back to checkout"
+            },
+            "refundDialog": {
+                "title": "Refund",
+                "reason": "Refund reason",
+                "reasonPlaceholder": "Enter reason for this refund...",
+                "confirm": "Confirm refund",
+                "successTitle": "Refund recorded",
+                "successDescription": "The item was refunded and stock was restored."
+            },
             "columns": {
                 "no": "No",
                 "invoiceNo": "Invoice No",
@@ -347,15 +380,25 @@
                 "sold": "Sold"
             }
         },
+        "refund": {
+            "title": "Refund",
+            "recordsTitle": "Refund Records",
+            "pending": {
+                "title": "Refund invoice"
+            }
+        },
         "delivery": {
             "title": "Delivery",
             "tableTitle": "Delivery List",
             "columns": {
                 "no": "No.",
-                "invoiceId": "Invoice Id",
+                "invoiceId": "Invoice No.",
+                "invoiceNo": "Invoice No.",
+                "customer": "Customer",
                 "address": "Address",
                 "deliveryType": "Delivery Type",
                 "deliveryPrice": "Delivery Price",
+                "total": "Total",
                 "deliveryStatus": "Delivery Status",
                 "date": "Date"
             }
@@ -364,6 +407,34 @@
             "title": "Role Management",
             "tableTitle": "Authorization Policies",
             "addBtn": "Add Role",
+            "allPages": "Full system access",
+            "pages": {
+                "dashboard": "Dashboard",
+                "category": "Category",
+                "supplier": "Supplier",
+                "product": "Product",
+                "pos": "POS",
+                "finance": "Finance",
+                "report": "Report",
+                "refund": "Refund",
+                "delivery": "Delivery",
+                "history": "History",
+                "commission": "Commission",
+                "role": "Role management",
+                "user": "User management"
+            },
+            "actions": {
+                "view": "View",
+                "create": "Create",
+                "update": "Update",
+                "delete": "Delete",
+                "export": "Export",
+                "checkout": "Checkout",
+                "adjustStock": "Adjust stock",
+                "viewAdjustStock": "View stock history",
+                "addDamage": "Add damaged stock",
+                "viewAddDamage": "View damaged stock"
+            },
             "analyticsRoles": "Target Roles",
             "analyticsPermissions": "Global Permissions",
             "analyticsPolicies": "Active Policies",
@@ -406,11 +477,18 @@
             "out": "Out of stock"
         },
         "qty": "Qty",
+        "qtyRemaining": "Left in batch",
         "note": "Note",
         "viewAddedStock": "View Add",
         "viewDamagedStock": "View Damaged",
         "historyTitleAdded": "Stock Addition History",
-        "historyTitleDamaged": "Damaged Stock History"
+        "historyTitleDamaged": "Damaged Stock History",
+        "historyPageQtyTotal": "Qty total (this page)",
+        "historyRecordsTotal": "{count} records",
+        "historyEditBatch": "Edit stock batch",
+        "historyEditDamage": "Edit damaged record",
+        "historyUpdateSuccess": "History record updated",
+        "historyUpdateFailed": "Could not update record"
     },
     "settings": {
         "language": "Language",

@@ -6,6 +6,9 @@ import type {
   FinanceEntry,
   Product,
   ReportRow,
+  RefundRecord,
+  Supplier,
+  SupplierProductItem,
   SystemRole,
   SystemUser
 } from '~/types'
@@ -108,6 +111,49 @@ export function useProductApi() {
       api.get<ApiList<any>>(`/products/${id}/stock-additions`, { query: params }),
     listDamages: (id: number | string, params?: ApiQueryParams) =>
       api.get<ApiList<any>>(`/products/${id}/damages`, { query: params }),
+    adjustStock: (
+      id: number | string,
+      body: {
+        mode: 'added' | 'damaged'
+        qty: number
+        inPrice?: number
+        outPrice?: number
+        note?: string
+      },
+    ) => api.post<{ data: Product }>(`/products/${id}/stock-adjust`, body),
+    updateStockAddition: (
+      productId: number | string,
+      recordId: number | string,
+      body: { qty?: number; inPrice?: number; outPrice?: number; note?: string },
+    ) =>
+      api.patch<{ data: { product: Product; record: Record<string, unknown> } }>(
+        `/products/${productId}/stock-additions/${recordId}`,
+        body,
+      ),
+    updateDamage: (
+      productId: number | string,
+      recordId: number | string,
+      body: { qty?: number; note?: string },
+    ) =>
+      api.patch<{ data: { product: Product; record: Record<string, unknown> } }>(
+        `/products/${productId}/damages/${recordId}`,
+        body,
+      ),
+  }
+}
+
+export function useSupplierApi() {
+  const crud = makeCrudApi<Supplier>('/suppliers')
+  const api = useApi()
+  return {
+    ...crud,
+    listProducts: (supplierId: number | string, params?: ApiQueryParams) =>
+      api.get<ApiList<SupplierProductItem>>(`/suppliers/${supplierId}/products`, { query: params }),
+    updateProduct: (
+      supplierId: number | string,
+      productId: number | string,
+      body: { productName?: string; qty?: number; unitPrice?: number }
+    ) => api.patch<{ data: SupplierProductItem }>(`/suppliers/${supplierId}/products/${productId}`, body)
   }
 }
 
@@ -219,6 +265,24 @@ export function useReportApi() {
   return useReportsViewApi()
 }
 
+export function useRefundApi() {
+  const api = useApi()
+  return {
+    list: (params?: ApiQueryParams, signal?: AbortSignal) =>
+      api.get<ApiList<RefundRecord>>('/refunds', { query: params, signal, dedupe: true }),
+    searchInvoices: (invoiceNo: string, signal?: AbortSignal, exact = true) =>
+      api.get<ApiList<ReportRow>>('/refunds/search-invoices', {
+        query: { invoiceNo, exact },
+        signal,
+        dedupe: true,
+        suppressErrorToast: true
+      }),
+    createMany: (records: Array<ReportRow & { refundReason?: string }>) =>
+      api.post<{ data: RefundRecord[] }>('/refunds', { records }),
+    remove: (id: number | string) => api.delete<{ message: string }>(`/refunds/${id}`)
+  }
+}
+
 export function useDeliveryApi() {
   const api = useApi()
   return {
@@ -272,11 +336,11 @@ export function usePosApi() {
       `/api/v1/pos/invoice/${encodeURIComponent(invoiceNo)}/pdf`,
     calculateTotals: (payload: {
       discountAmount: number
-      lines: Array<{ productId: number; qty: number }>
+      lines: Array<{ productId: number; qty: number; unitPrice?: number }>
     }) =>
       withLegacyFallback(
-        () => api.post<{ subtotal: number; discountAmount: number; total: number }>('/pos/calculate-totals', payload),
-        () => api.post<{ subtotal: number; discountAmount: number; total: number }>('/invoices/calculate-totals', payload)
+        () => api.post<{ subtotal: number; discountAmount: number; total: number }>('/pos/calculate-totals', payload, { suppressErrorToast: true }),
+        () => api.post<{ subtotal: number; discountAmount: number; total: number }>('/invoices/calculate-totals', payload, { suppressErrorToast: true })
       ),
     checkout: (payload: {
       customerName: string
@@ -288,7 +352,7 @@ export function usePosApi() {
       deliveryDate: string
       discountAmount: number
       sellerId?: number
-      lines: Array<{ productId: number; qty: number }>
+      lines: Array<{ productId: number; qty: number; unitPrice?: number }>
     }) =>
       withLegacyFallback(
         () =>

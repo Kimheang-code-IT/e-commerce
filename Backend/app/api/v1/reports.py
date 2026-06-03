@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -19,12 +19,12 @@ from app.services.filter_options_service import report_filter_options
 router = APIRouter(prefix="/reports-view", tags=["reports-view"], dependencies=[Depends(get_current_user)])
 
 
-from sqlalchemy import or_
-
 def _base_report_query():
     return (
-        select(Invoice, User)
+        select(CheckoutItem, Invoice, User)
+        .join(Invoice, CheckoutItem.invoice_id == Invoice.id)
         .outerjoin(User, Invoice.user_id == User.id)
+        .where(Invoice.status == "paid")
     )
 
 
@@ -49,12 +49,12 @@ def list_reports_view(
         q = q.where(
             Invoice.invoice_no.ilike(f"%{keyword}%")
             | Invoice.customer_name.ilike(f"%{keyword}%")
-            | Invoice.product_name.ilike(f"%{keyword}%")
+            | CheckoutItem.product_name.ilike(f"%{keyword}%")
             | User.name.ilike(f"%{keyword}%")
         )
     products = parse_csv(product)
     if products:
-        conditions = [Invoice.product_name.ilike(f"%{p}%") for p in products]
+        conditions = [CheckoutItem.product_name.ilike(f"%{p}%") for p in products]
         q = q.where(or_(*conditions))
 
     sources = parse_csv(source)
@@ -71,16 +71,18 @@ def list_reports_view(
         sortBy,
         sortOrder,
         {
-            "id": Invoice.id,
+            "id": CheckoutItem.id,
             "invoiceNo": Invoice.invoice_no,
             "date": Invoice.created_at,
-            "product": Invoice.product_name,
+            "product": CheckoutItem.product_name,
             "seller": User.name,
-            "amount": Invoice.total,
+            "amount": CheckoutItem.total,
         },
     )
+    if not sortBy:
+        q = q.order_by(Invoice.created_at.desc(), CheckoutItem.id.asc())
     rows, total = paginate_query(q, db, page, limit)
-    result = [serialize_report_row(None, inv, seller) for inv, seller in rows]
+    result = [serialize_report_row(ci, inv, seller) for ci, inv, seller in rows]
     return list_response(result, total)
 
 
@@ -102,12 +104,12 @@ def export_reports_view(
         q = q.where(
             Invoice.invoice_no.ilike(f"%{keyword}%")
             | Invoice.customer_name.ilike(f"%{keyword}%")
-            | Invoice.product_name.ilike(f"%{keyword}%")
+            | CheckoutItem.product_name.ilike(f"%{keyword}%")
             | User.name.ilike(f"%{keyword}%")
         )
     products = parse_csv(product)
     if products:
-        conditions = [Invoice.product_name.ilike(f"%{p}%") for p in products]
+        conditions = [CheckoutItem.product_name.ilike(f"%{p}%") for p in products]
         q = q.where(or_(*conditions))
 
     sources = parse_csv(source)
@@ -119,8 +121,9 @@ def export_reports_view(
         q = q.where(or_(*[Invoice.customer_address == p for p in provinces]))
 
     q = apply_created_at_range(q, dateFrom, dateTo, Invoice.created_at)
-    pairs = db.execute(q).all()
-    result = [serialize_report_row(None, inv, seller) for inv, seller in pairs]
+    q = q.order_by(Invoice.created_at.desc(), CheckoutItem.id.asc())
+    triples = db.execute(q).all()
+    result = [serialize_report_row(ci, inv, seller) for ci, inv, seller in triples]
     return export_payload(result, "reports-view", format)
 
 

@@ -35,7 +35,6 @@ const deliveryTimePart = ref('')
 
 const {
   deliveryTypeItems,
-  sourceItems,
   paymentMethodItems,
   addressItems: provinceItems
 } = usePosFormOptions()
@@ -218,6 +217,7 @@ watch([deliveryDatePart, deliveryTimePart], () => {
             <USelect
               v-model="deliveryType"
               :items="deliveryTypeItems"
+              label-key="label"
               value-key="value"
               size="lg"
               class="w-full mt-1"
@@ -258,6 +258,7 @@ watch([deliveryDatePart, deliveryTimePart], () => {
             <USelect
               v-model="paymentMethod"
               :items="paymentMethodItems"
+              label-key="label"
               value-key="value"
               size="lg"
               class="w-full mt-1"
@@ -274,28 +275,16 @@ watch([deliveryDatePart, deliveryTimePart], () => {
           </div>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
-          <div class="flex-1 space-y-1.5">
-            <label class="text-sm text-muted-foreground">{{ $t('pages.pos.customer.form.source') }} <span class="text-error">*</span></label>
-            <USelect
-              v-model="source"
-              :items="sourceItems"
-              value-key="value"
-              size="lg"
-              class="w-full mt-1"
-            />
-          </div>
-          <div class="space-y-1.5">
-            <label class="text-sm text-muted-foreground">{{ $t('pages.pos.customer.form.address') }}<span class="text-error ml-1">*</span></label>
-            <USelectMenu
-              v-model="selectedProvinceItem"
-              :items="provinceItems"
-              searchable
-              :placeholder="$t('pages.pos.customer.form.addressPlaceholder')"
-              size="lg"
-              class="w-full mt-1"
-            />
-          </div>
+        <div class="space-y-1.5 w-full">
+          <label class="text-sm text-muted-foreground">{{ $t('pages.pos.customer.form.address') }}<span class="text-error ml-1">*</span></label>
+          <USelectMenu
+            v-model="selectedProvinceItem"
+            :items="provinceItems"
+            searchable
+            :placeholder="$t('pages.pos.customer.form.addressPlaceholder')"
+            size="lg"
+            class="w-full mt-1"
+          />
         </div>
       </div>
     </div>

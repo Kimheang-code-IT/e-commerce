@@ -10,6 +10,7 @@ from app.core.config import settings
 from app.models import Category, CheckoutItem, Finance, History, Invoice, Product, ProductDamage, ProductStockAddition, Role, User
 from app.services.product_image_service import public_image_url
 from app.services.product_stock_status import stock_status_tier
+from app.services.stock_fifo_service import batch_fifo_head_out_prices
 
 
 def record_history(db: Session, user_id: int, type_action: str, description: str):
@@ -115,6 +116,7 @@ def serialize_product(
     *,
     added: int = 0,
     damaged: int = 0,
+    sale_price: float | None = None,
 ) -> dict[str, Any]:
     category_name = row.category_rel.name if getattr(row, "category_rel", None) is not None else ""
     category_public = Category.to_public_id(row.category_id) if row.category_id else ""
@@ -126,6 +128,7 @@ def serialize_product(
         "categoryId": category_public,
         "inPrice": row.in_price,
         "outPrice": row.out_price,
+        "salePrice": float(sale_price if sale_price is not None else row.out_price or 0),
         "commission": row.commission,
         "totalStock": row.total_stock,
         "inStock": row.in_stock,
@@ -206,6 +209,7 @@ def serialize_delivery_invoice(inv: Invoice) -> dict[str, Any]:
         "deliveryType": inv.delivery_type or "",
         "deliveryStatus": inv.delivery_status or "",
         "deliveryPrice": float(inv.delivery_price or 0),
+        "total": float(inv.total or 0),
         "date": to_iso(inv.created_at),
     }
 

@@ -70,9 +70,11 @@ function goToInvoice(row: any) {
           <span class="text-sm text-muted-foreground">{{ row.index + 1 }}</span>
         </template>
 
-        <template #invoiceId-cell="{ row }">
+        <template #invoiceNo-cell="{ row }">
           <div class="flex items-center gap-2">
-            <span class="font-medium text-foreground">{{ row.original.invoiceId }}</span>
+            <span class="font-medium text-foreground">
+              {{ row.original.invoiceNo || row.original.invoiceId }}
+            </span>
             <UButton
               icon="i-lucide-receipt-text"
               color="primary"
@@ -81,6 +83,10 @@ function goToInvoice(row: any) {
               @click="goToInvoice(row.original)"
             />
           </div>
+        </template>
+
+        <template #customer-cell="{ row }">
+          <span class="text-sm text-foreground">{{ row.original.customer || '—' }}</span>
         </template>
 
         <template #address-cell="{ row }">
@@ -96,6 +102,12 @@ function goToInvoice(row: any) {
         <template #deliveryPrice-cell="{ row }">
           <span class="text-sm font-medium text-primary">
             {{ formatCurrency(row.original.deliveryPrice, 'USD') }}
+          </span>
+        </template>
+
+        <template #total-cell="{ row }">
+          <span class="text-sm font-semibold text-foreground tabular-nums">
+            {{ formatCurrency(row.original.total ?? 0, 'USD') }}
           </span>
         </template>
 

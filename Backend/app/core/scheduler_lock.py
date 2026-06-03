@@ -4,16 +4,17 @@ from __future__ import annotations
 
 import logging
 
+from app.core.config import settings
+from app.core.redis_client import get_redis
+
 logger = logging.getLogger(__name__)
 
 
 def try_acquire_scheduler_lock(name: str, *, ttl_seconds: int = 3600) -> bool:
+    if not settings.cache_enabled:
+        return True
     try:
-        import redis
-
-        from app.core.config import settings
-
-        client = redis.from_url(settings.redis_url, decode_responses=True)
+        client = get_redis()
         acquired = client.set(f"ecom:schedlock:{name}", "1", nx=True, ex=ttl_seconds)
         return bool(acquired)
     except Exception as exc:
