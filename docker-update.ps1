@@ -34,7 +34,7 @@ Write-Host "Checking Backend/.env for Docker..." -ForegroundColor Cyan
 python Backend/scripts/check_env_docker.py
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-$services = @("backend", "celery-worker", "celery-beat", "telegram-bot", "nginx")
+$services = @("backend", "celery-worker", "celery-beat", "telegram-bot")
 
 if (-not $NoBuild) {
     Write-Host "Building images: $($services -join ', ')..." -ForegroundColor Cyan
@@ -64,5 +64,5 @@ Write-Host "  docker compose exec backend python -c ""import reportlab; print('r
 Write-Host "  docker compose logs telegram-bot --tail 30"
 
 if ($Logs) {
-    docker compose logs -f backend celery-worker nginx
+    docker compose logs -f backend celery-worker
 }

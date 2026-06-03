@@ -1,0 +1,83 @@
+# Host nginx example — NOT used by Docker. Copy to your WSL/server, e.g.:
+#   sudo cp domank-dontrey.in.conf.sample /etc/nginx/sites-available/domank-dontrey.in
+#   sudo ln -s /etc/nginx/sites-available/domank-dontrey.in /etc/nginx/sites-enabled/
+#   sudo nginx -t && sudo systemctl reload nginx
+#
+# Prerequisites:
+#   1. docker compose up -d  (API on 127.0.0.1:8000)
+#   2. cd Frontend && pnpm install && pnpm exec nuxi generate
+#   3. Set FRONTEND_ROOT below to your Frontend/.output/public path
+#   4. DNS A record domank-dontrey.in -> your public IP; router forwards 80/443
+#   5. sudo certbot --nginx -d domank-dontrey.in  (fills ssl_certificate paths)
+
+# --- HTTP (ACME + optional LAN) ---
+server {
+    listen 80;
+    listen [::]:80;
+    server_name domank-dontrey.in;
+
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+# --- HTTPS ---
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+    server_name domank-dontrey.in;
+
+    # After certbot:
+    ssl_certificate     /etc/letsencrypt/live/domank-dontrey.in/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/domank-dontrey.in/privkey.pem;
+
+    client_max_body_size 20m;
+
+    # CHANGE to absolute path on your machine (WSL example):
+    set $frontend_root /home/YOUR_USER/e-comerce/Frontend/.output/public;
+
+    location /api/ {
+        proxy_pass http://127.0.0.1:8000/api/;
+        proxy_http_version 1.1;
+        proxy_set_header Connection "";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_connect_timeout 10s;
+        proxy_send_timeout 120s;
+        proxy_read_timeout 120s;
+    }
+
+    location /uploads/products/ {
+        proxy_pass http://127.0.0.1:8000/uploads/products/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location /health {
+        proxy_pass http://127.0.0.1:8000/health;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location / {
+        root $frontend_root;
+        try_files $uri $uri/ /index.html;
+    }
+}
+
+# Optional: LAN-only HTTP on port 80 with default_server (no TLS)
+# server {
+#     listen 80 default_server;
+#     server_name _;
+#     set $frontend_root /home/YOUR_USER/e-comerce/Frontend/.output/public;
+#     include snippets/e-comerce-proxy.conf;  # copy location blocks from above
+# }

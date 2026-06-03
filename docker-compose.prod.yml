@@ -10,9 +10,6 @@ x-logging: &default-logging
     max-file: "5"
 
 services:
-  nginx:
-    logging: *default-logging
-
   backend:
     environment:
       APP_ENV: production

@@ -1,6 +1,6 @@
 # E-Commerce (POS + reports + Telegram)
 
-LAN/Wi-Fi deploy with **Docker**: nginx (SPA + load balancer), FastAPI, PostgreSQL, Redis, Celery, Telegram polling bot.
+**Docker** runs the API, PostgreSQL, Redis, Celery, and Telegram bot. **Host nginx** (you install) serves the SPA and HTTPS on ports 80/443, proxying to `http://127.0.0.1:8000`.
 
 ## Push to GitHub (this machine)
 
@@ -13,14 +13,13 @@ LAN/Wi-Fi deploy with **Docker**: nginx (SPA + load balancer), FastAPI, PostgreS
 ```powershell
 git add .
 git status
-# Confirm Backend/.env and credentials are NOT listed
-git commit -m "Docker LAN deploy, Celery, nginx LB, Telegram polling"
+git commit -m "Docker stack; host nginx for SPA and TLS"
 git push origin main
 ```
 
 ## Deploy on another computer
 
-**Requirements:** Windows 10/11, [Docker Desktop](https://www.docker.com/products/docker-desktop/), Python 3.11+ (for deploy script), Git.
+**Requirements:** Docker, Python 3.11+ (for deploy script), Git. **Host nginx** for browsers to reach the app.
 
 ```powershell
 git clone https://github.com/YOUR_USER/e-comerce.git
@@ -30,34 +29,34 @@ cd e-comerce
 
 Or manually:
 
-1. Copy `Backend/.env.example` → `Backend/.env` and fill in DB password, JWT secret, **your existing** `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` (same bot on every PC).
-2. Optional: copy `.env.deploy.example` → `.env` and set `BACKEND_REPLICAS=2` for nginx load balancing.
-3. Place Google service account JSON at `Backend/credentials/google-service-account.json` if using backup.
-4. Allow firewall **TCP 8080** (and 8443 for HTTPS).
-5. Run:
+1. Copy `Backend/.env.example` → `Backend/.env` (DB, JWT, Telegram, Google backup).
+2. Place Google service account JSON at `Backend/credentials/` if using backup.
+3. Start Docker:
 
 ```powershell
 .\docker-update.ps1
 ```
 
-Open the URL printed (e.g. `http://192.168.x.x:8080/`). On first run (no users), open `/setup` to create the administrator account.
+4. Build frontend and configure host nginx — see [host-nginx-examples/domank-dontrey.in.conf.sample](host-nginx-examples/domank-dontrey.in.conf.sample).
+
+```bash
+cd Frontend && pnpm install && pnpm exec nuxi generate
+```
+
+5. Open your site via nginx (e.g. `https://domank-dontrey.in/` or `http://<LAN-IP>/`). First run with no users: `/setup`.
 
 ### Telegram (same bot everywhere)
 
 | Setting | Role |
 |---------|------|
-| `TELEGRAM_BOT_TOKEN` | From @BotFather — **use the same value on each machine** |
-| `TELEGRAM_CHAT_ID` | Your group/user id — **same on each machine** |
-| `TELEGRAM_REPORT_ENABLED=true` | Report menus via `telegram-bot` container |
+| `TELEGRAM_BOT_TOKEN` | From @BotFather — same on each machine |
+| `TELEGRAM_CHAT_ID` | Same chat id on each machine |
+| `TELEGRAM_REPORT_ENABLED=true` | Menus via `telegram-bot` |
 | `TELEGRAM_NOTIFY_ENABLED=true` | Checkout alerts via `celery-worker` |
-
-Bot uses **send-only** replies (no edit/delete message APIs). Menus may send multiple messages as you tap buttons.
 
 ```powershell
 docker compose logs telegram-bot -f
 ```
-
-Send `/start` in the configured chat.
 
 ### Updates after `git pull`
 
@@ -65,15 +64,20 @@ Send `/start` in the configured chat.
 .\docker-update.ps1
 ```
 
+Rebuild frontend if `NUXT_PUBLIC_*` changed; reload host nginx.
+
 ## Docs
 
-- [DEPLOY-LAN.md](DEPLOY-LAN.md) — LAN IP, load balancer, firewall, ports
+- [DEPLOY-LAN.md](DEPLOY-LAN.md) — Docker + LAN + host nginx
+- [docs/PRODUCTION.md](docs/PRODUCTION.md) — production checklist
+- [host-nginx-examples/](host-nginx-examples/) — sample nginx config
 - [docs/PERFORMANCE-SECURITY.md](docs/PERFORMANCE-SECURITY.md) — Redis, Celery, rate limits
 
 ## Quick commands
 
 ```powershell
 docker compose ps
+curl http://127.0.0.1:8000/health
 docker compose logs celery-worker --tail 30
 .\docker-update.ps1 -NoBuild
 .\docker-update.ps1 -BackendReplicas 2

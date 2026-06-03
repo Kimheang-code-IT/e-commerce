@@ -1,4 +1,4 @@
-# Optional: build static assets only (main deploy path is nginx/Dockerfile which runs nuxi generate).
+# Optional: build static assets only. Main deploy: host nginx serves Frontend/.output/public after `pnpm exec nuxi generate`.
 # Output: /app/.output/public
 FROM node:20-alpine AS build
 

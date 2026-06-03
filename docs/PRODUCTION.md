@@ -1,137 +1,108 @@
-# Single-VPS production (Docker Compose + nginx load balancer)
+# Production deploy (Docker stack + host nginx)
 
-This stack runs on one server: **nginx** fronts the SPA and load-balances **API replicas** to PostgreSQL, Redis, Celery, and a single Telegram poller.
+Docker runs the **API and workers only**. You install and configure **nginx + Certbot** on the host (WSL/Linux) on ports **80/443**.
 
 ## Architecture
 
 ```
-Clients → nginx (port PUBLIC_HTTP_PORT) → backend × N (least_conn)
+Clients → host nginx (80/443) → 127.0.0.1:8000 (Docker backend)
                 ↓
-         PostgreSQL, Redis (single instance each)
-         celery-worker, celery-beat (×1), telegram-bot (×1)
+         SPA static files (Frontend/.output/public)
+                ↓
+         PostgreSQL, Redis, Celery, telegram-bot (Docker internal)
 ```
 
-## Load balancer (nginx)
+| Layer | Role |
+|-------|------|
+| **Host nginx** | TLS, reverse proxy, SPA `root` — you maintain config |
+| **Docker** | `backend`, `db`, `redis`, `celery-worker`, `celery-beat`, `telegram-bot` |
+| **Not in Docker** | nginx, Certbot |
 
-- Upstream: [`nginx/conf.d/00-upstream.conf`](../nginx/conf.d/00-upstream.conf) — `least_conn` to `backend:8000`
-- Scale API: set `BACKEND_REPLICAS=2` (or more) in root `.env`, then deploy.
+Sample config: [`host-nginx-examples/domank-dontrey.in.conf.sample`](../host-nginx-examples/domank-dontrey.in.conf.sample)
 
-```powershell
-# Option A: root .env
-BACKEND_REPLICAS=2
+## Docker
 
-# Option B: one-shot
-python scripts/deploy_lan.py --backend-replicas 2 --build
-
-# Option C:
-.\docker-update.ps1 -BackendReplicas 2
+```bash
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+# Optional scale:
+docker compose up -d --scale backend=2
 ```
+
+API is published at **`127.0.0.1:8000`** only (not exposed to LAN directly).
 
 **Singleton services (never scale):**
 
-| Service        | Why                                      |
-|----------------|------------------------------------------|
+| Service | Why |
+|---------|-----|
 | `telegram-bot` | Long polling — duplicate token → HTTP 409 |
-| `celery-beat`  | One cron scheduler                       |
-| `nginx`        | One entry point                          |
-| `db`, `redis`  | Single-node data store                   |
+| `celery-beat` | One cron scheduler |
 
-Shared uploads: volume `backend_uploads` — all API replicas on the **same host** read/write the same files.
+## Frontend (SPA)
 
-## Schedulers (avoid duplicate jobs)
+Build once on the host (values baked at generate time):
 
-| Component        | Production recommendation                          |
-|------------------|----------------------------------------------------|
-| `celery-beat`    | **On** — owns backup, low-stock, daily report      |
-| API `SCHEDULER_ENABLED` | **false** when `celery-beat` runs (see `Backend/.env`) |
+```bash
+cd Frontend
+pnpm install
+export NUXT_PUBLIC_SITE_URL=https://domank-dontrey.in
+export NUXT_PUBLIC_API_BASE=/api/v1
+pnpm exec nuxi generate
+```
 
-Set in [`Backend/.env`](../Backend/.env) for production:
+Point host nginx `root` at `Frontend/.output/public`.
+
+## Host nginx + HTTPS
+
+1. DNS: `domank-dontrey.in` → your public IP; router forwards **80** and **443**.
+2. Copy and edit `host-nginx-examples/domank-dontrey.in.conf.sample` → `/etc/nginx/sites-available/`.
+3. `sudo nginx -t && sudo systemctl reload nginx`
+4. `sudo certbot --nginx -d domank-dontrey.in`
+
+## Schedulers
+
+| Component | Production |
+|-----------|------------|
+| `celery-beat` | **On** |
+| API `SCHEDULER_ENABLED` | **false** |
 
 ```env
 APP_ENV=production
 SCHEDULER_ENABLED=false
 CACHE_ENABLED=true
-BACKEND_REPLICAS=2
 ```
 
-Match `BACKEND_REPLICAS` to root `.env` so scheduler locks stay strict when scaled.
+## Security
 
-## Production deploy
-
-```powershell
-# 1. Copy and edit secrets (never commit)
-copy Backend\.env.example Backend\.env
-copy .env.deploy.example .env
-
-# 2. Production overlay (logging limits, memory caps)
-docker compose -f docker-compose.yml -f docker-compose.prod.yml build
-docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --scale backend=2
-
-# Or LAN script with replicas:
-python scripts/deploy_lan.py --backend-replicas 2 --build
-```
-
-### Security checklist
-
-| Setting | Production |
-|---------|------------|
+| Item | Setting |
+|------|---------|
 | `APP_DEBUG` | `false` |
 | `API_DOCS_ENABLED` | `false` |
-| `CORS_ALLOW_LAN` | `false` |
-| `CORS_ORIGINS` | Your real site URL(s) |
-| `JWT_SECRET_KEY` | Long random string (64+ chars) |
-| DB port | Stays `127.0.0.1:5432` in compose (not public) |
-| TLS | Replace self-signed cert or put Caddy/Traefik in front |
+| `CORS_ALLOW_LAN` | `false` in production |
+| `CORS_ORIGINS` | `https://domank-dontrey.in,http://<LAN-IP>` |
+| Redis | No host port in compose |
+| Postgres | `127.0.0.1:5432` only |
+| API | `127.0.0.1:8000` only |
 
 ## Health checks
 
-- `GET /health` and `GET /api/v1/health` verify **PostgreSQL** and **Redis** (when `CACHE_ENABLED=true`).
-- Returns **503** if a dependency fails — Docker and nginx stop routing to bad API replicas.
-
-## Phase 1 — Load balancer verification
-
-Run after deploy with `BACKEND_REPLICAS=2`:
-
-```powershell
-.\scripts\verify_lb.ps1
+```bash
+curl -fsS http://127.0.0.1:8000/health
+curl -fsS http://127.0.0.1/health          # via host nginx
+curl -fsS https://domank-dontrey.in/health
 ```
 
-Or manually:
+Returns **503** if PostgreSQL or Redis is down.
 
-```powershell
-docker compose ps backend
-docker compose exec nginx getent hosts backend
-curl -s http://127.0.0.1:8081/health
-curl -s http://127.0.0.1:8081/api/v1/health
-docker compose ps telegram-bot celery-beat
-```
-
-**Pass criteria:**
-
-- Two or more `backend` containers, status healthy
-- `getent hosts backend` lists multiple IPs
-- `/health` returns `200` with `"status":"ok"` and checks for database/redis
-- Exactly one `ecom-telegram-bot` and one `ecom-celery-beat`
-- Manual: login, checkout, open `/uploads/products/...` image URL
-
-## PostgreSQL backup (cron example)
+## PostgreSQL backup
 
 ```bash
-# Daily 02:00 — adjust user/db from Backend/.env
-0 2 * * * docker exec ecom-postgres pg_dump -U ecom-admin ecommerce | gzip > /var/backups/ecom-$(date +\%F).sql.gz
+docker exec ecom-postgres pg_dump -U ecom-admin ecommerce | gzip > ecom-$(date +%F).sql.gz
 ```
 
 ## Updates
 
-```powershell
-.\docker-update.ps1 -Build
-# or with 2 API replicas:
-.\docker-update.ps1 -Build -BackendReplicas 2
-curl -s http://127.0.0.1:8081/health
+```bash
+docker compose build backend celery-worker celery-beat telegram-bot
+docker compose up -d
+# Rebuild frontend if NUXT_PUBLIC_* changed, then reload nginx
 ```
-
-## Out of scope (single VPS)
-
-- Multi-server HA, replicated Postgres, floating IP
-- Object storage for uploads across separate machines (use S3/NFS if you add nodes later)
-- CI/CD — add GitHub Actions when needed

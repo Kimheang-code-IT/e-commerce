@@ -7,6 +7,9 @@ Auto-detect LAN IPv4 and start Docker (no manual IP in config files).
   python scripts/deploy_lan.py --watch  # keep printing URL if DHCP changes IP
 
 Or double-click / run: start-lan.ps1
+
+Public HTTPS and the SPA are served by **host nginx** (ports 80/443), not Docker.
+After compose is up, proxy http://127.0.0.1:8000 — see host-nginx-examples/
 """
 from __future__ import annotations
 
@@ -20,26 +23,6 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 ENV_PATH = ROOT / ".env"
-
-
-def port_available(port: int) -> bool:
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        try:
-            s.bind(("0.0.0.0", port))
-            return True
-        except OSError:
-            return False
-
-
-def pick_http_port(preferred: int) -> int:
-    """Use preferred port, or the next free one (never binds host port 80)."""
-    for candidate in range(preferred, preferred + 30):
-        if port_available(candidate):
-            if candidate != preferred:
-                print(f"Port {preferred} is in use; using {candidate} instead.")
-            return candidate
-    print(f"Warning: could not find a free port near {preferred}; trying {preferred} anyway.")
-    return preferred
 
 
 def detect_lan_ipv4() -> str | None:
@@ -66,7 +49,7 @@ def detect_lan_ipv4() -> str | None:
 
 
 def _read_backend_replicas() -> int:
-    """BACKEND_REPLICAS from root .env (default 1). Nginx load-balances when > 1."""
+    """BACKEND_REPLICAS from root .env (default 1)."""
     if ENV_PATH.is_file():
         for line in ENV_PATH.read_text(encoding="utf-8").splitlines():
             line = line.strip()
@@ -80,7 +63,6 @@ def _read_backend_replicas() -> int:
 
 def detect_compose_project_name() -> str:
     """Reuse the original project name so existing volumes/containers (ecom-postgres) attach."""
-    # 1) If shared postgres container already exists, follow its owning compose project label.
     try:
         owner = subprocess.run(
             [
@@ -99,7 +81,6 @@ def detect_compose_project_name() -> str:
     except OSError:
         pass
 
-    # 2) Otherwise respect current .env.
     if ENV_PATH.is_file():
         for line in ENV_PATH.read_text(encoding="utf-8").splitlines():
             line = line.strip()
@@ -107,7 +88,6 @@ def detect_compose_project_name() -> str:
                 name = line.split("=", 1)[1].strip()
                 if name:
                     return name
-    # 3) Fallback to known volumes.
     try:
         out = subprocess.run(
             ["docker", "volume", "ls", "-q"],
@@ -124,16 +104,13 @@ def detect_compose_project_name() -> str:
     return "e-comerce"
 
 
-def write_compose_env(*, host_ip: str, http_port: int, https_port: int, backend_replicas: int) -> str:
+def write_compose_env(*, host_ip: str, backend_replicas: int) -> str:
     project = detect_compose_project_name()
-    public_url = f"http://{host_ip}:{http_port}"
     lines = [
         "# Auto-generated — do not edit; regenerated on each start (scripts/deploy_lan.py).",
         f"# Docker volume prefix: {project}_pg_data",
         f"COMPOSE_PROJECT_NAME={project}",
         f"HOST_LAN_IP={host_ip}",
-        f"PUBLIC_HTTP_PORT={http_port}",
-        f"PUBLIC_HTTPS_PORT={https_port}",
         f"BACKEND_REPLICAS={backend_replicas}",
         "CORS_ALLOW_LAN=true",
         "NUXT_PUBLIC_SITE_URL=",
@@ -141,10 +118,11 @@ def write_compose_env(*, host_ip: str, http_port: int, https_port: int, backend_
         "NUXT_PUBLIC_USE_BACKEND_API=true",
         "FILE_BASE_URL=",
         "",
-        f"# Wi-Fi URL: {public_url}/",
+        f"# API (Docker): http://127.0.0.1:8000",
+        f"# Wi-Fi (via your host nginx on 80/443): http://{host_ip}/ or https://domank-dontrey.in/",
     ]
     ENV_PATH.write_text("\n".join(lines) + "\n", encoding="utf-8")
-    return public_url
+    return f"http://{host_ip}/"
 
 
 COMPOSE_BUILD_SERVICES = [
@@ -152,7 +130,6 @@ COMPOSE_BUILD_SERVICES = [
     "celery-worker",
     "celery-beat",
     "telegram-bot",
-    "nginx",
 ]
 
 
@@ -186,16 +163,14 @@ def compose_up(*, build: bool, profile_beat: bool = False, backend_replicas: int
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Auto LAN IP + Docker start (no manual IP config)")
-    parser.add_argument("--port", type=int, default=8081)
-    parser.add_argument("--https-port", type=int, default=8443)
+    parser = argparse.ArgumentParser(description="Auto LAN IP + Docker start (host nginx for HTTP/S)")
     parser.add_argument("--ip", help="Override detected LAN IP")
-    parser.add_argument("--build", action="store_true", help="Rebuild backend/celery/nginx images before up")
+    parser.add_argument("--build", action="store_true", help="Rebuild backend/celery images before up")
     parser.add_argument(
         "--backend-replicas",
         type=int,
         default=None,
-        help="API replicas behind nginx load balancer (default: BACKEND_REPLICAS in .env or 1)",
+        help="API replicas (default: BACKEND_REPLICAS in .env or 1); Docker LB on 127.0.0.1:8000",
     )
     parser.add_argument(
         "--beat",
@@ -214,14 +189,8 @@ def main() -> int:
         host_ip = (args.ip or "").strip() or detect_lan_ipv4()
         if not host_ip:
             return None
-        http_port = pick_http_port(args.port)
         replicas = args.backend_replicas if args.backend_replicas is not None else _read_backend_replicas()
-        url = write_compose_env(
-            host_ip=host_ip,
-            http_port=http_port,
-            https_port=args.https_port,
-            backend_replicas=replicas,
-        )
+        url = write_compose_env(host_ip=host_ip, backend_replicas=replicas)
         return host_ip, url, replicas
 
     first = refresh()
@@ -230,10 +199,11 @@ def main() -> int:
         return 1
 
     host_ip, public_url, backend_replicas = first
-    print(f"LAN URL (open on Wi-Fi devices): {public_url}/")
-    print("API/CORS follow this IP automatically — no edits in Backend/.env when IP changes.")
+    print(f"LAN URL (via host nginx): {public_url}")
+    print("Docker API only: http://127.0.0.1:8000 (configure host nginx to proxy — see host-nginx-examples/)")
+    print("API/CORS: CORS_ALLOW_LAN=true — set CORS_ORIGINS in Backend/.env for production HTTPS domain.")
     if backend_replicas > 1:
-        print(f"Load balancer: nginx -> {backend_replicas} backend containers (least_conn)")
+        print(f"Docker: {backend_replicas} backend containers (published as 127.0.0.1:8000)")
 
     if not args.no_up:
         print("Starting Docker...")
@@ -244,13 +214,11 @@ def main() -> int:
         )
         if code != 0:
             return code
-        print("Done. Use the URL above on any device on the same Wi-Fi.")
-        print("Services: nginx, backend, db, redis, celery-worker, celery-beat, telegram-bot")
-        if args.beat:
-            print("Also running: celery-beat (profile beat)")
+        print("Done. Open the LAN URL above after host nginx is configured.")
+        print("Services: backend, db, redis, celery-worker, celery-beat, telegram-bot")
         print("After code changes: python scripts/deploy_lan.py --build")
-        print("Telegram: docker compose logs telegram-bot -f  (send /start; same token/chat in Backend/.env on every PC)")
-        print("PDF: <LAN-URL>/api/v1/pos/invoice/<invoice-no>/pdf (auth required)")
+        print("Telegram: docker compose logs telegram-bot -f")
+        print("Health: curl http://127.0.0.1:8000/health")
 
     if not args.watch:
         return 0
@@ -267,11 +235,9 @@ def main() -> int:
                 last_ip = current
                 url = write_compose_env(
                     host_ip=current,
-                    http_port=args.port,
-                    https_port=args.https_port,
                     backend_replicas=_read_backend_replicas(),
                 )
-                print(f"[IP changed] New URL: {url}/")
+                print(f"[IP changed] New LAN URL: {url}")
     except KeyboardInterrupt:
         print()
     return 0

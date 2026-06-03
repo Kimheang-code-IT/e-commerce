@@ -1,162 +1,85 @@
-# LAN / Wi-Fi deploy (automatic IP — nothing to edit by hand)
+# LAN / Wi-Fi deploy (Docker + host nginx)
 
-## You do **not** need to change IP in `.env` when DHCP changes
+## Overview
 
-| Part | Automatic behavior |
-|------|---------------------|
-| **Browser / API** | Frontend calls `/api/v1` on whatever host you opened (e.g. `http://192.168.1.20:8080`). |
-| **CORS** | `CORS_ALLOW_LAN=true` allows any private LAN IP and port. |
-| **New PC** | Run the start script once; it detects that PC’s IP and starts Docker. |
-| **IP changed** | Open the **new** URL on Wi-Fi — no rebuild. Optional: `start-lan.ps1 -watch` prints the new URL. |
+| Part | Where it runs |
+|------|----------------|
+| API, DB, Redis, Celery, Telegram | **Docker** (`docker compose up -d`) |
+| SPA + HTTPS + public URL | **Host nginx** (you configure — ports 80/443) |
 
-## Start (recommended)
+Docker exposes the API at **`http://127.0.0.1:8000`** only. Phones and browsers reach the app through **your nginx** on the LAN IP or domain.
 
-**Windows** — double-click or PowerShell:
+## Start Docker
 
 ```powershell
 .\start-lan.ps1
-```
-
-First time or after code changes (Redis, Celery, PDF, API):
-
-```powershell
+# or after code changes:
 .\docker-update.ps1
 ```
 
-Or:
+This detects your LAN IP, writes root `.env`, and starts containers. It does **not** install or configure nginx.
 
-```powershell
-.\start-lan.ps1 -build
+## Host nginx (you)
+
+1. Build the frontend:
+
+```bash
+cd Frontend && pnpm install && pnpm exec nuxi generate
 ```
+
+2. Copy [`host-nginx-examples/domank-dontrey.in.conf.sample`](host-nginx-examples/domank-dontrey.in.conf.sample) to your nginx sites (edit `frontend_root` path).
+
+3. Enable the site and reload nginx; use Certbot for HTTPS if needed.
+
+4. Wi-Fi URL: `http://<LAN-IP>/` or `https://domank-dontrey.in/` (after DNS + cert).
 
 ## Docker services
 
 | Service | Role |
 |---------|------|
-| **nginx** | SPA + proxy `/api/` and `/uploads/` to backend |
-| **backend** | FastAPI (checkout, PDF sync, cache) |
-| **db** | PostgreSQL |
-| **redis** | Cache + Celery broker/result |
-| **celery-worker** | Telegram notify, PDF backup tasks, Google backup |
-| **telegram-bot** | Command polling (one instance only) |
-| **celery-beat** | Optional daily report (`--beat` or `docker compose --profile beat up -d`) |
+| **backend** | FastAPI on `127.0.0.1:8000` |
+| **db** | PostgreSQL (`127.0.0.1:5432` on host) |
+| **redis** | Internal only |
+| **celery-worker** | Telegram notify, PDF, Google backup |
+| **telegram-bot** | Command polling (**one instance only**) |
+| **celery-beat** | Scheduled jobs |
 
-### Load balancer (nginx → multiple API containers)
-
-Nginx uses upstream `ecom_backend` (`nginx/conf.d/00-upstream.conf`, `least_conn`).  
-Set replicas in root `.env` (auto-written by deploy script):
-
-```env
-BACKEND_REPLICAS=2
-```
-
-Then rebuild and start:
-
-```powershell
-.\docker-update.ps1
-```
-
-Or one-off:
+### Scale API (optional)
 
 ```powershell
 python scripts/deploy_lan.py --build --backend-replicas 2
 ```
 
-**Do not** scale `telegram-bot` — Telegram long-polling must run in a single container.
+Docker load-balances replicas on the published port `8000`. Configure host nginx `upstream` if you need multiple upstream ports.
 
-### Telegram bot
+## CORS / LAN IP
 
-In `Backend/.env`:
+- `CORS_ALLOW_LAN=true` — any private LAN origin (dev/Wi-Fi).
+- Production: `CORS_ALLOW_LAN=false` and `CORS_ORIGINS=https://domank-dontrey.in,http://192.168.x.x` in `Backend/.env`.
 
-| Variable | Purpose |
-|----------|---------|
-| `TELEGRAM_BOT_TOKEN` | From @BotFather |
-| `TELEGRAM_CHAT_ID` | Your group or user id (only this chat can use reports) |
-| `TELEGRAM_REPORT_ENABLED=true` | `/start`, menus, `/summary`, etc. |
-| `TELEGRAM_NOTIFY_ENABLED=true` | Checkout alerts (sent by **celery-worker**, not the bot process) |
+## Telegram
 
-Check logs:
+Same `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` in `Backend/.env` on every machine. **Do not** scale `telegram-bot`.
 
 ```powershell
 docker compose logs telegram-bot -f
 ```
 
-Send `/start` in the configured chat. If you see `Unauthorized`, fix `TELEGRAM_CHAT_ID` (group ids are often negative).
-
-Checkout notifications: confirm `celery-worker` is healthy and logs show no Telegram API errors after a sale.
-
-Shared volume **`backend_uploads`**: product images + invoice PDFs (`uploads/invoices/`).
-
-## Update stack after pulling code
+## Health
 
 ```powershell
-.\docker-update.ps1
+curl http://127.0.0.1:8000/health
 ```
 
-Restart without rebuild:
+## Firewall
 
-```powershell
-.\docker-update.ps1 -NoBuild
-```
-
-Check workers:
-
-```powershell
-docker compose ps
-docker compose logs celery-worker --tail 50
-docker compose exec backend python -c "import reportlab; print('ok')"
-```
-
-If your IP changes often while the PC stays on:
-
-```powershell
-.\start-lan.ps1 -watch
-```
-
-Same without the script:
-
-```powershell
-python scripts/deploy_lan.py
-python scripts/deploy_lan.py --build
-```
-
-## Do **not** use plain `docker compose up` on a new machine
-
-Use `start-lan.ps1` so the script refreshes the root `.env` and prints the correct URL.  
-Plain `docker compose up` still **works** for API access on any LAN IP; you just won’t get the printed URL in logs.
-
-## Firewall (once per Windows PC)
-
-Allow inbound **TCP 8080** (and **8443** for HTTPS).
-
-## Port (not host 80)
-
-Docker maps **`8080:80`** — your PC uses **8080**, nginx uses **80 inside the container only**.  
-Host port **80 is never used**, so IIS/Apache on :80 is unaffected.
-
-If **8080** is busy, `start-lan.ps1` picks the next free port (8081, 8082, …) automatically.
-
-Custom port:
-
-```powershell
-.\start-lan.ps1 --port 9000
-```
-
-Or set `PUBLIC_HTTP_PORT=9000` in root `.env` and run `docker compose up -d`.
-
-## New computer (GitHub clone)
-
-```powershell
-git clone <your-repo-url>
-cd e-comerce
-.\scripts\setup-from-github.ps1
-# Edit Backend\.env — use the SAME TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID as your other PC
-.\docker-update.ps1
-```
-
-See [README.md](README.md) for Git push checklist (never commit `Backend/.env` or credential JSON).
+- Allow **TCP 80 and 443** for host nginx (internet + LAN).
+- Docker API on 8000 is loopback-only; no extra rule for LAN on 8000.
 
 ## Files
 
-- `Backend/.env` — DB, JWT, Telegram, admin seed (copy once per machine from `.env.example`)
-- Root `.env` — **auto-generated** by `deploy_lan.py` (do not edit by hand)
+- `Backend/.env` — secrets (copy from `.env.example`)
+- Root `.env` — auto-generated by `deploy_lan.py`
+- `host-nginx-examples/` — sample nginx config (not auto-installed)
+
+See [README.md](README.md) and [docs/PRODUCTION.md](docs/PRODUCTION.md).
