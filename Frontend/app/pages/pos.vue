@@ -75,28 +75,32 @@ async function handleFinishWithPrint() {
 
 
 function buildCartFromLines(lines: any[]) {
-    return lines.map((line: any, index: number) => ({
-        lineId: `preview-${index}-${line.productId || 0}-${line.price || 0}`,
-        product: {
-            id: line.productId || -3000 - index,
-            image: '',
-            name: line.product,
-            category: 'Report',
-            categoryId: '',
-            inPrice: 0,
-            outPrice: Number(line.price || line.amount || 0),
-            commission: 0,
-            totalStock: 0,
-            inStock: 0,
-            sold: 0,
-            added: 0,
-            damaged: 0,
-            status: 'active' as const,
-            createdAt: line.date || new Date().toISOString()
-        },
-        qty: Number(line.qty || 1),
-        unitPrice: Number(line.price || 0),
-    }))
+    return lines.map((line: any, index: number) => {
+        const unitPrice = Number(line.price || line.amount || 0)
+        return {
+            lineId: `preview-${index}-${line.productId || 0}-${unitPrice}`,
+            product: {
+                id: line.productId || -3000 - index,
+                image: '',
+                name: line.product,
+                category: 'Report',
+                categoryId: '',
+                inPrice: 0,
+                outPrice: unitPrice,
+                salePrice: unitPrice,
+                commission: 0,
+                totalStock: 0,
+                inStock: 0,
+                sold: 0,
+                added: 0,
+                damaged: 0,
+                status: 'active' as const,
+                createdAt: line.date || new Date().toISOString()
+            },
+            qty: Number(line.qty || 1),
+            unitPrice,
+        }
+    })
 }
 
 const groupedReportInvoices = computed(() => {
@@ -122,6 +126,7 @@ const groupedReportInvoices = computed(() => {
 const previewCart = computed(() => {
     if (selectedReportInvoiceLines.value?.length > 0) {
         return selectedReportInvoiceLines.value.map((line: any, index: number) => ({
+            lineId: `report-${index}-${line.productId || 0}-${line.price || 0}`,
             product: {
                 id: line.productId || -2000 - index,
                 image: '',
@@ -130,6 +135,7 @@ const previewCart = computed(() => {
                 categoryId: '',
                 inPrice: 0,
                 outPrice: Number(line.price || 0),
+                salePrice: Number(line.price || 0),
                 commission: 0,
                 totalStock: 0,
                 inStock: 0,
@@ -139,7 +145,8 @@ const previewCart = computed(() => {
                 status: 'active' as const,
                 createdAt: selectedReportInvoice.value?.date || new Date().toISOString()
             },
-            qty: Number(line.qty || 0)
+            qty: Number(line.qty || 0),
+            unitPrice: Number(line.price || 0),
         }))
     }
     return cart.value

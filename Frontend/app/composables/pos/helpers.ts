@@ -84,6 +84,40 @@ export function getLineTotal(item: PosCartItem): number {
   return getLineUnitPrice(item) * Number(item.qty || 0)
 }
 
+/** Invoice / print rows: separate lines per price; reference label when same product name. */
+export function buildInvoiceDisplayRows(cart: PosCartItem[]) {
+  const countByName = new Map<string, number>()
+  for (const item of cart) {
+    const name = (item.product.name || '').trim()
+    countByName.set(name, (countByName.get(name) || 0) + 1)
+  }
+  const refIndexByName = new Map<string, number>()
+
+  return cart.map((item, index) => {
+    const name = (item.product.name || '').trim()
+    const duplicateName = (countByName.get(name) || 0) > 1
+    let priceRef = ''
+    if (duplicateName) {
+      const next = (refIndexByName.get(name) || 0) + 1
+      refIndexByName.set(name, next)
+      priceRef = String.fromCharCode(64 + next) // A, B, C…
+    }
+    const unitPrice = getLineUnitPrice(item)
+    const editedPrice = Boolean(item.manualPrice)
+
+    return {
+      item,
+      lineKey: item.lineId || `row-${index}`,
+      rowNo: index + 1,
+      unitPrice,
+      lineTotal: getLineTotal(item),
+      showPriceRef: duplicateName,
+      priceRef,
+      editedPrice,
+    }
+  })
+}
+
 export function mapCartToApiLines(cart: PosCartItem[]) {
   return cart.map((item) => ({
     productId: item.product.id,

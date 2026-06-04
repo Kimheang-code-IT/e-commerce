@@ -247,6 +247,9 @@
                     "deliveryType": "ប្រភេទដឹកជញ្ជូន",
                     "deliveryPrice": "តម្លៃដឹកជញ្ជូន"
                 },
+                "lineRef": "យោង {ref}",
+                "unitAt": "តម្លៃឯកតា {price}",
+                "editedPrice": "តម្លៃលក់កែដោយដៃ",
                 "table": {
                     "noKm": "ល.រ",
                     "no": "No",

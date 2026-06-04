@@ -1,10 +1,13 @@
 <script setup lang="ts">
-import type { Product } from '~/types'
 import { formatCurrency } from '~/utils/format/currency'
 import { formatDate } from '~/utils/format/date'
-import { useI18n } from 'vue-i18n'
+import {
+  buildInvoiceDisplayRows,
+  type PosCartItem,
+} from '~/composables/pos/helpers'
 import logo from '~/assets/images/logo.png'
-const { t, locale } = useI18n()
+
+const { t } = useI18n()
 const authStore = useAuthStore()
 
 interface ReportInvoice {
@@ -17,15 +20,11 @@ interface ReportInvoice {
   seller: string
   source?: string
   grandTotal?: number
+  discount?: number
 }
 
-interface CartItem {
-  product: Product
-  qty: number
-}
-
-defineProps<{
-  cart: CartItem[]
+const props = defineProps<{
+  cart: PosCartItem[]
   customerName: string
   customerPhone: string
   deliveryType: string
@@ -36,6 +35,8 @@ defineProps<{
   displayDiscount: number
   displayTotal: number
 }>()
+
+const displayRows = computed(() => buildInvoiceDisplayRows(props.cart ?? []))
 </script>
 
 <template>
@@ -49,7 +50,6 @@ defineProps<{
             </div>
             <h1 class="text-2xl font-black text-slate-800 uppercase italic mr-10 mt-8">
               {{ t('pages.pos.invoice.title') }}
-
             </h1>
           </div>
 
@@ -61,12 +61,8 @@ defineProps<{
               <div class="grid grid-cols-[110px_1fr] gap-2 pt-2">
                 <span class="text-slate-600 font-medium">{{ t('pages.pos.invoice.fields.invoiceNo') }}:</span>
                 <span class="font-medium text-slate-900">{{ selectedReportInvoice?.invoiceNo || checkoutInvoiceNo || '-' }}</span>
-                <span class="text-slate-600 font-medium">
-                  {{ t('pages.pos.invoice.fields.date') }}:
-                </span>
-                <span class="font-medium text-slate-900">
-                  {{ formatDate(selectedReportInvoice?.date || new Date()) }}
-                </span>
+                <span class="text-slate-600 font-medium">{{ t('pages.pos.invoice.fields.date') }}:</span>
+                <span class="font-medium text-slate-900">{{ formatDate(selectedReportInvoice?.date || new Date()) }}</span>
                 <span class="text-slate-600 font-medium">{{ t('pages.pos.invoice.fields.deliveryPrice') }}:</span>
                 <span class="font-medium text-slate-900">{{ formatCurrency(deliveryPrice || 0, 'USD') }}</span>
               </div>
@@ -78,7 +74,7 @@ defineProps<{
               </div>
               <div class="grid grid-cols-[110px_1fr] gap-2 pt-2">
                 <span class="text-slate-600 font-medium">{{ t('pages.pos.invoice.fields.name') }}:</span>
-                <span class="font-medium text-slate-900">{{ selectedReportInvoice?.customer || customerName || 'N/A'}}</span>
+                <span class="font-medium text-slate-900">{{ selectedReportInvoice?.customer || customerName || 'N/A' }}</span>
                 <span class="text-slate-600 font-medium">{{ t('pages.pos.invoice.fields.phone') }}:</span>
                 <span>{{ selectedReportInvoice?.phoneCustomer || customerPhone || 'N/A' }}</span>
                 <span class="text-slate-600 font-medium">{{ t('pages.pos.invoice.fields.deliveryType') }}:</span>
@@ -91,32 +87,64 @@ defineProps<{
             <table class="w-full border-collapse table-auto">
               <thead>
                 <tr class="bg-primary text-white text-[9px] sm:text-[10px] uppercase font-bold text-left">
-                  <th
-                    class="px-2 sm:px-3 py-1 border-[0.5px] border-primary-foreground/20 w-10 sm:w-12 text-center whitespace-nowrap">
-                    {{ t('pages.pos.invoice.table.noKm') }}<br>{{ t('pages.pos.invoice.table.no') }}</th>
+                  <th class="px-2 sm:px-3 py-1 border-[0.5px] border-primary-foreground/20 w-10 sm:w-12 text-center whitespace-nowrap">
+                    {{ t('pages.pos.invoice.table.noKm') }}<br>{{ t('pages.pos.invoice.table.no') }}
+                  </th>
                   <th class="px-2 text-center sm:px-3 py-1 border-[0.5px] border-primary-foreground/20 min-w-[140px]">
-                    {{ t('pages.pos.invoice.table.descriptionKm') }}<br>{{ t('pages.pos.invoice.table.description') }}</th>
+                    {{ t('pages.pos.invoice.table.descriptionKm') }}<br>{{ t('pages.pos.invoice.table.description') }}
+                  </th>
                   <th class="px-2 text-center sm:px-3 py-1 border-[0.5px] border-primary-foreground/20 whitespace-nowrap">
-                    {{ t('pages.pos.invoice.table.priceKm') }}<br>{{ t('pages.pos.invoice.table.price') }}</th>
+                    {{ t('pages.pos.invoice.table.priceKm') }}<br>{{ t('pages.pos.invoice.table.price') }}
+                  </th>
                   <th class="px-2 text-center sm:px-3 py-1 border-[0.5px] border-primary-foreground/20 whitespace-nowrap">
-                    {{ t('pages.pos.invoice.table.qtyKm') }}<br>{{ t('pages.pos.invoice.table.qty') }}</th>
+                    {{ t('pages.pos.invoice.table.qtyKm') }}<br>{{ t('pages.pos.invoice.table.qty') }}
+                  </th>
                   <th class="px-2 text-center sm:px-3 py-1 border-[0.5px] border-primary-foreground/20 whitespace-nowrap">
-                    {{ t('pages.pos.invoice.table.totalKm') }}<br>{{ t('pages.pos.invoice.table.total') }}</th>
+                    {{ t('pages.pos.invoice.table.totalKm') }}<br>{{ t('pages.pos.invoice.table.total') }}
+                  </th>
                 </tr>
               </thead>
               <tbody class="text-xs sm:text-sm">
-                <tr v-for="(item, index) in cart" :key="item.product.id" class="border-[0.5px] border-slate-200">
-                  <td class="px-2 sm:px-3 py-2 text-center border-[0.5px] border-slate-200 text-slate-400 font-medium">{{
-                    String(index + 1).padStart(2, '0') }}</td>
-                  <td class="px-2 sm:px-3 py-2 border-[0.5px] border-slate-200">
-                    <p class="font-bold text-slate-800 wrap-break-word">{{ item.product.name }}</p>
+                <tr
+                  v-for="row in displayRows"
+                  :key="row.lineKey"
+                  class="border-[0.5px] border-slate-200"
+                >
+                  <td class="px-2 sm:px-3 py-2 text-center border-[0.5px] border-slate-200 text-slate-400 font-medium whitespace-nowrap">
+                    {{ String(row.rowNo).padStart(2, '0') }}
                   </td>
-                  <td class="px-2 sm:px-3 py-2 text-center border-[0.5px] border-slate-200 text-slate-600 whitespace-nowrap">{{
-                    formatCurrency(item.product.outPrice, 'USD') }}</td>
-                  <td class="px-2 sm:px-3 py-2 text-center border-[0.5px] border-slate-200 text-slate-600 whitespace-nowrap">{{
-                    item.qty }}</td>
-                  <td class="px-2 text-center sm:px-3 py-2 font-black text-slate-900 whitespace-nowrap">{{
-                    formatCurrency(item.product.outPrice * item.qty, 'USD') }}</td>
+                  <td class="px-2 sm:px-3 py-2 border-[0.5px] border-slate-200">
+                    <p class="font-bold text-slate-800 wrap-break-word leading-snug">
+                      {{ row.item.product.name }}
+                      <span
+                        v-if="row.showPriceRef"
+                        class="text-primary font-semibold text-[11px] ml-1"
+                      >
+                        ({{ t('pages.pos.invoice.lineRef', { ref: row.priceRef }) }})
+                      </span>
+                    </p>
+                    <p
+                      v-if="row.showPriceRef"
+                      class="text-[10px] text-slate-500 mt-0.5 tabular-nums"
+                    >
+                      {{ t('pages.pos.invoice.unitAt', { price: formatCurrency(row.unitPrice, 'USD') }) }}
+                    </p>
+                    <p
+                      v-if="row.editedPrice"
+                      class="text-[10px] text-amber-600 font-semibold mt-0.5"
+                    >
+                      {{ t('pages.pos.invoice.editedPrice') }}
+                    </p>
+                  </td>
+                  <td class="px-2 sm:px-3 py-2 text-center border-[0.5px] border-slate-200 text-slate-600 whitespace-nowrap tabular-nums">
+                    {{ formatCurrency(row.unitPrice, 'USD') }}
+                  </td>
+                  <td class="px-2 sm:px-3 py-2 text-center border-[0.5px] border-slate-200 text-slate-600 whitespace-nowrap tabular-nums">
+                    {{ row.item.qty }}
+                  </td>
+                  <td class="px-2 text-center sm:px-3 py-2 font-black text-slate-900 whitespace-nowrap tabular-nums">
+                    {{ formatCurrency(row.lineTotal, 'USD') }}
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -158,8 +186,7 @@ defineProps<{
                     <p class="text-[10px] mt-2 text-slate-400 uppercase font-bold">{{ t('pages.pos.invoice.footer.customer') }}</p>
                   </div>
                   <div>
-                    <p class="text-[14px] font-black text-slate-900">{{ selectedReportInvoice?.seller || authStore.user?.name || 'Seller' }}
-                    </p>
+                    <p class="text-[14px] font-black text-slate-900">{{ selectedReportInvoice?.seller || authStore.user?.name || 'Seller' }}</p>
                     <p class="text-[10px] mt-2 text-slate-400 uppercase font-bold">{{ t('pages.pos.invoice.footer.seller') }}</p>
                   </div>
                 </div>

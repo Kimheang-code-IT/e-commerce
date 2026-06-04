@@ -85,12 +85,24 @@ def generate_invoice_pdf(db: Session, invoice_id: int) -> dict:
     y -= 6 * mm
     c.setFont("Helvetica", 10)
 
+    name_counts: dict[str, int] = {}
+    for row in items:
+        key = (row.product_name or "").strip()
+        name_counts[key] = name_counts.get(key, 0) + 1
+    name_ref: dict[str, int] = {}
+
     for row in items:
         if y < 30 * mm:
             c.showPage()
             y = height - 20 * mm
             c.setFont("Helvetica", 10)
-        name = (row.product_name or "")[:40]
+        base_name = (row.product_name or "").strip()
+        name = base_name[:36]
+        if name_counts.get(base_name, 0) > 1:
+            idx = name_ref.get(base_name, 0) + 1
+            name_ref[base_name] = idx
+            letter = chr(64 + idx) if idx <= 26 else str(idx)
+            name = f"{name[:32]} ({letter})"
         qty = int(row.quantity or 0)
         price = float(row.price or 0)
         line_total = float(row.total or 0)

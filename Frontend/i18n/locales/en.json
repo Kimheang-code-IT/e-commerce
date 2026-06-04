@@ -247,6 +247,9 @@
                     "deliveryType": "Delivery Type",
                     "deliveryPrice": "Delivery Price"
                 },
+                "lineRef": "Ref {ref}",
+                "unitAt": "Unit price {price}",
+                "editedPrice": "Edited sale price",
                 "table": {
                     "noKm": "ល.រ",
                     "no": "NO",
