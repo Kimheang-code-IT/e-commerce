@@ -158,7 +158,7 @@ function catalogPrice(product: Product) {
       </div>
     </div>
 
-    <div class="flex-1 min-h-0 overflow-y-auto">
+    <div class="flex-1 min-h-0 overflow-y-auto pb-20 lg:pb-4">
       <div
         v-if="cart.length === 0"
         class="flex flex-col items-center justify-center min-h-48 gap-3 text-muted-foreground px-4 py-8"

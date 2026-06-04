@@ -122,6 +122,12 @@ const groupedReportInvoices = computed(() => {
     })
 })
 
+const posSearchExpanded = ref(false)
+
+watch(currentStep, (step) => {
+    if (step !== 0) posSearchExpanded.value = false
+})
+
 const previewCart = computed(() => {
     if (selectedReportInvoiceLines.value?.length > 0) {
         return selectedReportInvoiceLines.value.map((line: any, index: number) => ({
@@ -153,7 +159,7 @@ const previewCart = computed(() => {
 </script>
 
 <template>
-    <div class="flex flex-col h-full bg-background text-foreground overflow-hidden tracking-tight">
+    <div class="flex flex-col h-full bg-background text-foreground overflow-hidden tracking-tight pb-20 lg:pb-0">
         <!-- ── Header ── -->
         <LayoutAppHeader hide-sidebar-toggle title="">
             <template #leading>
@@ -202,14 +208,38 @@ const previewCart = computed(() => {
                                 :content="false" class="w-max min-w-full" />
                         </div>
 
-                        <div class="flex items-center gap-2 ml-auto">
-                            <!-- Search -->
-                            <CommonAppSearch v-model="searchQuery" :placeholder="t('common.search')" class="w-52" />
+                        <div class="flex items-center gap-2 ml-auto shrink-0">
+                            <UButton
+                                v-if="!posSearchExpanded"
+                                color="neutral"
+                                variant="soft"
+                                size="md"
+                                icon="i-lucide-panel-left-open"
+                                :aria-label="t('common.search')"
+                                @click="posSearchExpanded = true"
+                            />
+                            <div v-else class="flex items-center gap-1.5 min-w-0">
+                                <CommonAppSearch
+                                    v-model="searchQuery"
+                                    :placeholder="t('common.search')"
+                                    class="w-40 sm:w-52 min-w-0"
+                                    autofocus
+                                />
+                                <UButton
+                                    color="neutral"
+                                    variant="ghost"
+                                    size="sm"
+                                    icon="i-lucide-panel-left-close"
+                                    aria-label="Collapse search"
+                                    class="shrink-0"
+                                    @click="posSearchExpanded = false"
+                                />
+                            </div>
                         </div>
                     </div>
 
                     <!-- Product Area — scrollable -->
-                    <div class="flex-1 overflow-y-auto p-3 relative">
+                    <div class="flex-1 overflow-y-auto p-3 pb-20 relative">
 
                         <!-- Empty State -->
                         <div v-if="!isLoadingProducts && filteredProducts.length === 0"
