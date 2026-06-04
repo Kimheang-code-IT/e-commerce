@@ -11,6 +11,7 @@ import { useAuthSessionManager } from '~/utils/auth/session-manager'
  */
 export function useApi() {
     const toast = useToast()
+    const { t } = useI18n()
     const config = useRuntimeConfig()
     
     // Base URL from runtime config; keep relative path for reverse-proxy deployments.
@@ -88,7 +89,11 @@ export function useApi() {
                   color: 'error'
                 })
               } else {
-                toast.add({ title: 'Connection Error', description: 'Could not reach the server', color: 'error' })
+                toast.add({
+                  title: t('common.toast.connectionError'),
+                  description: t('common.toast.connectionErrorDesc'),
+                  color: 'error',
+                })
               }
             }
             throw err

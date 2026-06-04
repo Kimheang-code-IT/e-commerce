@@ -20,6 +20,7 @@ import {
 export function usePosCart() {
   const posApi = usePosApi()
   const toast = useToast()
+  const { t } = useI18n()
   const cart = ref<PosCartItem[]>([])
   const discountMode = ref<DiscountMode>('usd')
   const discountInput = ref(0)
@@ -72,7 +73,7 @@ export function usePosCart() {
     lastStockToastMessage.value = text
     lastStockToastAt.value = now
     toast.add({
-      title: 'Stock not enough',
+      title: t('pages.pos.stock.notEnough'),
       description: text,
       color: 'warning',
     })
@@ -157,8 +158,8 @@ export function usePosCart() {
     const current = totalQtyForProduct(product.id)
     if (current >= maxQty) {
       toast.add({
-        title: 'Stock limit reached',
-        description: `${product.name} has only ${maxQty} in stock.`,
+        title: t('pages.pos.stock.limitReached'),
+        description: t('pages.pos.stock.limitReachedDesc', { name: product.name, qty: maxQty }),
         color: 'warning',
       })
       return
@@ -194,8 +195,8 @@ export function usePosCart() {
       const totalForProduct = totalQtyForProduct(item.product.id)
       if (totalForProduct >= maxQty) {
         toast.add({
-          title: 'Stock limit reached',
-          description: `${item.product.name} has only ${maxQty} in stock.`,
+          title: t('pages.pos.stock.limitReached'),
+          description: t('pages.pos.stock.limitReachedDesc', { name: item.product.name, qty: maxQty }),
           color: 'warning',
         })
         return
@@ -230,8 +231,8 @@ export function usePosCart() {
     })
     if (skipped > 0) {
       toast.add({
-        title: 'Some items skipped',
-        description: `${skipped} line(s) could not be loaded (missing product).`,
+        title: t('pages.pos.stock.itemsSkipped'),
+        description: t('pages.pos.stock.itemsSkippedDesc', { count: skipped }),
         color: 'warning',
       })
     }

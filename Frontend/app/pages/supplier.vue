@@ -53,7 +53,7 @@ function onSubmitSupplierProduct(data: Record<string, any>) {
 
 <template>
   <div class="flex flex-col h-full bg-background overflow-hidden text-foreground tracking-tight">
-    <LayoutAppHeader title="Supplier Management" show-datepicker>
+    <LayoutAppHeader :title="$t('pages.supplier.title')" show-datepicker>
       <template #right>
         <UButton v-if="canView" icon="i-lucide-download" color="neutral" variant="subtle"
           class="font-normal shadow-sm shrink-0" @click="isExportOpen = true">
@@ -61,13 +61,13 @@ function onSubmitSupplierProduct(data: Record<string, any>) {
         </UButton>
         <UButton v-if="canCreate" icon="i-lucide-circle-plus" color="primary" variant="solid"
           class="font-normal shadow-sm shrink-0" @click="handleAddNew">
-          Add Supplier
+          <span class="hidden sm:inline">{{ $t('pages.supplier.addBtn') }}</span>
         </UButton>
       </template>
     </LayoutAppHeader>
 
     <div class="flex-1 p-2 overflow-hidden">
-      <TableApptable title="Supplier Table" v-model:row-selection="rowSelection" v-model:sorting="sorting"
+      <TableApptable :title="$t('pages.supplier.tableTitle')" v-model:row-selection="rowSelection" v-model:sorting="sorting"
         v-model:column-visibility="columnVisibility" v-model:pagination="pagination"
         v-model:column-filters="columnFilters" v-model:global-filter="searchQuery" :data="suppliers" :columns="columns"
         :total-rows="totalRows" :selectable="true" :get-row-actions="getDropdownActions">
@@ -86,17 +86,28 @@ function onSubmitSupplierProduct(data: Record<string, any>) {
       </TableApptable>
     </div>
 
-    <CommonAppSlideoverForm v-model:open="isFormOpen" :data="selectedSupplier || undefined" :fields="supplierFormFields"
-      :title="selectedSupplier?.id ? 'Edit Supplier' : 'Add Supplier'"
-      :submit-label="selectedSupplier?.id ? 'Save' : 'Add'" @submit="onSubmitSupplier" />
+    <CommonAppSlideoverForm
+      v-model:open="isFormOpen"
+      :data="selectedSupplier || undefined"
+      :fields="supplierFormFields"
+      :title-key="selectedSupplier?.id ? 'pages.supplier.formTitleEdit' : 'pages.supplier.formTitleNew'"
+      :submit-label-key="selectedSupplier?.id ? 'actions.save' : 'actions.add'"
+      @submit="onSubmitSupplier"
+    />
 
     <CommonAppModalCURD v-model:open="isConfirmOpen" v-bind="confirmConfig" @submit="finalizeAction" />
 
     <CommonAppSupplierProductsDialog v-model:open="isProductsDialogOpen" v-model:range="supplierProductsDateRange"
       :supplier-name="supplierForProducts?.name" :products="supplierProducts" :loading="supplierProductsLoading"
       :total-rows="supplierProductsTotal" :columns="supplierProductsColumns" />
-    <CommonAppSlideoverForm v-model:open="isProductEditOpen" :data="productFormData" :fields="productFormFields"
-      title="Edit Supplier Product" submit-label="Save" @submit="onSubmitSupplierProduct" />
+    <CommonAppSlideoverForm
+      v-model:open="isProductEditOpen"
+      :data="productFormData"
+      :fields="productFormFields"
+      title-key="pages.supplier.formTitleEditProduct"
+      submit-label-key="actions.save"
+      @submit="onSubmitSupplierProduct"
+    />
     <CommonAppExport v-model:open="isExportOpen" :data="suppliers" filename="suppliers" date-field="createdAt" />
   </div>
 </template>

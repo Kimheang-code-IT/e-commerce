@@ -244,7 +244,7 @@ const previewCart = computed(() => {
                         <div v-if="!isLoadingProducts && filteredProducts.length === 0"
                             class="flex flex-col items-center justify-center h-[50vh] gap-3 text-muted-foreground">
                             <UIcon name="i-lucide-package-search" class="size-12 opacity-30" />
-                            <p class="text-sm">No products found</p>
+                            <p class="text-sm">{{ t('pages.pos.noProducts') }}</p>
                         </div>
 
                         <!-- ── GRID View ── -->
@@ -260,7 +260,7 @@ const previewCart = computed(() => {
                         <div class="mt-3 flex justify-center">
                             <UButton v-if="currentStep === 0 && filteredProducts.length >= 60" color="neutral"
                                 variant="soft" size="sm" :loading="isLoadingProducts" @click="loadMoreProducts">
-                                Load more
+                                {{ t('pages.pos.loadMore') }}
                             </UButton>
                         </div>
                     </div>

@@ -124,17 +124,17 @@ export function useTotalRevenue() {
 
   async function createCategory(payload: { name: string; description: string }) {
     await categoryApi.create(payload);
-    toast.add({ title: "Category Added", color: "primary" });
+    toast.add({ title: t("pages.category.toastAdded"), color: "primary" });
   }
 
   async function updateCategory(id: string, payload: { name: string; description: string }) {
     await categoryApi.update(id, payload);
-    toast.add({ title: "Category Updated", color: "primary" });
+    toast.add({ title: t("pages.category.toastUpdated"), color: "primary" });
   }
 
   async function deleteCategory(id: string) {
     await categoryApi.remove(id);
-    toast.add({ title: "Category Deleted", color: "error" });
+    toast.add({ title: t("pages.category.toastDeleted"), color: "error" });
   }
 
   // --- Finalize Confirmed Action (API-first) ---
@@ -160,9 +160,9 @@ export function useTotalRevenue() {
       await resource.refresh();
     } catch (err: any) {
       console.error('Action failed:', err)
-      const msg = err.data?.message || err.message || "Please try again."
+      const msg = err.data?.message || err.message || t("common.toast.tryAgain")
       toast.add({
-        title: "Request failed",
+        title: t("common.toast.requestFailed"),
         description: msg,
         color: "error",
       });
@@ -174,25 +174,29 @@ export function useTotalRevenue() {
   const confirmConfig = computed(() => {
     if (confirmMode.value === "delete") {
       return {
-        title: t("actions.delete"),
-        description: `You are about to delete this category.\nProducts linked to this category may be affected.\nThis action is permanent and cannot be undone.`,
+        titleKey: "pages.category.confirmDeleteTitle",
+        descriptionKey: "pages.category.confirmDeleteDesc",
         type: "error" as const,
-        submitLabel: t("actions.delete"),
+        submitLabelKey: "actions.delete",
       };
     }
     if (confirmMode.value === "edit") {
       return {
-        title: t("actions.save"),
-        description: `You updated category "${pendingPayload.value?.name || ""}".\nPlease verify name and description are correct.\nClick save to apply these changes.`,
+        titleKey: "pages.category.confirmEditTitle",
+        description: t("pages.category.confirmEditDesc", {
+          name: pendingPayload.value?.name || "",
+        }),
         type: "primary" as const,
-        submitLabel: t("actions.save"),
+        submitLabelKey: "actions.save",
       };
     }
     return {
-      title: t("actions.add"),
-      description: `You are creating category "${pendingPayload.value?.name || ""}".\nMake sure the details are correct.\nClick confirm to add this category.`,
+      titleKey: "pages.category.confirmAddTitle",
+      description: t("pages.category.confirmAddDesc", {
+        name: pendingPayload.value?.name || "",
+      }),
       type: "primary" as const,
-      submitLabel: t("actions.confirm"),
+      submitLabelKey: "actions.confirm",
     };
   });
 

@@ -96,26 +96,32 @@ export function useSystemRoleManagement() {
     const confirmConfig = computed(() => {
         if (confirmMode.value === 'delete') {
             return {
-                title: t('actions.delete'),
-                description: `You are about to delete role "${selectedRole.value?.name || ""}".\nUsers with this role may lose access permissions.\nThis action is permanent and cannot be undone.`,
+                titleKey: 'pages.roleManagement.confirmDeleteTitle',
+                description: t('pages.roleManagement.confirmDeleteDesc', {
+                    name: selectedRole.value?.name || '',
+                }),
                 type: 'error' as const,
-                submitLabel: t('actions.delete'),
+                submitLabelKey: 'actions.delete',
                 icon: 'i-lucide-shield-off'
             }
         }
         if (confirmMode.value === 'edit') {
             return {
-                title: t('actions.save'),
-                description: `You updated role "${pendingRole.value?.name || ""}".\nPlease review page access permissions carefully.\nClick save to apply this policy.`,
-                submitLabel: t('actions.save'),
+                titleKey: 'pages.roleManagement.confirmEditTitle',
+                description: t('pages.roleManagement.confirmEditDesc', {
+                    name: pendingRole.value?.name || '',
+                }),
+                submitLabelKey: 'actions.save',
                 type: 'primary' as const,
                 icon: 'i-lucide-save'
             }
         }
         return {
-            title: t('pages.roleManagement.addBtn'),
-            description: `You are creating role "${pendingRole.value?.name || ""}".\nSet the correct permissions for this role.\nClick confirm to create it.`,
-            submitLabel: t('actions.confirm'),
+            titleKey: 'pages.roleManagement.confirmAddTitle',
+            description: t('pages.roleManagement.confirmAddDesc', {
+                name: pendingRole.value?.name || '',
+            }),
+            submitLabelKey: 'actions.confirm',
             type: 'primary' as const,
             icon: 'i-lucide-shield-plus'
         }
@@ -196,17 +202,29 @@ export function useSystemRoleManagement() {
         if (confirmMode.value === 'delete' && selectedRole.value) {
             await mutation.run(() => systemRoleApi.remove(selectedRole.value!.id), 'roles')
             await resource.refresh()
-            toast.add({ title: 'Role Purged', description: 'Role removed successfully.', color: 'error' })
+            toast.add({
+                title: t('pages.roleManagement.toastDeleted'),
+                description: t('pages.roleManagement.toastDeletedDesc'),
+                color: 'error',
+            })
         } else if (pendingRole.value) {
             if (confirmMode.value === 'add') {
                 await mutation.run(() => systemRoleApi.create(pendingRole.value!), 'roles')
                 await resource.refresh()
-                toast.add({ title: 'Role Provisioned', description: 'New role policy is active.', color: 'primary' })
+                toast.add({
+                    title: t('pages.roleManagement.toastAdded'),
+                    description: t('pages.roleManagement.toastAddedDesc'),
+                    color: 'primary',
+                })
             } else if (confirmMode.value === 'edit') {
                 const { id, ...updatePayload } = pendingRole.value!
                 await mutation.run(() => systemRoleApi.update(id, updatePayload), 'roles')
                 await resource.refresh()
-                toast.add({ title: 'Role Synchronized', description: 'Policy updates synchronized.', color: 'primary' })
+                toast.add({
+                    title: t('pages.roleManagement.toastUpdated'),
+                    description: t('pages.roleManagement.toastUpdatedDesc'),
+                    color: 'primary',
+                })
             }
         }
         isConfirmOpen.value = false

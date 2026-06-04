@@ -59,9 +59,14 @@ function onSubmitUser(data: Record<string, any>) {
             </TableApptable>
         </div>
 
-        <CommonAppSlideoverForm v-model:open="isFormOpen" :data="selectedUser || undefined" :fields="userFormFields"
-            :title="selectedUser ? $t('actions.edit') : $t('pages.userManagement.addBtn')"
-            :submit-label="selectedUser ? $t('actions.save') : $t('actions.confirm')" @submit="onSubmitUser" />
+        <CommonAppSlideoverForm
+            v-model:open="isFormOpen"
+            :data="selectedUser || undefined"
+            :fields="userFormFields"
+            :title-key="selectedUser ? 'pages.userManagement.formTitleEdit' : 'pages.userManagement.formTitleNew'"
+            :submit-label-key="selectedUser ? 'actions.save' : 'actions.confirm'"
+            @submit="onSubmitUser"
+        />
         <CommonAppModalCURD v-model:open="isConfirmOpen" v-bind="confirmConfig" @submit="finalizeAction" />
     </div>
 </template>

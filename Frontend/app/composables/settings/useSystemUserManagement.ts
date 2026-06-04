@@ -80,26 +80,32 @@ export function useSystemUserManagement() {
   const confirmConfig = computed(() => {
     if (confirmMode.value === "delete") {
       return {
-        title: t("actions.delete"),
-        description: `You are about to delete account "${selectedUser.value?.name || ""}".\nThis user will no longer be able to sign in.\nThis action is permanent and cannot be undone.`,
+        titleKey: "pages.userManagement.confirmDeleteTitle",
+        description: t("pages.userManagement.confirmDeleteDesc", {
+          name: selectedUser.value?.name || "",
+        }),
         type: "error" as const,
-        submitLabel: t("actions.delete"),
+        submitLabelKey: "actions.delete",
         icon: "i-lucide-user-minus",
       };
     }
     if (confirmMode.value === "edit") {
       return {
-        title: t("actions.save"),
-        description: `You updated account "${pendingUser.value?.name || ""}".\nPlease verify role, email, and permissions.\nClick save to apply these updates.`,
-        submitLabel: t("actions.save"),
+        titleKey: "pages.userManagement.confirmEditTitle",
+        description: t("pages.userManagement.confirmEditDesc", {
+          name: pendingUser.value?.name || "",
+        }),
+        submitLabelKey: "actions.save",
         type: "primary" as const,
         icon: "i-lucide-user-check",
       }
     }
     return {
-      title: t("pages.userManagement.addBtn"),
-      description: `You are creating a new account for "${pendingUser.value?.name || ""}".\nPlease verify user details and assigned role.\nClick confirm to create this account.`,
-      submitLabel: t("actions.confirm"),
+      titleKey: "pages.userManagement.confirmAddTitle",
+      description: t("pages.userManagement.confirmAddDesc", {
+        name: pendingUser.value?.name || "",
+      }),
+      submitLabelKey: "actions.confirm",
       type: "primary" as const,
       icon: "i-lucide-user-plus",
     };
@@ -202,8 +208,10 @@ export function useSystemUserManagement() {
       await mutation.run(() => systemUserApi.remove(selectedUser.value!.id), 'users')
       await resource.refresh()
       toast.add({
-        title: "Account Revoked",
-        description: `Access revoked for ${selectedUser.value.name}.`,
+        title: t("pages.userManagement.toastDeleted"),
+        description: t("pages.userManagement.toastDeletedDesc", {
+          name: selectedUser.value.name,
+        }),
         color: "error",
       });
     } else if (pendingUser.value) {
@@ -211,8 +219,8 @@ export function useSystemUserManagement() {
         await mutation.run(() => systemUserApi.create(pendingUser.value!), 'users')
         await resource.refresh()
         toast.add({
-          title: "Account Provisioned",
-          description: "System credentials delivered.",
+          title: t("pages.userManagement.toastAdded"),
+          description: t("pages.userManagement.toastAddedDesc"),
           color: "primary",
         });
       } else if (confirmMode.value === "edit") {
@@ -222,8 +230,8 @@ export function useSystemUserManagement() {
         await mutation.run(() => systemUserApi.update(id, updatePayload), 'users')
         await resource.refresh()
         toast.add({
-          title: "Account Synchronized",
-          description: "Profile changes applied successfully.",
+          title: t("pages.userManagement.toastUpdated"),
+          description: t("pages.userManagement.toastUpdatedDesc"),
           color: "primary",
         });
       }

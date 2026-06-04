@@ -64,7 +64,7 @@ export function usePos() {
     if (isInvoicePreviewMode.value) return
     if (currentStep.value === 0) {
       if (cartState.cart.value.length === 0 && !hasReportPreviewInvoices.value) {
-        toast.add({ title: t('common.error'), description: 'Cart is empty', color: 'error' })
+        toast.add({ title: t('common.error'), description: t('pages.pos.validation.cartEmpty'), color: 'error' })
         return
       }
       currentStep.value += 1
@@ -73,24 +73,24 @@ export function usePos() {
 
     if (currentStep.value === 1) {
       if (!posPerms.canCheckout.value) {
-        toast.add({ title: t('common.error'), description: 'You do not have permission to checkout', color: 'error' })
+        toast.add({ title: t('common.error'), description: t('pages.pos.validation.noCheckoutPermission'), color: 'error' })
         return
       }
       // Validate customer form
       if (!customer.customerName.value) {
-        toast.add({ title: t('common.error'), description: 'Customer name is required', color: 'error' })
+        toast.add({ title: t('common.error'), description: t('pages.pos.validation.customerNameRequired'), color: 'error' })
         return
       }
       if (!customer.customerPhone.value) {
-        toast.add({ title: t('common.error'), description: 'Customer phone is required', color: 'error' })
+        toast.add({ title: t('common.error'), description: t('pages.pos.validation.customerPhoneRequired'), color: 'error' })
         return
       }
       if (!customer.customerAddress.value) {
-        toast.add({ title: t('common.error'), description: 'Customer address is required', color: 'error' })
+        toast.add({ title: t('common.error'), description: t('pages.pos.validation.customerAddressRequired'), color: 'error' })
         return
       }
       if (!customer.deliveryDate.value) {
-        toast.add({ title: t('common.error'), description: 'Delivery date is required', color: 'error' })
+        toast.add({ title: t('common.error'), description: t('pages.pos.validation.deliveryDateRequired'), color: 'error' })
         return
       }
       
@@ -100,7 +100,7 @@ export function usePos() {
 
     if (cartState.cart.value.length === 0 && !hasReportPreviewInvoices.value) return
     if (!posPerms.canCheckout.value) {
-      toast.add({ title: t('common.error'), description: 'You do not have permission to checkout', color: 'error' })
+      toast.add({ title: t('common.error'), description: t('pages.pos.validation.noCheckoutPermission'), color: 'error' })
       return
     }
     printing.openCheckoutConfirm()
@@ -149,7 +149,7 @@ export function usePos() {
       }
       completeCheckoutUiReset()
     } catch (error: any) {
-      toast.add({ title: t('common.error') || 'Error', description: String(error?.message || 'Checkout failed'), color: 'error' })
+      toast.add({ title: t('common.error'), description: String(error?.message || t('pages.pos.validation.checkoutFailed')), color: 'error' })
     }
   }
 
@@ -176,7 +176,7 @@ export function usePos() {
       await onPrint()
       completeCheckoutUiReset()
     } catch (error: any) {
-      toast.add({ title: t('common.error') || 'Error', description: String(error?.message || 'Checkout failed'), color: 'error' })
+      toast.add({ title: t('common.error'), description: String(error?.message || t('pages.pos.validation.checkoutFailed')), color: 'error' })
     }
   }
 

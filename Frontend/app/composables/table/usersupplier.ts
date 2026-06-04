@@ -121,39 +121,55 @@ export function useSupplierTable() {
   ]);
 
   const supplierFormFields = computed<FormField[]>(() => [
-    { key: 'name', label: 'Name', type: 'input', required: true, textRule: 'english' },
-    { key: 'gender', label: 'Gender', type: 'select', required: true, items: ['Male', 'Female', 'Other'] },
-    { key: 'address', label: 'Address', type: 'textarea', required: true, textRule: 'text' },
-    { key: 'phoneNumber', label: 'Phone Number', type: 'input', required: true, textRule: 'numeric' }
+    { key: 'name', label: t('pages.supplier.form.name'), type: 'input', required: true, textRule: 'english' },
+    {
+      key: 'gender',
+      label: t('pages.supplier.form.gender'),
+      type: 'select',
+      required: true,
+      items: [
+        { label: t('pages.supplier.form.genderMale'), value: 'Male' },
+        { label: t('pages.supplier.form.genderFemale'), value: 'Female' },
+        { label: t('pages.supplier.form.genderOther'), value: 'Other' },
+      ],
+    },
+    { key: 'address', label: t('pages.supplier.form.address'), type: 'textarea', required: true, textRule: 'text' },
+    { key: 'phoneNumber', label: t('pages.supplier.form.phoneNumber'), type: 'input', required: true, textRule: 'numeric' },
   ])
   const productFormFields = computed<FormField[]>(() => [
-    { key: 'productName', label: 'Product Name', type: 'input', required: true, textRule: 'english' },
-    { key: 'qty', label: 'Qty', type: 'number', required: true, min: 1 },
-    { key: 'unitPrice', label: 'Unit Price', type: 'currency', required: true, min: 0, currencyPrefix: 'USD' }
+    { key: 'productName', label: t('pages.supplier.form.productName'), type: 'input', required: true, textRule: 'english' },
+    { key: 'qty', label: t('pages.supplier.form.qty'), type: 'number', required: true, min: 1 },
+    { key: 'unitPrice', label: t('pages.supplier.form.unitPrice'), type: 'currency', required: true, min: 0, currencyPrefix: 'USD' },
   ])
 
   const confirmConfig = computed(() => {
     if (confirmMode.value === 'delete') {
       return {
-        title: t('actions.delete'),
-        description: `You are about to delete supplier "${selectedSupplier.value?.name || ''}".\nThis action cannot be undone.\nPlease confirm to continue.`,
+        titleKey: 'pages.supplier.confirmDeleteTitle',
+        description: t('pages.supplier.confirmDeleteDesc', {
+          name: selectedSupplier.value?.name || '',
+        }),
         type: 'error' as const,
-        submitLabel: t('actions.delete')
+        submitLabelKey: 'actions.delete',
       }
     }
     if (confirmMode.value === 'edit') {
       return {
-        title: t('actions.save'),
-        description: `You updated supplier "${pendingSupplier.value?.name || ''}".\nPlease review the changes one more time.\nClick save to apply updates.`,
+        titleKey: 'pages.supplier.confirmEditTitle',
+        description: t('pages.supplier.confirmEditDesc', {
+          name: pendingSupplier.value?.name || '',
+        }),
         type: 'primary' as const,
-        submitLabel: t('actions.save')
+        submitLabelKey: 'actions.save',
       }
     }
     return {
-      title: 'Add Supplier',
-      description: `You are creating supplier "${pendingSupplier.value?.name || ''}".\nCheck name, phone, and address before submit.\nClick confirm to create this supplier.`,
+      titleKey: 'pages.supplier.confirmAddTitle',
+      description: t('pages.supplier.confirmAddDesc', {
+        name: pendingSupplier.value?.name || '',
+      }),
       type: 'primary' as const,
-      submitLabel: t('actions.confirm')
+      submitLabelKey: 'actions.confirm',
     }
   })
 
@@ -182,7 +198,7 @@ export function useSupplierTable() {
     if (confirmMode.value === 'delete' && selectedSupplier.value) {
       await mutation.run(() => supplierApi.remove(selectedSupplier.value!.id), 'suppliers')
       await resource.refresh()
-      toast.add({ title: 'Supplier deleted', color: 'error' })
+      toast.add({ title: t('pages.supplier.toastDeleted'), color: 'error' })
     } else if (pendingSupplier.value) {
       if (confirmMode.value === 'add') {
         await mutation.run(
@@ -196,7 +212,7 @@ export function useSupplierTable() {
           'suppliers'
         )
         await resource.refresh()
-        toast.add({ title: 'Supplier added', color: 'primary' })
+        toast.add({ title: t('pages.supplier.toastAdded'), color: 'primary' })
       } else {
         await mutation.run(
           () =>
@@ -209,7 +225,7 @@ export function useSupplierTable() {
           'suppliers'
         )
         await resource.refresh()
-        toast.add({ title: 'Supplier updated', color: 'primary' })
+        toast.add({ title: t('pages.supplier.toastUpdated'), color: 'primary' })
       }
     }
     isConfirmOpen.value = false
@@ -260,7 +276,7 @@ export function useSupplierTable() {
     await resource.refresh()
     isProductEditOpen.value = false
     selectedProduct.value = null
-    toast.add({ title: 'Supplier product updated', color: 'primary' })
+    toast.add({ title: t('pages.supplier.toastProductUpdated'), color: 'primary' })
   }
 
   return {

@@ -51,7 +51,7 @@ watch(newDescription, (value) => {
 
 <template>
     <div class="flex flex-col h-full bg-background overflow-hidden text-foreground tracking-tight">
-        <LayoutAppHeader :title="$t('category.tableTitle')" show-datepicker />
+        <LayoutAppHeader :title="$t('pages.category.title')" show-datepicker />
         <div v-if="showCategoryForm" class="lg:hidden px-2 pt-2">
             <UTabs
                 v-model="mobileView"

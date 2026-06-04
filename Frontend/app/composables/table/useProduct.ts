@@ -246,20 +246,20 @@ export function useProduct() {
   const confirmConfig = computed(() => {
     if (confirmMode.value === "delete") {
       return {
-        title: t("pages.product.confirmDeleteTitle"),
+        titleKey: "pages.product.confirmDeleteTitle",
         description: t("pages.product.confirmDeleteDesc", {
           id: selectedEntry.value?.id ?? "",
         }),
         type: "error" as const,
-        submitLabel: t("actions.delete"),
+        submitLabelKey: "actions.delete",
         icon: "i-lucide-trash-2",
       };
     }
     const isEdit = Boolean(selectedEntry.value);
     return {
-      title: isEdit
-        ? t("pages.product.confirmEditTitle")
-        : t("pages.product.confirmNewTitle"),
+      titleKey: isEdit
+        ? "pages.product.confirmEditTitle"
+        : "pages.product.confirmNewTitle",
       description: isEdit
         ? t("pages.product.confirmEditDesc", {
             id: pendingEntry.value?.id ?? "",
@@ -268,7 +268,7 @@ export function useProduct() {
             name: pendingEntry.value?.name ?? "",
           }),
       type: "primary" as const,
-      submitLabel: isEdit ? t("actions.save") : t("actions.confirm"),
+      submitLabelKey: isEdit ? "actions.save" : "actions.confirm",
       icon: "i-lucide-check-circle",
     };
   });
@@ -676,9 +676,9 @@ export function useProduct() {
     toast.add({
       title:
         stockAdjustMode.value === "added"
-          ? "Stock Added"
-          : "Damaged Stock Added",
-      description: `Updated product #${target.id}`,
+          ? t("components.stockAdjust.titleAdd")
+          : t("components.stockAdjust.titleDamaged"),
+      description: t("pages.product.toastStockAdjustDesc", { id: target.id }),
       color: stockAdjustMode.value === "added" ? "primary" : "warning",
     });
 
@@ -727,7 +727,7 @@ export function useProduct() {
       }
     } catch (err) {
       console.error("Failed to load history:", err);
-      toast.add({ title: "Failed to load history", color: "error" });
+      toast.add({ title: t("pages.product.toastHistoryLoadFailed"), color: "error" });
     } finally {
       isHistoryLoading.value = false;
     }

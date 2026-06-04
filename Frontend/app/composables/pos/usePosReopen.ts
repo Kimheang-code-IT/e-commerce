@@ -42,7 +42,7 @@ export function usePosReopen() {
       if (!normalized?.invoice || !Array.isArray(normalized.lines) || normalized.lines.length === 0) {
         toast.add({
           title: t('common.error'),
-          description: 'Invoice not found or has no lines.',
+          description: t('pages.pos.reopen.invoiceNotFound'),
           color: 'error',
         })
         return false
@@ -51,7 +51,7 @@ export function usePosReopen() {
       if (deps.cart.cart.value.length === 0) {
         toast.add({
           title: t('common.error'),
-          description: 'No cart items could be loaded from this invoice.',
+          description: t('pages.pos.reopen.noCartItems'),
           color: 'error',
         })
         return false
@@ -60,15 +60,15 @@ export function usePosReopen() {
       deps.cart.discountMode.value = 'usd'
       deps.cart.discountInput.value = Number(normalized.invoice.discount || 0)
       toast.add({
-        title: 'Invoice loaded',
-        description: `${trimmed} — edit cart and continue checkout.`,
+        title: t('pages.pos.reopen.invoiceLoaded'),
+        description: t('pages.pos.reopen.invoiceLoadedDesc', { invoiceNo: trimmed }),
         color: 'success',
       })
       return true
     } catch (error: unknown) {
       toast.add({
         title: t('common.error'),
-        description: handleApiError(error, 'Failed to load invoice'),
+        description: handleApiError(error, t('pages.pos.reopen.loadFailed')),
         color: 'error',
       })
       return false

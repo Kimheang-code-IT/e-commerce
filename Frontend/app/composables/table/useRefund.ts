@@ -37,6 +37,8 @@ export function useRefund(handlers?: RefundRowActionHandlers) {
   })
 
   const isRefundDialogOpen = ref(false)
+  const isConfirmOpen = ref(false)
+  const pendingDeleteRow = ref<RefundRecord | null>(null)
   const refundTargetRow = ref<ReportRow | null>(null)
   const refundReason = ref('')
   const submittingRefund = ref(false)
@@ -92,7 +94,11 @@ export function useRefund(handlers?: RefundRowActionHandlers) {
       await resource.refresh()
     } catch {
       refundRows.value = []
-      toast.add({ title: 'Load failed', description: 'Could not load refund records.', color: 'error' })
+      toast.add({
+        title: t('common.error'),
+        description: t('pages.refund.toastLoadFailed'),
+        color: 'error',
+      })
     }
   }
 
@@ -168,14 +174,45 @@ export function useRefund(handlers?: RefundRowActionHandlers) {
     isRefundDialogOpen.value = true
   }
 
-  async function removeRefundInvoice(row: RefundRecord) {
+  function requestDeleteRefund(row: RefundRecord) {
     if (!row.invoiceNo) return
+    pendingDeleteRow.value = row
+    isConfirmOpen.value = true
+  }
+
+  const confirmConfig = computed(() => ({
+    titleKey: 'pages.refund.confirmDeleteTitle',
+    descriptionKey: 'pages.refund.confirmDeleteDesc',
+    descriptionParams: {
+      invoiceNo: pendingDeleteRow.value?.invoiceNo || '',
+    },
+    type: 'error' as const,
+    submitLabelKey: 'actions.delete',
+  }))
+
+  async function finalizeDeleteRefund() {
+    const row = pendingDeleteRow.value
+    if (!row?.invoiceNo) {
+      isConfirmOpen.value = false
+      return
+    }
     try {
       await refundApi.removeByInvoice(row.invoiceNo)
       await loadRefunds()
-      toast.add({ title: t('common.success'), description: t('pages.refund.deleteSuccess'), color: 'primary' })
+      toast.add({
+        title: t('common.success'),
+        description: t('pages.refund.deleteSuccess'),
+        color: 'primary',
+      })
     } catch {
-      toast.add({ title: 'Delete failed', color: 'error' })
+      toast.add({
+        title: t('common.error'),
+        description: t('pages.refund.toastDeleteFailed'),
+        color: 'error',
+      })
+    } finally {
+      isConfirmOpen.value = false
+      pendingDeleteRow.value = null
     }
   }
 
@@ -215,7 +252,7 @@ export function useRefund(handlers?: RefundRowActionHandlers) {
       )
       if (parts.length) return parts.join('; ')
     }
-    return data?.message || 'Could not save refund.'
+    return data?.message || t('pages.refund.toastRefundFailedDesc')
   }
 
   async function confirmRefund(onSuccess?: () => void | Promise<void>) {
@@ -223,7 +260,11 @@ export function useRefund(handlers?: RefundRowActionHandlers) {
     const reason = refundReason.value.trim()
 
     if (!row) {
-      toast.add({ title: t('common.error'), description: 'No invoice line selected.', color: 'error' })
+      toast.add({
+        title: t('common.error'),
+        description: t('pages.refund.toastNoLineSelected'),
+        color: 'error',
+      })
       return
     }
     if (!reason) {
@@ -243,8 +284,8 @@ export function useRefund(handlers?: RefundRowActionHandlers) {
 
       if (!createdCount) {
         toast.add({
-          title: 'Refund not saved',
-          description: 'This item may already be refunded.',
+          title: t('pages.refund.toastRefundNotSaved'),
+          description: t('pages.refund.toastRefundNotSavedDesc'),
           color: 'warning',
         })
         return
@@ -264,7 +305,7 @@ export function useRefund(handlers?: RefundRowActionHandlers) {
       refundReason.value = ''
     } catch (err: unknown) {
       toast.add({
-        title: 'Refund failed',
+        title: t('pages.refund.toastRefundFailed'),
         description: formatRefundError(err),
         color: 'error',
       })
@@ -299,7 +340,10 @@ export function useRefund(handlers?: RefundRowActionHandlers) {
     confirmRefund,
     refundColumns,
     getDropdownActions,
-    removeRefundInvoice,
+    isConfirmOpen,
+    confirmConfig,
+    requestDeleteRefund,
+    finalizeDeleteRefund,
     loadRefunds,
     canDelete: perms.canDelete,
     canView: perms.canView,

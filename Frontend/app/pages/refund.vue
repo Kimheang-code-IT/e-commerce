@@ -43,7 +43,10 @@ const {
   toggleSelectAllFiltered,
   refundColumns,
   getDropdownActions,
-  removeRefundInvoice,
+  isConfirmOpen,
+  confirmConfig,
+  requestDeleteRefund,
+  finalizeDeleteRefund,
   canDelete,
   canView,
 } = useRefund({ onPreview: goToPreview })
@@ -124,11 +127,17 @@ const isExportOpen = ref(false)
           </template>
           <template #action-cell="{ row }">
             <UButton v-if="canDelete" icon="i-lucide-trash" color="error" variant="ghost" size="xs"
-              @click="removeRefundInvoice(row.original)" />
+              @click="requestDeleteRefund(row.original)" />
           </template>
         </TableApptable>
       </div>
     </div>
+
+    <CommonAppModalCURD
+      v-model:open="isConfirmOpen"
+      v-bind="confirmConfig"
+      @submit="finalizeDeleteRefund"
+    />
 
     <CommonAppExport v-model:open="isExportOpen" :data="filteredRefundRows" filename="refunds"
       date-field="refundedAt" />

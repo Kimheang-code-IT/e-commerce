@@ -26,7 +26,13 @@
         "total": "Total",
         "percent": "{value}%",
         "success": "Success",
-        "error": "Error"
+        "error": "Error",
+        "toast": {
+            "requestFailed": "Request failed",
+            "tryAgain": "Please try again.",
+            "connectionError": "Connection Error",
+            "connectionErrorDesc": "Could not reach the server"
+        }
     },
     "components": {
         "search": "Filter...",
@@ -125,10 +131,48 @@
             }
         },
         "category": {
-            "title": "Category"
+            "title": "Category",
+            "formTitleNew": "Add Category",
+            "formTitleEdit": "Edit Category",
+            "confirmDeleteTitle": "Delete Category",
+            "confirmDeleteDesc": "You are about to delete this category.\nProducts linked to this category may be affected.\nThis action is permanent and cannot be undone.",
+            "confirmEditTitle": "Update Category",
+            "confirmEditDesc": "You updated category \"{name}\".\nPlease verify name and description are correct.\nClick save to apply these changes.",
+            "confirmAddTitle": "Create Category",
+            "confirmAddDesc": "You are creating category \"{name}\".\nMake sure the details are correct.\nClick confirm to add this category.",
+            "toastAdded": "Category created",
+            "toastUpdated": "Category updated",
+            "toastDeleted": "Category deleted"
         },
         "supplier": {
-            "title": "Supplier"
+            "title": "Supplier Management",
+            "tableTitle": "Suppliers",
+            "addBtn": "Add Supplier",
+            "formTitleNew": "Add Supplier",
+            "formTitleEdit": "Edit Supplier",
+            "formTitleEditProduct": "Edit Supplier Product",
+            "confirmDeleteTitle": "Delete Supplier",
+            "confirmDeleteDesc": "You are about to delete supplier \"{name}\".\nThis action cannot be undone.\nPlease confirm to continue.",
+            "confirmEditTitle": "Update Supplier",
+            "confirmEditDesc": "You updated supplier \"{name}\".\nPlease review the changes one more time.\nClick save to apply updates.",
+            "confirmAddTitle": "Create Supplier",
+            "confirmAddDesc": "You are creating supplier \"{name}\".\nCheck name, phone, and address before submit.\nClick confirm to create this supplier.",
+            "toastDeleted": "Supplier deleted",
+            "toastAdded": "Supplier created",
+            "toastUpdated": "Supplier updated",
+            "toastProductUpdated": "Supplier product updated",
+            "form": {
+                "name": "Name",
+                "gender": "Gender",
+                "genderMale": "Male",
+                "genderFemale": "Female",
+                "genderOther": "Other",
+                "address": "Address",
+                "phoneNumber": "Phone Number",
+                "productName": "Product Name",
+                "qty": "Qty",
+                "unitPrice": "Unit Price"
+            }
         },
         "product": {
             "title": "Product",
@@ -136,8 +180,8 @@
             "addBtn": "Add Product",
             "formTitleNew": "Add Product",
             "formTitleEdit": "Edit Product",
-            "confirmNewTitle": "Confirm Add Product",
-            "confirmEditTitle": "Confirm Edit Product",
+            "confirmNewTitle": "Create Product",
+            "confirmEditTitle": "Update Product",
             "confirmDeleteTitle": "Delete Product",
             "confirmNewDesc": "You are creating product \"{name}\".\nPlease verify all fields before submit.\nClick confirm to add this product.",
             "confirmEditDesc": "You updated product #{id}.\nPlease verify stock, prices, and category.\nClick save to apply changes.",
@@ -147,7 +191,9 @@
             "toastUpdated": "Product Updated",
             "toastUpdatedDesc": "Product #{id} updated.",
             "toastDeleted": "Product Deleted",
-            "toastDeletedDesc": "Product #{id} has been removed."
+            "toastDeletedDesc": "Product #{id} has been removed.",
+            "toastHistoryLoadFailed": "Failed to load history",
+            "toastStockAdjustDesc": "Updated product #{id}"
         },
         "pos": {
             "title": "POS System",
@@ -200,12 +246,35 @@
                 "addMore": "Add More",
                 "addToCart": "Add to Cart"
             },
+            "noProducts": "No products found",
+            "loadMore": "Load more",
             "validation": {
                 "numberRequired": "Enter a valid amount",
                 "minUsd": "Minimum is {min} USD",
                 "maxUsd": "Maximum is {max} USD",
                 "discountPercentMax": "Discount cannot exceed 100%",
-                "discountUsdMax": "Discount cannot exceed subtotal"
+                "discountUsdMax": "Discount cannot exceed subtotal",
+                "cartEmpty": "Cart is empty",
+                "noCheckoutPermission": "You do not have permission to checkout",
+                "customerNameRequired": "Customer name is required",
+                "customerPhoneRequired": "Customer phone is required",
+                "customerAddressRequired": "Customer address is required",
+                "deliveryDateRequired": "Delivery date is required",
+                "checkoutFailed": "Checkout failed"
+            },
+            "stock": {
+                "notEnough": "Stock not enough",
+                "limitReached": "Stock limit reached",
+                "limitReachedDesc": "{name} has only {qty} in stock.",
+                "itemsSkipped": "Some items skipped",
+                "itemsSkippedDesc": "{count} line(s) could not be loaded (missing product)."
+            },
+            "reopen": {
+                "invoiceNotFound": "Invoice not found or has no lines.",
+                "noCartItems": "No cart items could be loaded from this invoice.",
+                "invoiceLoaded": "Invoice loaded",
+                "invoiceLoadedDesc": "{invoiceNo} — edit cart and continue checkout.",
+                "loadFailed": "Failed to load invoice"
             },
             "cart": {
                 "title": "Cart",
@@ -356,6 +425,20 @@
             "tableTitle": "Platform User Directory",
             "addBtn": "Add User",
             "analyticsTitle": "User & Session Insights",
+            "formTitleNew": "Add User",
+            "formTitleEdit": "Edit User",
+            "confirmDeleteTitle": "Delete User",
+            "confirmDeleteDesc": "You are about to delete account \"{name}\".\nThis user will no longer be able to sign in.\nThis action is permanent and cannot be undone.",
+            "confirmEditTitle": "Update User",
+            "confirmEditDesc": "You updated account \"{name}\".\nPlease verify role, email, and permissions.\nClick save to apply these updates.",
+            "confirmAddTitle": "Create User",
+            "confirmAddDesc": "You are creating a new account for \"{name}\".\nPlease verify user details and assigned role.\nClick confirm to create this account.",
+            "toastDeleted": "User deleted",
+            "toastDeletedDesc": "Access revoked for {name}.",
+            "toastAdded": "User created",
+            "toastAddedDesc": "System credentials delivered.",
+            "toastUpdated": "User updated",
+            "toastUpdatedDesc": "Profile changes applied successfully.",
             "columns": {
                 "name": "Name",
                 "role": "Role",
@@ -432,6 +515,15 @@
             "recordsTitle": "Refund Records",
             "previewSelected": "Preview Selected",
             "deleteSuccess": "Refund records for this invoice were removed.",
+            "confirmDeleteTitle": "Delete Refund Records",
+            "confirmDeleteDesc": "You are about to delete all refund records for invoice \"{invoiceNo}\".\nThis action cannot be undone.",
+            "toastLoadFailed": "Could not load refund records.",
+            "toastDeleteFailed": "Delete failed",
+            "toastNoLineSelected": "No invoice line selected.",
+            "toastRefundNotSaved": "Refund not saved",
+            "toastRefundNotSavedDesc": "This item may already be refunded.",
+            "toastRefundFailed": "Refund failed",
+            "toastRefundFailedDesc": "Could not save refund.",
             "columns": {
                 "refundedAt": "Refunded At",
                 "reason": "Reason"
@@ -460,6 +552,20 @@
             "title": "Role Management",
             "tableTitle": "Authorization Policies",
             "addBtn": "Add Role",
+            "formTitleNew": "Add Role",
+            "formTitleEdit": "Edit Role",
+            "confirmDeleteTitle": "Delete Role",
+            "confirmDeleteDesc": "You are about to delete role \"{name}\".\nUsers with this role may lose access permissions.\nThis action is permanent and cannot be undone.",
+            "confirmEditTitle": "Update Role",
+            "confirmEditDesc": "You updated role \"{name}\".\nPlease review page access permissions carefully.\nClick save to apply this policy.",
+            "confirmAddTitle": "Create Role",
+            "confirmAddDesc": "You are creating role \"{name}\".\nSet the correct permissions for this role.\nClick confirm to create it.",
+            "toastDeleted": "Role deleted",
+            "toastDeletedDesc": "Role removed successfully.",
+            "toastAdded": "Role created",
+            "toastAddedDesc": "New role policy is active.",
+            "toastUpdated": "Role updated",
+            "toastUpdatedDesc": "Policy updates synchronized.",
             "allPages": "Full system access",
             "pages": {
                 "dashboard": "Dashboard",
@@ -496,6 +602,21 @@
                 "name": "Name",
                 "pageAccess": "Page Access"
             }
+        },
+        "error": {
+            "seoTitle404": "Page not found",
+            "seoDescription404": "We are sorry but this page could not be found.",
+            "seoTitleGeneric": "Error",
+            "seoDescriptionGeneric": "Something went wrong. Please try again later.",
+            "notFoundTitle": "Page not found",
+            "notFoundMessage": "We are sorry but this page could not be found.",
+            "forbiddenTitle": "Access denied",
+            "forbiddenMessage": "You do not have permission to view this page.",
+            "serverErrorTitle": "Server error",
+            "serverErrorMessage": "Something went wrong on our side. Please try again later.",
+            "genericTitle": "Something went wrong",
+            "genericMessage": "An unexpected error occurred. Please try again later.",
+            "backHome": "Back to home"
         }
     },
     "category": {

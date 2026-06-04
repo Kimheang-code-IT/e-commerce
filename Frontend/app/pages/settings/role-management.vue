@@ -71,9 +71,14 @@ function onSubmitRole(data: Record<string, any>) {
                 </template>
             </TableApptable>
         </div>
-        <CommonAppSlideoverForm v-model:open="isFormOpen" :data="selectedRole || undefined" :fields="roleFormFields"
-            :title="selectedRole ? $t('actions.edit') : $t('pages.roleManagement.addBtn')"
-            :submit-label="selectedRole ? $t('actions.save') : $t('actions.confirm')" @submit="onSubmitRole" />
+        <CommonAppSlideoverForm
+            v-model:open="isFormOpen"
+            :data="selectedRole || undefined"
+            :fields="roleFormFields"
+            :title-key="selectedRole ? 'pages.roleManagement.formTitleEdit' : 'pages.roleManagement.formTitleNew'"
+            :submit-label-key="selectedRole ? 'actions.save' : 'actions.confirm'"
+            @submit="onSubmitRole"
+        />
         <CommonAppModalCURD v-model:open="isConfirmOpen" v-bind="confirmConfig" @submit="finalizeAction" />
     </div>
 </template>
