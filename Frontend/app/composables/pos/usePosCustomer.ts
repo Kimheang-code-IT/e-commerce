@@ -8,7 +8,6 @@ export function usePosCustomer() {
   const customerName = ref(initial.customerName)
   const customerPhone = ref(initial.customerPhone)
   const customerAddress = ref(initial.customerAddress)
-  const source = ref(initial.source)
   const deliveryType = ref(initial.deliveryType)
   const deliveryPrice = ref(initial.deliveryPrice)
   const deliveryDate = ref(formatDate(new Date()))
@@ -22,7 +21,6 @@ export function usePosCustomer() {
     customerName.value = next.customerName
     customerPhone.value = next.customerPhone
     customerAddress.value = next.customerAddress
-    source.value = next.source
     deliveryType.value = next.deliveryType
     deliveryPrice.value = next.deliveryPrice
     deliveryDate.value = formatDate(new Date())
@@ -35,8 +33,6 @@ export function usePosCustomer() {
     customerName.value = String(invoice.customer || '')
     customerPhone.value = String(invoice.phoneCustomer || '')
     customerAddress.value = String(invoice.address || '')
-    const src = String(invoice.source ?? '').trim()
-    source.value = !src || src.toLowerCase() === 'other' ? 'Other' : src
     if (invoice.deliveryType) deliveryType.value = String(invoice.deliveryType)
     if (invoice.deliveryPrice != null) deliveryPrice.value = Number(invoice.deliveryPrice)
     if (invoice.deliveryDate) {
@@ -54,7 +50,6 @@ export function usePosCustomer() {
     customerName,
     customerPhone,
     customerAddress,
-    source,
     deliveryType,
     deliveryPrice,
     deliveryDate,

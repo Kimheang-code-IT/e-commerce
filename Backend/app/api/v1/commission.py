@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy import func, or_, select
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -35,7 +35,6 @@ def list_commission_view(
     limit: int = Query(20, ge=1, le=200),
     search: str | None = None,
     product: str | None = None,
-    source: str | None = None,
     dateFrom: str | None = None,
     dateTo: str | None = None,
     sortBy: str | None = None,
@@ -50,9 +49,6 @@ def list_commission_view(
     products = parse_csv(product)
     if products:
         q = q.where(CheckoutItem.product_name.in_(products))
-    sources = parse_csv(source)
-    if sources:
-        q = q.where(or_(*[Invoice.source == s for s in sources]))
     q = apply_created_at_range(q, dateFrom, dateTo, Invoice.created_at)
     q = apply_sort(
         q,
@@ -74,7 +70,6 @@ def list_commission_view(
 def export_commission_view(
     search: str | None = None,
     product: str | None = None,
-    source: str | None = None,
     dateFrom: str | None = None,
     dateTo: str | None = None,
     format: str = Query("json", pattern="^(json|csv)$"),
@@ -88,9 +83,6 @@ def export_commission_view(
     products = parse_csv(product)
     if products:
         q = q.where(CheckoutItem.product_name.in_(products))
-    sources = parse_csv(source)
-    if sources:
-        q = q.where(or_(*[Invoice.source == s for s in sources]))
     q = apply_created_at_range(q, dateFrom, dateTo, Invoice.created_at)
     rows = db.execute(q).all()
     data = [serialize_commission_row(ci, inv, seller, prod) for ci, inv, seller, prod in rows]

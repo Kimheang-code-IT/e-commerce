@@ -45,10 +45,8 @@ const {
   someFilteredSelected,
   toggleSelectAllFiltered,
   productItems,
-  sourceItems,
   provinceItems,
   selectedProducts,
-  selectedSources,
   selectedProvinces,
   columns,
   getDropdownActions,
@@ -86,7 +84,6 @@ async function fetchReportExportData(args: { startDate?: string; endDate?: strin
     ...((args.startDate || args.endDate) ? { dateFrom: args.startDate, dateTo: args.endDate } : {}),
     search: searchQuery.value || undefined,
     product: selectedProducts.value.length ? selectedProducts.value.join(',') : undefined,
-    source: selectedSources.value.length ? selectedSources.value.join(',') : undefined,
     province: selectedProvinces.value.length ? selectedProvinces.value.join(',') : undefined
   })
   return res.data || filteredReportRows.value
@@ -119,15 +116,12 @@ async function fetchReportExportData(args: { startDate?: string; endDate?: strin
         v-model:sorting="sorting" v-model:column-visibility="columnVisibility" v-model:pagination="pagination"
         v-model:column-filters="columnFilters"
         v-model:filter-value="selectedProducts"
-        v-model:filter-value-secondary="selectedSources"
-        v-model:filter-value-third="selectedProvinces"
+        v-model:filter-value-secondary="selectedProvinces"
         v-model:global-filter="searchQuery"
         :filter-items="productItems"
-        :filter-items-secondary="sourceItems"
-        :filter-items-third="provinceItems"
+        :filter-items-secondary="provinceItems"
         :filter-placeholder="$t('product.name')"
-        :filter-placeholder-secondary="$t('pages.report.filterSource')"
-        :filter-placeholder-third="$t('pages.report.filterProvince')"
+        :filter-placeholder-secondary="$t('pages.report.filterProvince')"
         :data="filteredReportRows" :total-rows="totalRows" :columns="columns"
         :selectable="true" :loading="isLoading"
         :get-row-actions="getDropdownActions">
@@ -156,11 +150,6 @@ async function fetchReportExportData(args: { startDate?: string; endDate?: strin
         <template #product-cell="{ row }">
           <UBadge color="neutral" variant="soft" class="font-normal">
             {{ row.original.product }}
-          </UBadge>
-        </template>
-        <template #source-cell="{ row }">
-          <UBadge color="primary" variant="soft" class="font-normal">
-            {{ row.original.source }}
           </UBadge>
         </template>
         <template #address-cell="{ row }">

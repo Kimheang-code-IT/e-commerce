@@ -76,21 +76,16 @@ def report_filter_options(
     base = _non_refunded_report_items_query(date_from=date_from, date_to=date_to)
     pairs = db.execute(base.order_by(CheckoutItem.product_name)).all()
     products: set[str] = set()
-    sources: set[str] = set()
     provinces: set[str] = set()
     for ci, inv in pairs:
         name = str(ci.product_name or "").strip()
         if name:
             products.add(name)
-        src = str(inv.source or "").strip()
-        if src:
-            sources.add(src)
         addr = str(inv.customer_address or "").strip()
         if addr:
             provinces.add(addr)
     return {
         "products": sorted(products),
-        "sources": sorted(sources),
         "provinces": sorted(provinces),
     }
 
@@ -110,9 +105,6 @@ def commission_filter_options(
     product_rows = db.execute(q.order_by(CheckoutItem.product_name)).all()
     return {
         "products": _sorted_non_empty(product_rows),
-        "sources": invoice_field_options(
-            db, Invoice.source, date_from=date_from, date_to=date_to, paid_only=True
-        ),
     }
 
 
@@ -120,7 +112,6 @@ def pos_form_options(db: Session) -> dict[str, list[str]]:
     """POS checkout dropdowns from values already used in invoices."""
     return {
         "deliveryTypes": invoice_field_options(db, Invoice.delivery_type),
-        "sources": invoice_field_options(db, Invoice.source),
         "paymentMethods": invoice_field_options(db, Invoice.payment_method),
         "addresses": invoice_field_options(db, Invoice.customer_address),
     }

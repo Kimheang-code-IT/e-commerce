@@ -130,7 +130,6 @@ export function buildCheckoutPayload(input: {
   customerName: string
   customerPhone: string
   customerAddress: string
-  source: string
   deliveryType: string
   deliveryPrice: number
   deliveryDate: string
@@ -144,7 +143,7 @@ export function buildCheckoutPayload(input: {
     customerName: input.customerName,
     customerPhone: input.customerPhone,
     customerAddress: input.customerAddress,
-    source: input.source,
+    source: 'other',
     deliveryType: input.deliveryType,
     deliveryPrice: Number(input.deliveryPrice || 0),
     deliveryDate: input.deliveryDate,
@@ -171,7 +170,6 @@ export function resetCustomerForm() {
     deliveryDate: new Date().toISOString(),
     paymentMethod: 'cash',
     deliveryStatus: 'pending',
-    source: 'Other',
     sellerId: undefined as number | undefined
   }
 }

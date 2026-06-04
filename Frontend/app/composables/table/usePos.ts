@@ -113,7 +113,6 @@ export function usePos() {
     deliveryType: customer.deliveryType.value,
     deliveryPrice: Number(customer.deliveryPrice.value || 0),
     paymentMethod: customer.paymentMethod.value,
-    source: customer.source.value,
     itemCount: cartState.itemCount.value,
     subtotal: displaySubtotal.value,
     discount: displayDiscount.value,
@@ -139,7 +138,6 @@ export function usePos() {
             customerName: customer.customerName.value,
             customerPhone: customer.customerPhone.value,
             customerAddress: customer.customerAddress.value,
-            source: customer.source.value,
             deliveryType: customer.deliveryType.value,
             deliveryPrice: customer.deliveryPrice.value,
             deliveryDate: customer.deliveryDate.value,
@@ -166,7 +164,6 @@ export function usePos() {
             customerName: customer.customerName.value,
             customerPhone: customer.customerPhone.value,
             customerAddress: customer.customerAddress.value,
-            source: customer.source.value,
             deliveryType: customer.deliveryType.value,
             deliveryPrice: customer.deliveryPrice.value,
             deliveryDate: customer.deliveryDate.value,
@@ -228,12 +225,7 @@ export function usePos() {
       if (reopenHandled.value) return
       if (invoice) {
         currentStep.value = 2
-        customer.customerName.value = String(invoice.customer || '')
-        customer.customerPhone.value = String(invoice.phoneCustomer || '')
-        customer.customerAddress.value = String(invoice.address || '')
-        const src = String(invoice.source ?? '').trim()
-        customer.source.value =
-          !src || src.toLowerCase() === 'other' ? 'Other' : src
+        customer.applyInvoiceHeader(invoice as Record<string, unknown>)
         checkout.checkoutInvoiceNo.value = ''
         checkout.lastInvoiceData.value = null
       }
@@ -263,7 +255,6 @@ export function usePos() {
     deliveryDate: customer.deliveryDate,
     paymentMethod: customer.paymentMethod,
     deliveryStatus: customer.deliveryStatus,
-    source: customer.source,
     sellerId: customer.sellerId,
     cart: cartState.cart,
     itemCount: cartState.itemCount,

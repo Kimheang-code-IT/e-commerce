@@ -51,7 +51,6 @@ def _refunded_checkout_item_ids_subquery():
 def list_refunds(
     query: ListQuery = Depends(list_query_dependency),
     product: str | None = None,
-    source: str | None = None,
     province: str | None = None,
     _: User = Depends(require_permission("refund:view")),
     db: Session = Depends(get_db),
@@ -63,7 +62,6 @@ def list_refunds(
         limit=query.limit,
         search=query.search,
         product=product,
-        source=source,
         province=province,
         date_from=query.dateFrom,
         date_to=query.dateTo,

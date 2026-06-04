@@ -18,7 +18,7 @@ interface ReportInvoice {
   customer: string
   phoneCustomer: string
   seller: string
-  source?: string
+  deliveryType?: string
   grandTotal?: number
   discount?: number
 }
@@ -78,7 +78,7 @@ const displayRows = computed(() => buildInvoiceDisplayRows(props.cart ?? []))
                 <span class="text-slate-600 font-medium">{{ t('pages.pos.invoice.fields.phone') }}:</span>
                 <span>{{ selectedReportInvoice?.phoneCustomer || customerPhone || 'N/A' }}</span>
                 <span class="text-slate-600 font-medium">{{ t('pages.pos.invoice.fields.deliveryType') }}:</span>
-                <span class="font-medium text-slate-900">{{ selectedReportInvoice?.source || deliveryType || 'N/A' }}</span>
+                <span class="font-medium text-slate-900">{{ selectedReportInvoice?.deliveryType || deliveryType || 'N/A' }}</span>
               </div>
             </div>
           </div>

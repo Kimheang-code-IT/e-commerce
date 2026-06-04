@@ -41,7 +41,6 @@ def build_refunds_query(
     *,
     search: str | None = None,
     products: list[str] | None = None,
-    sources: list[str] | None = None,
     provinces: list[str] | None = None,
     date_from: str | None = None,
     date_to: str | None = None,
@@ -57,8 +56,6 @@ def build_refunds_query(
         )
     if products:
         q = q.where(or_(*[RefundRecord.product.ilike(f"%{name}%") for name in products]))
-    if sources:
-        q = q.where(RefundRecord.source.in_(sources))
     if provinces:
         q = q.where(RefundRecord.address.in_(provinces))
     q = apply_created_at_range(q, date_from, date_to, RefundRecord.refunded_at)
@@ -95,7 +92,6 @@ def group_refund_rows(rows: list[RefundRecord], db: Session) -> list[dict]:
                 "refunded_at": row.refunded_at,
                 "customer": row.customer or "",
                 "seller": row.seller or "",
-                "source": row.source or "",
                 "address": row.address or "",
                 "sale_date": row.sale_date or "",
             }
@@ -114,7 +110,6 @@ def group_refund_rows(rows: list[RefundRecord], db: Session) -> list[dict]:
             g["refunded_at"] = row.refunded_at
             g["customer"] = row.customer or g["customer"]
             g["seller"] = row.seller or g["seller"]
-            g["source"] = row.source or g["source"]
             g["address"] = row.address or g["address"]
             g["sale_date"] = row.sale_date or g["sale_date"]
 
@@ -135,7 +130,6 @@ def group_refund_rows(rows: list[RefundRecord], db: Session) -> list[dict]:
                 "phoneCustomer": "",
                 "phoneSaler": "",
                 "seller": g["seller"],
-                "source": g["source"],
                 "address": g["address"],
                 "amount": float(g["amount"]),
                 "refundedAt": to_iso(g["refunded_at"]),
@@ -154,7 +148,6 @@ def list_grouped_refunds(
     limit: int,
     search: str | None = None,
     product: str | None = None,
-    source: str | None = None,
     province: str | None = None,
     date_from: str | None = None,
     date_to: str | None = None,
@@ -162,14 +155,12 @@ def list_grouped_refunds(
     sort_order: str | None = None,
 ):
     products = parse_csv(product)
-    sources = parse_csv(source)
     provinces = parse_csv(province)
 
     q = build_refunds_query(
         db,
         search=search,
         products=products,
-        sources=sources,
         provinces=provinces,
         date_from=date_from,
         date_to=date_to,

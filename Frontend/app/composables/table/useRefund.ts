@@ -21,12 +21,10 @@ export function useRefund(handlers?: RefundRowActionHandlers) {
 
   const refundRows = ref<RefundRecord[]>([])
   const selectedProducts = ref<string[]>([])
-  const selectedSources = ref<string[]>([])
   const selectedAddresses = ref<string[]>([])
 
   const filterExtraQuery = computed(() => ({
     product: selectedProducts.value.join(',') || undefined,
-    source: selectedSources.value.join(',') || undefined,
     province: selectedAddresses.value.join(',') || undefined,
   }))
 
@@ -47,9 +45,6 @@ export function useRefund(handlers?: RefundRowActionHandlers) {
 
   const productItems = computed(() =>
     [...new Set(filteredRefundRows.value.map((row) => String(row.product || '').trim()).filter(Boolean))]
-  )
-  const sourceItems = computed(() =>
-    [...new Set(filteredRefundRows.value.map((row) => String(row.source || '').trim()).filter(Boolean))]
   )
   const addressItems = computed(() =>
     [...new Set(filteredRefundRows.value.map((row) => String(row.address || '').trim()).filter(Boolean))]
@@ -101,7 +96,7 @@ export function useRefund(handlers?: RefundRowActionHandlers) {
     }
   }
 
-  watch([selectedProducts, selectedSources, selectedAddresses], () => {
+  watch([selectedProducts, selectedAddresses], () => {
     pagination.value.pageIndex = 0
   })
 
@@ -142,7 +137,6 @@ export function useRefund(handlers?: RefundRowActionHandlers) {
     { accessorKey: 'customer', header: t('pages.report.columns.customer') },
     { accessorKey: 'product', header: t('pages.report.columns.product') },
     { accessorKey: 'seller', header: t('pages.report.columns.seller') },
-    { accessorKey: 'source', header: t('pages.report.columns.source') },
     { accessorKey: 'address', header: t('pages.report.columns.address') },
     {
       accessorKey: 'amount',
@@ -289,10 +283,8 @@ export function useRefund(handlers?: RefundRowActionHandlers) {
     totalRows: resource.totalRows,
     isLoading: resource.isLoading,
     selectedProducts,
-    selectedSources,
     selectedAddresses,
     productItems,
-    sourceItems,
     addressItems,
     selectedRefundRows,
     allFilteredSelected,

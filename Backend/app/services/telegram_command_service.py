@@ -173,7 +173,6 @@ class TelegramCommandService:
                 "/summary",
                 "/category",
                 "/product",
-                "/source",
                 "/payment",
                 "/commission",
                 "/delivery",
@@ -202,12 +201,6 @@ class TelegramCommandService:
                             "📦 <b>Select Product</b>\nPlease choose a product to view its sales report:",
                             telegram_menu_service.get_product_list_menu(products),
                         )
-                elif command == "/source":
-                    await telegram_service.send_message(
-                        chat_id,
-                        "📍 <b>Price by Source</b>\nSelect period:",
-                        telegram_menu_service.get_date_menu("source_price"),
-                    )
                 elif command == "/payment":
                     await telegram_service.send_message(
                         chat_id,
@@ -267,15 +260,6 @@ class TelegramCommandService:
                     chat_id, 
                     "📦 <b>Select Product</b>\nPlease choose a product to view its sales report:",
                     telegram_menu_service.get_product_list_menu(products)
-                )
-            return
-        elif "source" in lower_text:
-            with next(get_db()) as db:
-                sources = report_repo.get_all_sources(db)
-                await telegram_service.send_message(
-                    chat_id,
-                    "📍 <b>Select Source</b>\nPlease choose a source:",
-                    telegram_menu_service.get_source_list_menu(sources)
                 )
             return
         elif "payment" in lower_text:
@@ -382,14 +366,6 @@ class TelegramCommandService:
                 )
             return
 
-        if data == "main_source_price":
-            with next(get_db()) as db:
-                sources = report_repo.get_all_sources(db)
-                await self._menu_reply(chat_id, "📍 <b>Select Source</b>\nPlease choose a source:",
-                    telegram_menu_service.get_source_list_menu(sources)
-                )
-            return
-
         if data == "main_commission_user":
             with next(get_db()) as db:
                 users = report_repo.get_all_users(db)
@@ -430,14 +406,6 @@ class TelegramCommandService:
             )
             return
 
-        if data.startswith("src_select_"):
-            source_name = data.replace("src_select_", "")
-            user_states[chat_id] = f"selected_src_{source_name}"
-            await self._menu_reply(chat_id, "📅 <b>Select Period</b>\nChoose a period for this source:",
-                telegram_menu_service.get_date_menu("src_detail")
-            )
-            return
-
         if data.startswith("usr_select_"):
             user_id = data.replace("usr_select_", "")
             user_states[chat_id] = f"selected_usr_{user_id}"
@@ -467,7 +435,6 @@ class TelegramCommandService:
                 "summary_price": "💰 Summary Price",
                 "category_price": "📁 Price by Category",
                 "product_price": "📦 Price by Product",
-                "source_price": "📍 Price by Source",
                 "payment_price": "💳 Price by Payment",
                 "commission_user": "👤 Commission by User",
                 "delivery_type": "🚚 Price by Delivery Type"
@@ -559,34 +526,6 @@ class TelegramCommandService:
 
                 await self._menu_reply(chat_id, msg,
                     telegram_menu_service.get_post_report_menu("payment_price")
-                )
-            return
-
-        # Handle Source Detail Date Selection
-        if data.startswith("src_detail_"):
-            period = data.replace("src_detail_", "")
-            state = user_states.get(chat_id, "")
-            if not state.startswith("selected_src_"):
-                await telegram_service.send_message(chat_id, "⚠️ Session expired. Please start over.")
-                return
-
-            source_name = state.replace("selected_src_", "")
-            start_date, end_date = self.get_date_range(period)
-
-            with next(get_db()) as db:
-                report_data = report_repo.get_single_source_summary(db, source_name, start_date, end_date)
-                if not report_data:
-                    await telegram_service.send_message(chat_id, "❌ Source not found.")
-                    return
-
-                msg = f"📍 <b>Source Summary</b>\n"
-                msg += f"Source: <b>{source_name}</b>\n"
-                msg += f"Period: <b>{period.replace('_', ' ').title()}</b>\n\n"
-                msg += f"💰 Total Sales: <b>${report_data['total_sales']:,.2f}</b>\n"
-                msg += f"📄 Total Invoices: <b>{report_data['total_invoices']}</b>\n"
-
-                await self._menu_reply(chat_id, msg,
-                    telegram_menu_service.get_post_report_menu("source_price")
                 )
             return
 
@@ -687,7 +626,6 @@ class TelegramCommandService:
             if report_type == "summary_price": msg = report_service.format_summary_price(db, start, end, label)
             elif report_type == "category_price": msg = report_service.format_category_price(db, start, end, label)
             elif report_type == "product_price": msg = report_service.format_product_price(db, start, end, label)
-            elif report_type == "source_price": msg = report_service.format_source_price(db, start, end, label)
             elif report_type == "payment_price": msg = report_service.format_payment_price(db, start, end, label)
             elif report_type == "commission_user": msg = report_service.format_commission_user(db, start, end, label)
             elif report_type == "delivery_type": msg = report_service.format_delivery_type_price(db, start, end, label)

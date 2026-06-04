@@ -3,7 +3,6 @@ import { formatDate } from '~/utils/format/date'
 import {
   POS_WALK_IN_ADDRESS,
   POS_WALK_IN_DELIVERY_TYPE,
-  POS_WALK_IN_SOURCE,
   usePosFormOptions
 } from '~/composables/pos/usePosFormOptions'
 
@@ -16,7 +15,6 @@ const deliveryPrice = defineModel<number>('deliveryPrice', { required: true })
 const deliveryDate = defineModel<string>('deliveryDate', { required: true })
 const paymentMethod = defineModel<string>('paymentMethod', { required: true, default: 'cash' })
 const deliveryStatus = defineModel<string>('deliveryStatus', { required: true, default: 'pending' })
-const source = defineModel<string>('source', { required: true, default: 'Other' })
 const sellerId = defineModel<number | undefined>('sellerId')
 const { t } = useI18n()
 const auth = useAuthStore()
@@ -73,7 +71,6 @@ function onSelectCustomerType(type: string) {
     customerPhone.value = '000000000'
     customerAddress.value = POS_WALK_IN_ADDRESS
     deliveryType.value = POS_WALK_IN_DELIVERY_TYPE
-    source.value = POS_WALK_IN_SOURCE
     paymentMethod.value = 'cash'
     deliveryStatus.value = 'pending'
     return
@@ -83,7 +80,6 @@ function onSelectCustomerType(type: string) {
   customerPhone.value = ''
   customerAddress.value = ''
   deliveryType.value = 'VET'
-  source.value = 'Other'
   paymentMethod.value = 'cash'
 }
 

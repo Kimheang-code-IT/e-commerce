@@ -6,7 +6,6 @@ type PosCustomerInput = {
   customerName: string
   customerPhone: string
   customerAddress: string
-  source: string
   deliveryType: string
   deliveryPrice: number
   deliveryDate: string

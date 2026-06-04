@@ -64,7 +64,6 @@ class TelegramService:
             msg += f"Invoice ID: {invoice.invoice_no}\n"
             msg += f"Customer: {invoice.customer_name or 'N/A'}\n"
             msg += f"Phone: {invoice.customer_phone or 'N/A'}\n"
-            msg += f"Source: {invoice.source.capitalize()}\n"
             msg += f"Payment: {invoice.payment_method.capitalize()}\n"
             msg += f"Delivery: {invoice.delivery_type.capitalize()}\n"
             msg += f"Delivery Status: {invoice.delivery_status.capitalize()}\n\n"
@@ -113,8 +112,6 @@ class TelegramService:
             msg += f"Customer: {customer or 'N/A'}\n"
             if phone:
                 msg += f"Phone: {phone}\n"
-            if source:
-                msg += f"Source: {str(source).capitalize()}\n"
             if seller:
                 msg += f"Seller: {seller}\n"
             if refunded_by:

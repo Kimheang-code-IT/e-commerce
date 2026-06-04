@@ -33,10 +33,8 @@ const {
   totalRows,
   isLoading,
   selectedProducts,
-  selectedSources,
   selectedAddresses,
   productItems,
-  sourceItems,
   addressItems,
   filteredRefundRows,
   selectedRefundRows,
@@ -93,15 +91,12 @@ const isExportOpen = ref(false)
           v-model:pagination="pagination"
           v-model:column-filters="columnFilters"
           v-model:filter-value="selectedProducts"
-          v-model:filter-value-secondary="selectedSources"
-          v-model:filter-value-third="selectedAddresses"
+          v-model:filter-value-secondary="selectedAddresses"
           v-model:global-filter="searchQuery"
           :filter-items="productItems"
-          :filter-items-secondary="sourceItems"
-          :filter-items-third="addressItems"
+          :filter-items-secondary="addressItems"
           :filter-placeholder="$t('product.name')"
-          :filter-placeholder-secondary="$t('pages.report.filterSource')"
-          :filter-placeholder-third="$t('pages.report.filterProvince')"
+          :filter-placeholder-secondary="$t('pages.report.filterProvince')"
           :data="filteredRefundRows"
           :columns="refundColumns"
           :loading="isLoading"
@@ -148,11 +143,6 @@ const isExportOpen = ref(false)
           <template #product-cell="{ row }">
             <UBadge color="neutral" variant="soft" class="font-normal">
               {{ row.original.product }}
-            </UBadge>
-          </template>
-          <template #source-cell="{ row }">
-            <UBadge color="primary" variant="soft" class="font-normal">
-              {{ row.original.source }}
             </UBadge>
           </template>
           <template #address-cell="{ row }">

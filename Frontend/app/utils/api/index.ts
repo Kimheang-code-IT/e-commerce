@@ -233,7 +233,7 @@ export function useReportsViewApi() {
     list: (params?: ApiQueryParams, signal?: AbortSignal) =>
       api.get<ApiList<ReportRow>>('/reports-view', { query: params, signal, dedupe: true }),
     filterOptions: (params?: DateQuery, signal?: AbortSignal) =>
-      api.get<{ data: { products: string[]; sources: string[]; provinces: string[] } }>(
+      api.get<{ data: { products: string[]; provinces: string[] } }>(
         '/reports-view/filter-options',
         { query: params, signal, dedupe: true }
       ),
@@ -263,7 +263,7 @@ export function useCommissionViewApi() {
     list: (params?: ApiQueryParams, signal?: AbortSignal) =>
       api.get<ApiList<CommissionEntry>>('/commission-view', { query: params, signal, dedupe: true }),
     filterOptions: (params?: DateQuery, signal?: AbortSignal) =>
-      api.get<{ data: { products: string[]; sources: string[] } }>('/commission-view/filter-options', {
+      api.get<{ data: { products: string[] } }>('/commission-view/filter-options', {
         query: params,
         signal,
         dedupe: true
@@ -349,7 +349,6 @@ export function usePosApi() {
       api.get<{
         data: {
           deliveryTypes: string[]
-          sources: string[]
           paymentMethods: string[]
           addresses: string[]
         }

@@ -34,7 +34,6 @@ const {
     deliveryDate,
     paymentMethod,
     deliveryStatus,
-    source,
     sellerId,
     cart,
     itemCount,
@@ -256,7 +255,7 @@ const previewCart = computed(() => {
                     v-model:customer-address="customerAddress" v-model:delivery-type="deliveryType"
                     v-model:delivery-price="deliveryPrice" v-model:delivery-date="deliveryDate"
                     v-model:payment-method="paymentMethod" v-model:delivery-status="deliveryStatus"
-                    v-model:source="source" v-model:seller-id="sellerId" />
+                    v-model:seller-id="sellerId" />
 
                 <!-- ══ LEFT: Invoice/Checkout Panel ══ -->
                 <div v-else class="w-full min-h-0 flex flex-col bg-muted/30 px-6 py-1 overflow-y-auto">
@@ -269,7 +268,7 @@ const previewCart = computed(() => {
                                     :cart="buildCartFromLines(group.lines)"
                                     :customer-name="group.header.customer || customerName"
                                     :customer-phone="group.header.phoneCustomer || customerPhone"
-                                    :delivery-type="group.header.source || deliveryType"
+                                    :delivery-type="group.header.deliveryType || deliveryType"
                                     :delivery-price="group.header.deliveryPrice || 0"
                                     :selected-report-invoice="group.header" :display-subtotal="group.subtotal"
                                     :display-discount="group.header.discount || 0"
@@ -279,7 +278,7 @@ const previewCart = computed(() => {
                         <CommonAppPosInvoicePreview v-else class="print-invoice-page" :cart="previewCart"
                             :customer-name="selectedReportInvoice?.customer || customerName"
                             :customer-phone="selectedReportInvoice?.phoneCustomer || customerPhone"
-                            :delivery-type="selectedReportInvoice?.source || deliveryType"
+                            :delivery-type="selectedReportInvoice?.deliveryType || deliveryType"
                             :delivery-price="selectedReportInvoice?.deliveryPrice || deliveryPrice" :selected-report-invoice="selectedReportInvoice"
                             :checkout-invoice-no="checkoutInvoiceNo" :display-subtotal="displaySubtotal"
                             :display-discount="displayDiscount" :display-total="displayTotal" />
@@ -336,10 +335,6 @@ const previewCart = computed(() => {
                 <div class="flex justify-between gap-2">
                     <span class="text-muted-foreground">{{ t('pages.pos.checkoutConfirm.payment') }}</span>
                     <span class="font-medium text-foreground">{{ checkoutConfirmSummary.paymentMethod }}</span>
-                </div>
-                <div class="flex justify-between gap-2">
-                    <span class="text-muted-foreground">{{ t('pages.pos.checkoutConfirm.source') }}</span>
-                    <span class="font-medium text-foreground">{{ checkoutConfirmSummary.source }}</span>
                 </div>
                 <div class="flex justify-between gap-2">
                     <span class="text-muted-foreground">{{ t('pages.pos.checkoutConfirm.items') }}</span>

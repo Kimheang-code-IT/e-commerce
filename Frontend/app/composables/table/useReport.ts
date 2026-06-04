@@ -21,11 +21,9 @@ export function useReport(handlers?: ReportRowActionHandlers) {
   const { rowSelection, columnVisibility } = useBaseTable({})
   const reportRows = ref<ReportRow[]>([])
   const selectedProducts = ref<string[]>([])
-  const selectedSources = ref<string[]>([])
   const selectedProvinces = ref<string[]>([])
   const filterExtraQuery = computed(() => ({
     product: selectedProducts.value.join(',') || undefined,
-    source: selectedSources.value.join(',') || undefined,
     province: selectedProvinces.value.join(',') || undefined
   }))
   const { sorting, columnFilters, pagination, searchQuery, resource } = useServerListTable<ReportRow>({
@@ -38,10 +36,9 @@ export function useReport(handlers?: ReportRowActionHandlers) {
 
   const { itemsFor } = useViewFilterOptions(
     (query, signal) => reportApi.filterOptions(query, signal),
-    ['products', 'sources', 'provinces']
+    ['products', 'provinces']
   )
   const productItems = itemsFor('products')
-  const sourceItems = itemsFor('sources')
   const provinceItems = itemsFor('provinces')
 
   const selectedReportRows = computed<ReportRow[]>(() => {
@@ -74,7 +71,7 @@ export function useReport(handlers?: ReportRowActionHandlers) {
   const effectiveRows = computed(() => resource.rows.value)
   const filteredReportRows = computed<ReportRow[]>(() => effectiveRows.value)
 
-  watch([selectedProducts, selectedSources, selectedProvinces], () => {
+  watch([selectedProducts, selectedProvinces], () => {
     pagination.value.pageIndex = 0
   })
 
@@ -97,7 +94,6 @@ export function useReport(handlers?: ReportRowActionHandlers) {
     { accessorKey: 'product', header: t('pages.report.columns.product') },
     { accessorKey: 'phoneCustomer', header: t('pages.report.columns.phoneCustomer') },
     { accessorKey: 'seller', header: t('pages.report.columns.seller') },
-    { accessorKey: 'source', header: t('pages.report.columns.source') },
     { accessorKey: 'address', header: t('pages.report.columns.address') },
     { accessorKey: 'amount', header: t('pages.report.columns.amount'), footer: formatCurrency(reportSummary.value.amountSum, 'USD') },
     { id: 'action', header: t('common.actions') }
@@ -169,10 +165,8 @@ export function useReport(handlers?: ReportRowActionHandlers) {
     reportRows: resource.rows,
     filteredReportRows,
     productItems,
-    sourceItems,
     provinceItems,
     selectedProducts,
-    selectedSources,
     selectedProvinces,
     selectedReportRows,
     allFilteredSelected,

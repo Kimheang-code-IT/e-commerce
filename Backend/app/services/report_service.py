@@ -38,7 +38,6 @@ def build_report_invoices_query(
     *,
     search: str | None = None,
     products: list[str] | None = None,
-    sources: list[str] | None = None,
     provinces: list[str] | None = None,
     date_from: str | None = None,
     date_to: str | None = None,
@@ -65,9 +64,6 @@ def build_report_invoices_query(
             )
         )
 
-    if sources:
-        q = q.where(or_(*[Invoice.source == s for s in sources]))
-
     if provinces:
         q = q.where(or_(*[Invoice.customer_address == p for p in provinces]))
 
@@ -90,8 +86,8 @@ def serialize_report_invoice(inv: Invoice, seller: User | None = None) -> dict:
         "phoneCustomer": inv.customer_phone or "",
         "seller": seller.name if seller else "",
         "phoneSaler": "",
-        "source": inv.source or "",
         "address": inv.customer_address or "",
+        "deliveryType": inv.delivery_type or "",
         "deliveryPrice": float(inv.delivery_price or 0),
         "discount": float(inv.discount or 0),
         "amount": float(inv.total or 0),
@@ -105,7 +101,6 @@ def list_report_invoices(
     limit: int,
     search: str | None = None,
     product: str | None = None,
-    source: str | None = None,
     province: str | None = None,
     date_from: str | None = None,
     date_to: str | None = None,
@@ -113,14 +108,12 @@ def list_report_invoices(
     sort_order: str | None = None,
 ):
     products = parse_csv(product)
-    sources = parse_csv(source)
     provinces = parse_csv(province)
 
     q = build_report_invoices_query(
         db,
         search=search,
         products=products,
-        sources=sources,
         provinces=provinces,
         date_from=date_from,
         date_to=date_to,
@@ -148,20 +141,17 @@ def export_report_invoices(
     *,
     search: str | None = None,
     product: str | None = None,
-    source: str | None = None,
     province: str | None = None,
     date_from: str | None = None,
     date_to: str | None = None,
 ):
     products = parse_csv(product)
-    sources = parse_csv(source)
     provinces = parse_csv(province)
 
     q = build_report_invoices_query(
         db,
         search=search,
         products=products,
-        sources=sources,
         provinces=provinces,
         date_from=date_from,
         date_to=date_to,

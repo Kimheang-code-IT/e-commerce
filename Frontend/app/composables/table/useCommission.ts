@@ -13,10 +13,8 @@ export function useCommission() {
   const commissionApi = useCommissionApi();
   const localRows = ref<CommissionEntry[]>([]);
   const selectedProducts = ref<string[]>([]);
-  const selectedSources = ref<string[]>([]);
   const extraQuery = computed(() => ({
     product: selectedProducts.value.join(",") || undefined,
-    source: selectedSources.value.join(",") || undefined,
   }));
   const { sorting, columnFilters, pagination, searchQuery, resource } =
     useServerListTable<CommissionEntry>({
@@ -29,12 +27,11 @@ export function useCommission() {
 
   const { itemsFor } = useViewFilterOptions(
     (query, signal) => commissionApi.filterOptions(query, signal),
-    ["products", "sources"]
+    ["products"]
   );
   const productItems = itemsFor("products");
-  const sourceItems = itemsFor("sources");
 
-  watch([selectedProducts, selectedSources], () => {
+  watch(selectedProducts, () => {
     pagination.value.pageIndex = 0;
   });
 
@@ -43,7 +40,6 @@ export function useCommission() {
     { accessorKey: "seller", header: t("pages.commission.columns.seller") },
     { accessorKey: "product", header: t("pages.commission.columns.product") },
     { accessorKey: "customer", header: t("pages.commission.columns.customer") },
-    { accessorKey: "source", header: t("pages.commission.columns.source") },
     { accessorKey: "date", header: t("pages.commission.columns.date") },
     { accessorKey: "amount", header: t("pages.commission.columns.amount") },
     {
@@ -67,9 +63,7 @@ export function useCommission() {
     pagination,
     columns,
     productItems,
-    sourceItems,
     selectedProducts,
-    selectedSources,
     groupingOptions,
     grouping,
     canExport: perms.canExport,

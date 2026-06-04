@@ -6,7 +6,6 @@ export const POS_DELIVERY_TYPES = ['VET', 'Grap', 'J&T', 'Other'] as const
 export const POS_PAYMENT_METHODS = ['cash', 'acleda', 'aba', 'wing', 'other'] as const
 
 export const POS_WALK_IN_DELIVERY_TYPE = 'Other'
-export const POS_WALK_IN_SOURCE = 'Other'
 export const POS_WALK_IN_ADDRESS = 'Nothing'
 
 export type PosSelectItem = { label: string; value: string }
