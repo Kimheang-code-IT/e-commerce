@@ -82,6 +82,9 @@ export function useProduct() {
   const stockAdjustOutPrice = ref<number>(0);
   const stockAdjustNote = ref("");
   const stockAdjustTarget = ref<Product | null>(null);
+  const stockAdjustLotId = ref<number | null>(null);
+  const stockLotOptions = ref<{ label: string; value: number; qtyRemaining: number }[]>([]);
+  const isStockLotsLoading = ref(false);
   const isHistoryOpen = ref(false);
   const historyType = ref<"added" | "damaged">("added");
   const historyEntries = ref<any[]>([]);
@@ -583,7 +586,33 @@ export function useProduct() {
     isFormOpen.value = true;
   }
 
-  function openStockAdjustDialog(entry: Product, mode: "added" | "damaged") {
+  async function loadOpenStockLots(productId: number) {
+    isStockLotsLoading.value = true;
+    stockLotOptions.value = [];
+    stockAdjustLotId.value = null;
+    try {
+      const res = await productApi.listOpenStockLots(productId);
+      const rows = Array.isArray(res?.data) ? res.data : [];
+      stockLotOptions.value = rows.map((lot: any) => {
+        const left = Number(lot.qtyRemaining ?? lot.qty ?? 0);
+        const inP = Number(lot.inPrice ?? 0);
+        const outP = Number(lot.outPrice ?? 0);
+        return {
+          value: Number(lot.id),
+          qtyRemaining: left,
+          label: `#${lot.id} · ${left} ${t("components.stockAdjust.lotQtyLeft")} · $${inP.toFixed(2)} / $${outP.toFixed(2)}`,
+        };
+      });
+      stockAdjustLotId.value = stockLotOptions.value[0]?.value ?? null;
+    } catch {
+      stockLotOptions.value = [];
+      stockAdjustLotId.value = null;
+    } finally {
+      isStockLotsLoading.value = false;
+    }
+  }
+
+  async function openStockAdjustDialog(entry: Product, mode: "added" | "damaged") {
     if (mode === "added" && !perms.canAdjustStock.value) return;
     if (mode === "damaged" && !perms.canAddDamage.value) return;
     stockAdjustTarget.value = entry;
@@ -592,6 +621,11 @@ export function useProduct() {
     stockAdjustInPrice.value = Number(entry.inPrice || 0);
     stockAdjustOutPrice.value = Number(entry.salePrice ?? entry.outPrice ?? 0);
     stockAdjustNote.value = "";
+    stockAdjustLotId.value = null;
+    stockLotOptions.value = [];
+    if (mode === "damaged") {
+      await loadOpenStockLots(entry.id);
+    }
     isStockAdjustOpen.value = true;
   }
 
@@ -600,11 +634,32 @@ export function useProduct() {
     const qty = Number(stockAdjustQty.value);
     if (!target || !Number.isFinite(qty) || qty <= 0) return;
 
+    if (stockAdjustMode.value === "damaged") {
+      if (!stockAdjustLotId.value) {
+        toast.add({
+          title: t("components.stockAdjust.selectLotRequired"),
+          color: "error",
+        });
+        return;
+      }
+      const selected = stockLotOptions.value.find((o) => o.value === stockAdjustLotId.value);
+      const left = selected?.qtyRemaining ?? 0;
+      if (qty > left) {
+        toast.add({
+          title: t("components.stockAdjust.lotQtyExceeded"),
+          color: "error",
+        });
+        return;
+      }
+    }
+
     await productApi.adjustStock(target.id, {
       mode: stockAdjustMode.value,
       qty,
       inPrice: stockAdjustMode.value === "added" ? Number(stockAdjustInPrice.value) : 0,
       outPrice: stockAdjustMode.value === "added" ? Number(stockAdjustOutPrice.value) : 0,
+      stockAdditionId:
+        stockAdjustMode.value === "damaged" ? Number(stockAdjustLotId.value) : undefined,
       note: stockAdjustNote.value || undefined,
     });
     await resource.refresh();
@@ -624,6 +679,8 @@ export function useProduct() {
     stockAdjustInPrice.value = 0;
     stockAdjustOutPrice.value = 0;
     stockAdjustNote.value = "";
+    stockAdjustLotId.value = null;
+    stockLotOptions.value = [];
   }
 
   async function openHistory(entry: Product, type: "added" | "damaged") {
@@ -723,6 +780,9 @@ export function useProduct() {
     stockAdjustOutPrice,
     stockAdjustNote,
     stockAdjustTarget,
+    stockAdjustLotId,
+    stockLotOptions,
+    isStockLotsLoading,
     openStockAdjustDialog,
     applyStockAdjust,
     // History

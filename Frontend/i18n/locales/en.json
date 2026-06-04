@@ -69,7 +69,13 @@
             "qtyToAdd": "Quantity to add",
             "qtyDamaged": "Damaged quantity",
             "fifoHint": "Each batch keeps its own cost and sale price. POS sells oldest stock first (FIFO).",
-            "damagedFifoHint": "Damaged units are removed from the oldest stock batch first."
+            "damagedLotHint": "Choose which stock batch to mark as damaged.",
+            "selectStockLot": "Stock batch",
+            "selectStockLotPlaceholder": "Select batch",
+            "selectLotRequired": "Select a stock batch",
+            "lotQtyExceeded": "Quantity exceeds remaining in this batch",
+            "lotQtyLeft": "left",
+            "noOpenLots": "No stock batches with remaining quantity"
         }
     },
     "provinces": {

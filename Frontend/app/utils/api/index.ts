@@ -130,6 +130,16 @@ export function useProductApi() {
     ...crud,
     listStockAdditions: (id: number | string, params?: ApiQueryParams) =>
       api.get<ApiList<any>>(`/products/${id}/stock-additions`, { query: params }),
+    listOpenStockLots: (id: number | string) =>
+      api.get<ApiList<{
+        id: number
+        qty: number
+        qtyRemaining: number
+        inPrice: number
+        outPrice: number
+        note: string
+        createdAt: string
+      }>>(`/products/${id}/stock-additions`, { query: { openOnly: true, page: 1, limit: 200 } }),
     listDamages: (id: number | string, params?: ApiQueryParams) =>
       api.get<ApiList<any>>(`/products/${id}/damages`, { query: params }),
     adjustStock: (
@@ -140,6 +150,7 @@ export function useProductApi() {
         inPrice?: number
         outPrice?: number
         note?: string
+        stockAdditionId?: number
       },
     ) => api.post<{ data: Product }>(`/products/${id}/stock-adjust`, body),
     updateStockAddition: (

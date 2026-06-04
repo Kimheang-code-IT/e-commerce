@@ -280,28 +280,21 @@ def complete_checkout_service(*, db: Session, payload: PosCheckoutPayload, curre
                 )
             if unit_price is not None:
                 sale_price = float(unit_price)
-                db.add(
-                    CheckoutItem(
-                        invoice_id=invoice.id,
-                        product_id=product.id,
-                        product_name=product.name,
-                        quantity=total_qty,
-                        price=sale_price,
-                        total=sale_price * total_qty,
-                    )
-                )
+                line_total = sale_price * total_qty
             else:
-                for sl in consumed:
-                    db.add(
-                        CheckoutItem(
-                            invoice_id=invoice.id,
-                            product_id=product.id,
-                            product_name=product.name,
-                            quantity=sl.qty,
-                            price=sl.out_price,
-                            total=sl.out_price * sl.qty,
-                        )
-                    )
+                line_total = sum(sl.out_price * sl.qty for sl in consumed)
+                sale_price = line_total / total_qty if total_qty else 0.0
+
+            db.add(
+                CheckoutItem(
+                    invoice_id=invoice.id,
+                    product_id=product.id,
+                    product_name=product.name,
+                    quantity=total_qty,
+                    price=float(sale_price),
+                    total=float(line_total if unit_price is None else sale_price * total_qty),
+                )
+            )
             product.sold = int(product.sold or 0) + total_qty
             product.in_stock = max(0, int(product.in_stock or 0) - total_qty)
 

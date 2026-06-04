@@ -17,7 +17,7 @@ const {
     getDropdownActions, handleSaveRequest, finalizeAction, handleAddNew,
     canCreate, canExport, canAdjustStock, canViewAdjustStock, canAddDamage, canViewAddDamage,
     stockAdjustMode, stockAdjustQty, stockAdjustInPrice, stockAdjustOutPrice,
-    stockAdjustNote, stockAdjustTarget,
+    stockAdjustNote, stockAdjustTarget, stockAdjustLotId, stockLotOptions, isStockLotsLoading,
     openStockAdjustDialog, applyStockAdjust,
     // History
     isHistoryOpen, historyType, historyEntries, isHistoryLoading, historyTotalRows,
@@ -185,10 +185,13 @@ function onProductImageError(event: Event) {
             v-model:in-price="stockAdjustInPrice"
             v-model:out-price="stockAdjustOutPrice"
             v-model:note="stockAdjustNote"
+            v-model:stock-lot-id="stockAdjustLotId"
             :mode="stockAdjustMode"
             :product-name="stockAdjustTarget?.name || ''"
             :default-in-price="stockAdjustTarget?.inPrice"
             :default-out-price="stockAdjustTarget?.salePrice ?? stockAdjustTarget?.outPrice"
+            :stock-lot-options="stockLotOptions"
+            :stock-lots-loading="isStockLotsLoading"
             @apply="applyStockAdjust"
         />
         

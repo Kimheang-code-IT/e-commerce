@@ -139,6 +139,46 @@ def allocate_fifo(
     return slices
 
 
+def allocate_from_lot(
+    db: Session,
+    lot_id: int,
+    product_id: int,
+    qty_needed: int,
+    *,
+    consume: bool,
+) -> list[FifoSlice]:
+    """Take qty from one stock batch (used for damaged stock with user-selected lot)."""
+    need = int(qty_needed)
+    if need <= 0:
+        return []
+
+    q = select(ProductStockAddition).where(
+        ProductStockAddition.id == lot_id,
+        ProductStockAddition.product_id == product_id,
+    )
+    if consume:
+        q = q.with_for_update()
+    lot = db.execute(q).scalar_one_or_none()
+    if not lot:
+        return []
+
+    available = int(lot.qty_remaining or 0)
+    if available < need:
+        return []
+
+    if consume:
+        lot.qty_remaining = available - need
+
+    return [
+        FifoSlice(
+            qty=need,
+            in_price=float(lot.in_price or 0),
+            out_price=float(lot.out_price or 0),
+            lot_id=lot.id,
+        )
+    ]
+
+
 def fifo_head_out_price(db: Session, product_id: int, fallback: float = 0.0) -> float:
     """Next unit sale price (oldest open lot)."""
     lot = db.execute(

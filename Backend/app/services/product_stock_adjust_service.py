@@ -6,7 +6,12 @@ from app.models import Product, ProductDamage
 from app.schemas.common import ProductStockAdjustPayload
 from app.services.cache_service import invalidate_products_and_dashboard
 from app.services.data_service import batch_stock_totals, record_history, serialize_product
-from app.services.stock_fifo_service import allocate_fifo, batch_fifo_head_out_prices, create_stock_lot
+from app.services.stock_fifo_service import (
+    allocate_fifo,
+    allocate_from_lot,
+    batch_fifo_head_out_prices,
+    create_stock_lot,
+)
 from app.shared.api_response import error_response
 
 
@@ -45,13 +50,28 @@ def adjust_product_stock_service(
                 f"Not enough stock (available: {row.in_stock})",
                 "NOT_ENOUGH_STOCK",
             )
-        slices = allocate_fifo(db, row.id, qty, consume=True)
-        if not slices:
-            return error_response(
-                status.HTTP_400_BAD_REQUEST,
-                "Not enough stock in FIFO lots",
-                "NOT_ENOUGH_STOCK",
+        if body.stockAdditionId:
+            slices = allocate_from_lot(
+                db,
+                int(body.stockAdditionId),
+                row.id,
+                qty,
+                consume=True,
             )
+            if not slices:
+                return error_response(
+                    status.HTTP_400_BAD_REQUEST,
+                    "Selected stock batch has insufficient quantity",
+                    "NOT_ENOUGH_STOCK",
+                )
+        else:
+            slices = allocate_fifo(db, row.id, qty, consume=True)
+            if not slices:
+                return error_response(
+                    status.HTTP_400_BAD_REQUEST,
+                    "Not enough stock in FIFO lots",
+                    "NOT_ENOUGH_STOCK",
+                )
         db.add(
             ProductDamage(
                 product_id=row.id,
@@ -61,7 +81,8 @@ def adjust_product_stock_service(
             )
         )
         row.in_stock = max(0, int(row.in_stock or 0) - qty)
-        action = f"Recorded {qty} damaged (FIFO)"
+        lot_label = f"lot #{body.stockAdditionId}" if body.stockAdditionId else "FIFO"
+        action = f"Recorded {qty} damaged ({lot_label})"
 
     db.commit()
     db.refresh(row)

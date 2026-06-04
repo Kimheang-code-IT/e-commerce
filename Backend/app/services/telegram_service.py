@@ -71,7 +71,12 @@ class TelegramService:
 
             msg += "<b>Products:</b>\n"
             for i, item in enumerate(items, 1):
-                msg += f"{i}. {item.product_name} x {item.quantity} = ${item.total:.2f}\n"
+                qty = int(item.quantity or 0)
+                unit = float(item.price or 0)
+                line_total = float(item.total or 0)
+                if qty > 0 and unit <= 0 and line_total > 0:
+                    unit = line_total / qty
+                msg += f"{i}. {item.product_name} x {qty} @ ${unit:.2f} = ${line_total:.2f}\n"
 
             subtotal = float(invoice.subtotal or 0)
             discount = float(invoice.discount or 0)

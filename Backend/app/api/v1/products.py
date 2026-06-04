@@ -118,12 +118,19 @@ def list_product_stock_additions(
     limit: int = Query(10, ge=1, le=200),
     dateFrom: str | None = None,
     dateTo: str | None = None,
+    openOnly: bool = Query(False),
     _: User = Depends(require_permission("product:view")),
     db: Session = Depends(get_db),
 ):
     q = select(ProductStockAddition).where(ProductStockAddition.product_id == item_id)
+    if openOnly:
+        q = q.where(ProductStockAddition.qty_remaining > 0)
     q = apply_created_at_range(q, dateFrom, dateTo, ProductStockAddition.created_at)
-    q = q.order_by(ProductStockAddition.created_at.desc())
+    q = (
+        q.order_by(ProductStockAddition.created_at.asc(), ProductStockAddition.id.asc())
+        if openOnly
+        else q.order_by(ProductStockAddition.created_at.desc())
+    )
     rows, total = paginate_query(q, db, page, limit)
     return list_response(
         [

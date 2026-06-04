@@ -29,17 +29,17 @@ def get_low_stock_products(db: Session) -> list[Product]:
 
 
 def format_low_stock_message(products: list[Product]) -> str:
-    threshold = max(0, int(settings.LOW_STOCK_THRESHOLD))
-    lines = [
-        "⚠️ <b>Low Stock Alert</b>",
-        f"Products with stock &lt; {threshold} — please add stock:",
-        "",
-    ]
-    for i, p in enumerate(products, 1):
-        lines.append(f"{i}. {p.name}\n   Stock left: <b>{int(p.in_stock or 0)}</b>")
-    lines.append("")
-    lines.append(f"Checked: {cambodia_now().strftime('%Y-%m-%d %H:%M')} (Cambodia time)")
-    return "\n".join(lines)
+    blocks: list[str] = []
+    for p in products:
+        name = _escape_telegram_html((p.name or "").strip() or "—")
+        in_stock = int(p.in_stock or 0)
+        blocks.append(
+            "<b>Product low stock</b>\n\n"
+            f"Product name: {name}\n"
+            f"In stock: {in_stock}\n\n"
+            "Pls, add this product to stock"
+        )
+    return "\n\n──────────\n\n".join(blocks)
 
 
 def format_backup_success_message(results: list[dict]) -> str:

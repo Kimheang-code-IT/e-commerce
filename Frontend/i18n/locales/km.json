@@ -69,7 +69,13 @@
             "qtyToAdd": "ចំនួនត្រូវបន្ថែម",
             "qtyDamaged": "ចំនួនខូច",
             "fifoHint": "គ្នាស្តុកមានតម្លៃចូល/លក់ផ្សេងគ្នា។ POS លក់ស្តុកចាស់មុន (FIFO)។",
-            "damagedFifoHint": "ខូចផ្តាច់ពីស្តុកចាស់បំផុតមុន។"
+            "damagedLotHint": "ជ្រើសរើសគ្នាស្តុកដែលត្រូវកត់ជាខូច។",
+            "selectStockLot": "គ្នាស្តុក",
+            "selectStockLotPlaceholder": "ជ្រើសរើសគ្នាស្តុក",
+            "selectLotRequired": "សូមជ្រើសរើសគ្នាស្តុក",
+            "lotQtyExceeded": "ចំនួនលើសពីស្តុកនៅសល់ក្នុងគ្នានេះ",
+            "lotQtyLeft": "នៅសល់",
+            "noOpenLots": "មិនមានគ្នាស្តុកដែលមានបរិមាណនៅសល់"
         }
     },
     "provinces": {

@@ -4,6 +4,7 @@ const qty = defineModel<number>("qty", { default: 0 });
 const inPrice = defineModel<number>("inPrice", { default: 0 });
 const outPrice = defineModel<number>("outPrice", { default: 0 });
 const note = defineModel<string>("note", { default: "" });
+const stockLotId = defineModel<number | null>("stockLotId", { default: null });
 
 const props = withDefaults(
   defineProps<{
@@ -11,12 +12,16 @@ const props = withDefaults(
     productName?: string;
     defaultInPrice?: number;
     defaultOutPrice?: number;
+    stockLotOptions?: { label: string; value: number; qtyRemaining: number }[];
+    stockLotsLoading?: boolean;
   }>(),
   {
     mode: "added",
     productName: "",
     defaultInPrice: 0,
     defaultOutPrice: 0,
+    stockLotOptions: () => [],
+    stockLotsLoading: false,
   },
 );
 
@@ -24,10 +29,18 @@ const emit = defineEmits<{
   (e: "apply"): void;
 }>();
 
+const { t } = useI18n();
+
 watch(open, (isOpen) => {
   if (!isOpen || props.mode !== "added") return;
   if (!inPrice.value) inPrice.value = Number(props.defaultInPrice || 0);
   if (!outPrice.value) outPrice.value = Number(props.defaultOutPrice || 0);
+});
+
+const selectedLotRemaining = computed(() => {
+  if (!stockLotId.value) return null;
+  const opt = props.stockLotOptions.find((o) => o.value === stockLotId.value);
+  return opt ? opt.qtyRemaining : null;
 });
 
 const canApply = computed(() => {
@@ -38,6 +51,11 @@ const canApply = computed(() => {
     const sale = Number(outPrice.value);
     return Number.isFinite(cost) && cost >= 0 && Number.isFinite(sale) && sale >= 0;
   }
+  if (props.stockLotsLoading) return false;
+  if (!props.stockLotOptions.length) return false;
+  if (!stockLotId.value) return false;
+  const left = selectedLotRemaining.value;
+  if (left != null && q > left) return false;
   return true;
 });
 </script>
@@ -64,11 +82,36 @@ const canApply = computed(() => {
 
     <template #body>
       <div class="space-y-3">
+        <template v-if="mode === 'damaged'">
+          <p class="text-xs text-muted-foreground">
+            {{ $t("components.stockAdjust.damagedLotHint") }}
+          </p>
+          <UFormField :label="$t('components.stockAdjust.selectStockLot')" required>
+            <USelect
+              v-model="stockLotId"
+              :items="stockLotOptions"
+              value-key="value"
+              label-key="label"
+              :loading="stockLotsLoading"
+              :disabled="!stockLotOptions.length && !stockLotsLoading"
+              class="w-full"
+              :placeholder="$t('components.stockAdjust.selectStockLotPlaceholder')"
+            />
+          </UFormField>
+          <p
+            v-if="!stockLotsLoading && !stockLotOptions.length"
+            class="text-xs text-error"
+          >
+            {{ $t("components.stockAdjust.noOpenLots") }}
+          </p>
+        </template>
+
         <UFormField :label="mode === 'added' ? $t('components.stockAdjust.qtyToAdd') : $t('components.stockAdjust.qtyDamaged')">
           <UInput
             v-model.number="qty"
             type="number"
             min="1"
+            :max="mode === 'damaged' && selectedLotRemaining != null ? selectedLotRemaining : undefined"
             step="1"
             placeholder="0"
             class="w-full"
@@ -76,6 +119,9 @@ const canApply = computed(() => {
         </UFormField>
 
         <template v-if="mode === 'added'">
+          <p class="text-xs text-muted-foreground">
+            {{ $t("components.stockAdjust.fifoHint") }}
+          </p>
           <UFormField :label="$t('product.inPrice')">
             <UInput
               v-model.number="inPrice"

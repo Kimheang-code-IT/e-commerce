@@ -112,6 +112,7 @@ class ProductStockAdjustPayload(BaseModel):
     qty: int = Field(gt=0)
     inPrice: float = Field(default=0, ge=0)
     outPrice: float = Field(default=0, ge=0)
+    stockAdditionId: int | None = Field(default=None, ge=1)
     note: str | None = Field(default=None, max_length=1000)
 
     @field_validator("note")
