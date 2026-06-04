@@ -8,12 +8,8 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import os
-import sys
 
 import httpx
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.core.config import settings
 from app.services.telegram_auth import (

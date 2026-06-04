@@ -12,12 +12,7 @@ class Settings(BaseSettings):
     API_DOCS_ENABLED: bool = True
     API_PREFIX: str = "/api/v1"
     CORS_ORIGINS: str = "http://localhost:3000,http://127.0.0.1:3000"
-    # When true, allow browser requests from any private LAN IP/port (Wi-Fi deploy on changing hosts).
-    CORS_ALLOW_LAN: bool = False
     FILE_BASE_URL: str = ""
-    # Set by scripts/deploy_lan.py / root .env (informational logging only).
-    HOST_LAN_IP: str = ""
-    PUBLIC_HTTP_PORT: str = "8080"
     EXPORT_INLINE_THRESHOLD: int = 100
     EXPORT_DIR: str = "exports"
 

@@ -1,14 +1,15 @@
-# Rebuild and restart the full Docker stack (LAN deploy).
+# Rebuild and restart the Docker stack.
 # Usage:
-#   .\docker-update.ps1           # rebuild images + restart
-#   .\docker-update.ps1 -NoBuild   # restart only
-#   .\docker-update.ps1 -Logs      # follow logs after start
-#   .\docker-update.ps1 -Beat      # include celery-beat (daily reports)
+#   .\docker-update.ps1
+#   .\docker-update.ps1 -NoBuild
+#   .\docker-update.ps1 -Logs
+#   .\docker-update.ps1 -Prod
+#   .\docker-update.ps1 -BackendReplicas 2
 param(
     [switch]$NoBuild,
     [switch]$Logs,
-    [switch]$Beat,
-    [int]$BackendReplicas = 0
+    [switch]$Prod,
+    [int]$BackendReplicas = 1
 )
 
 Set-Location $PSScriptRoot
@@ -27,30 +28,27 @@ if (Test-Path ".env") {
     }
 }
 if ($env:COMPOSE_PROJECT_NAME) {
-    Write-Host "Keeping existing data volumes: $($env:COMPOSE_PROJECT_NAME)_pg_data" -ForegroundColor Green
+    Write-Host "Docker volumes: $($env:COMPOSE_PROJECT_NAME)_pg_data" -ForegroundColor Green
 }
 
 Write-Host "Checking Backend/.env for Docker..." -ForegroundColor Cyan
-python Backend/scripts/check_env_docker.py
+python Backend/app/scripts/check_env_docker.py
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 $services = @("backend", "celery-worker", "celery-beat", "telegram-bot")
+$composeArgs = @("compose")
+if ($Prod) {
+    $composeArgs += @("-f", "docker-compose.yml", "-f", "docker-compose.prod.yml")
+}
 
 if (-not $NoBuild) {
-    Write-Host "Building images: $($services -join ', ')..." -ForegroundColor Cyan
-    docker compose build @services
+    Write-Host "Building: $($services -join ', ')..." -ForegroundColor Cyan
+    docker @composeArgs build @services
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 }
 
-Write-Host "Starting stack (detect LAN IP)..." -ForegroundColor Cyan
-$lanArgs = @()
-if ($Beat) {
-    $lanArgs += "--beat"
-}
-if ($BackendReplicas -gt 0) {
-    $lanArgs += "--backend-replicas", $BackendReplicas
-}
-python scripts/deploy_lan.py @lanArgs
+Write-Host "Starting stack..." -ForegroundColor Cyan
+docker @composeArgs up -d --scale "backend=$BackendReplicas"
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 Write-Host ""
@@ -58,10 +56,8 @@ Write-Host "Container status:" -ForegroundColor Cyan
 docker compose ps
 
 Write-Host ""
-Write-Host "Quick checks:" -ForegroundColor Cyan
-Write-Host "  docker compose logs celery-worker --tail 30"
-Write-Host "  docker compose exec backend python -c ""import reportlab; print('reportlab OK')"""
-Write-Host "  docker compose logs telegram-bot --tail 30"
+Write-Host "API health: curl http://127.0.0.1:8000/health" -ForegroundColor Cyan
+Write-Host "Frontend: cd Frontend; pnpm install; pnpm exec nuxi generate" -ForegroundColor Cyan
 
 if ($Logs) {
     docker compose logs -f backend celery-worker

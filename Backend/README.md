@@ -1,35 +1,34 @@
 # E-Commerce Backend (FastAPI)
 
-Production-ready FastAPI backend using PostgreSQL, Redis/Celery, Telegram, and Google Sheets backup.
+PostgreSQL, Redis/Celery, Telegram, Google Sheets backup.
 
-## Local Run
-
-1. `pip install -r requirements.txt`
-2. Copy `.env.example` to `.env`
-3. `alembic upgrade head` (if using migrations)
-4. `uvicorn app.main:app --reload`
-
-## Docker Compose (from repo root)
+## Docker (from repo root)
 
 ```bash
 docker compose up -d --build
+curl http://127.0.0.1:8000/health
 ```
 
-Services:
+Services: `backend`, `db`, `redis`, `celery-worker`, `celery-beat`, `telegram-bot`.
 
-- `backend` — API on **host** `127.0.0.1:8000` (proxy from host nginx)
-- `db` — PostgreSQL (`127.0.0.1:5432` on host for admin tools)
-- `redis` — internal only
-- `celery-worker`, `celery-beat`, `telegram-bot`
+Production overlay: `docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d`
 
-There is **no nginx container**. The SPA and TLS are served by **host nginx** — see [`host-nginx-examples/`](../host-nginx-examples/).
+## First admin
 
-## Production
+Use the frontend `/setup` page when the database has no users.
 
-- Host nginx proxies `/api/`, `/uploads/products/`, `/health` → `http://127.0.0.1:8000`
-- `SCHEDULER_ENABLED=false` on API when `celery-beat` runs
-- See [docs/PRODUCTION.md](../docs/PRODUCTION.md)
+## Environment
 
-## DBeaver via SSH Tunnel
+- Template: `.env.example` (every `Settings` field + `POSTGRES_*` for the `db` service)
+- Live secrets: `.env` (gitignored)
+- Catalog: `app/core/env_catalog.py` (keys used by the checker)
 
-- Host: `localhost`, Port: `5432` (Docker maps to loopback)
+```bash
+python Backend/app/scripts/check_env_docker.py   # Docker hosts + Settings() load
+```
+
+## Utilities (`app/scripts/`)
+
+```bash
+docker compose exec backend python app/scripts/reset_db.py
+```

@@ -9,9 +9,6 @@ services:
     env_file:
       - ./Backend/.env
     environment:
-      CORS_ALLOW_LAN: ${CORS_ALLOW_LAN:-true}
-      FILE_BASE_URL: ${FILE_BASE_URL:-}
-      HOST_LAN_IP: ${HOST_LAN_IP:-}
       BACKEND_REPLICAS: ${BACKEND_REPLICAS:-1}
     command:
       - uvicorn
@@ -124,7 +121,7 @@ services:
       context: ./Backend
       dockerfile: Dockerfile
     container_name: ecom-telegram-bot
-    command: python scripts/telegram_polling.py
+    command: python -m app.scripts.telegram_polling
     env_file:
       - ./Backend/.env
     depends_on:

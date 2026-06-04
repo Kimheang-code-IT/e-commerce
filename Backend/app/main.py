@@ -32,25 +32,13 @@ cors_origins = [origin.strip() for origin in settings.cors_origins.split(",") if
 if settings.APP_ENV.lower() == "production" and "*" in cors_origins:
     raise ValueError("Wildcard CORS is not allowed in production")
 
-# Private LAN / localhost with any port (phones on Wi-Fi, dynamic DHCP IP per machine).
-_LAN_ORIGIN_REGEX = (
-    r"https?://(localhost|127\.0\.0\.1)(:\d+)?"
-    r"|https?://(192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3}\.\d{1,3}"
-    r"|172\.(?:1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3})(:\d+)?"
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=cors_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
-
-_cors_kwargs: dict = {
-    "allow_credentials": True,
-    "allow_methods": ["*"],
-    "allow_headers": ["*"],
-}
-if settings.CORS_ALLOW_LAN:
-    _cors_kwargs["allow_origins"] = cors_origins
-    _cors_kwargs["allow_origin_regex"] = _LAN_ORIGIN_REGEX
-else:
-    _cors_kwargs["allow_origins"] = cors_origins
-
-app.add_middleware(CORSMiddleware, **_cors_kwargs)
 app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(RateLimitMiddleware)
 
@@ -117,17 +105,6 @@ def api_health():
 def on_startup():
     init_db()
     start_scheduler()
-    lan_ip = (settings.HOST_LAN_IP or "").strip()
-    lan_port = (settings.PUBLIC_HTTP_PORT or "8080").strip()
-    if lan_ip:
-        logger.info("LAN access (Wi-Fi): http://%s:%s/", lan_ip, lan_port)
-    elif settings.CORS_ALLOW_LAN:
-        logger.info(
-            "LAN mode: open http://<this-PC-LAN-IP>:%s/ on Wi-Fi (IP is detected automatically; CORS allows any private LAN origin)",
-            lan_port,
-        )
-
-
 @app.on_event("shutdown")
 def on_shutdown():
     shutdown_scheduler()

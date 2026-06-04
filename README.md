@@ -1,81 +1,84 @@
 # E-Commerce (POS + reports + Telegram)
 
-**Docker** runs the API, PostgreSQL, Redis, Celery, and Telegram bot. **Host nginx** (you install) serves the SPA and HTTPS on ports 80/443, proxying to `http://127.0.0.1:8000`.
+**Docker** runs the API on `http://127.0.0.1:8000` (not exposed to LAN directly).
 
-## Push to GitHub (this machine)
+**Ubuntu nginx** serves the public site: static SPA + proxy `/api` to that backend. No static LAN IP is configured in the app — only your domain in `CORS_ORIGINS` and `FILE_BASE_URL`.
 
-**Never commit secrets.** These stay local only (already in `.gitignore`):
+See [docs/NGINX-UBUNTU.md](docs/NGINX-UBUNTU.md).
 
-- `Backend/.env`
-- `.env` (auto-generated LAN IP)
-- `Backend/credentials/*.json`
+## Requirements
 
-```powershell
-git add .
-git status
-git commit -m "Docker stack; host nginx for SPA and TLS"
-git push origin main
-```
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+- Python 3.11+ (env check script)
+- Node 20+ and pnpm (frontend build)
 
-## Deploy on another computer
-
-**Full checklist:** [docs/DEPLOY-NEW-PC.md](docs/DEPLOY-NEW-PC.md)  
-**Secrets to copy:** [SECRETS.example.md](SECRETS.example.md)
-
-**Requirements:** Docker Desktop, Python 3.11+, Git, Node/pnpm (frontend build), host nginx (browser access).
+## Quick start
 
 ```powershell
 git clone https://github.com/Kimheang-code-IT/e-commerce.git
 cd e-commerce
-git checkout main
-.\scripts\setup-from-github.ps1
+copy Backend\.env.example Backend\.env
 ```
 
-1. Edit **`Backend/.env`** (or copy from your old PC — see `SECRETS.example.md`).
-2. `python Backend/scripts/check_env_docker.py` → must say OK.
-3. `.\docker-update.ps1`
-4. Build frontend: `cd Frontend; pnpm install; pnpm exec nuxi generate`
-5. Configure host nginx: [host-nginx-examples/domank-dontrey.in.conf.sample](host-nginx-examples/domank-dontrey.in.conf.sample)
-6. `.\scripts\verify-deploy.ps1`
+Edit `Backend\.env` (database password, `JWT_SECRET_KEY`, Telegram, Google backup).
 
-First visit with empty database: open **`/setup`** to create the admin user.
+```powershell
+python Backend\app\scripts\check_env_docker.py
+.\docker-update.ps1
+curl http://127.0.0.1:8000/health
+```
 
-### Telegram (same bot everywhere)
+Build the static frontend:
 
-| Setting | Role |
-|---------|------|
-| `TELEGRAM_BOT_TOKEN` | From @BotFather — same on each machine |
-| `TELEGRAM_CHAT_ID` | Same chat id on each machine |
-| `TELEGRAM_REPORT_ENABLED=true` | Menus via `telegram-bot` |
-| `TELEGRAM_NOTIFY_ENABLED=true` | Checkout alerts via `celery-worker` |
+```bash
+cd Frontend
+pnpm install
+pnpm exec nuxi generate
+```
+
+First run with no users: use `/setup` in the browser.
+
+## Environment files (safe to commit)
+
+| File | Purpose |
+|------|---------|
+| `Backend/.env.example` | All API settings + Postgres vars for Docker |
+| `Frontend/.env.example` | Nuxt public config for local dev |
+| `.env.example` | Optional Compose overrides (`COMPOSE_PROJECT_NAME`, replicas) |
+
+Copy examples to `.env` locally. Verify before Docker:
+
+```powershell
+python Backend\app\scripts\check_env_docker.py
+```
+
+## Secrets (never commit)
+
+- `Backend/.env`
+- `Backend/credentials/*.json`
+- Root `.env` (optional overrides only)
+
+## Telegram
+
+Use the **same** `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` on each machine, but run **only one** `telegram-bot` container at a time (same token).
 
 ```powershell
 docker compose logs telegram-bot -f
 ```
 
-### Updates after `git pull`
+## Commands
 
 ```powershell
-.\docker-update.ps1
+.\docker-update.ps1              # build + start
+.\docker-update.ps1 -NoBuild      # restart only
+.\docker-update.ps1 -Prod         # with docker-compose.prod.yml
+.\docker-update.ps1 -BackendReplicas 2
+docker compose ps
+docker compose logs celery-worker --tail 30
 ```
-
-Rebuild frontend if `NUXT_PUBLIC_*` changed; reload host nginx.
 
 ## Docs
 
-- **[docs/DEPLOY-NEW-PC.md](docs/DEPLOY-NEW-PC.md)** — clone and deploy on a new PC (start here)
-- [SECRETS.example.md](SECRETS.example.md) — what to copy from the old machine
-- [DEPLOY-LAN.md](DEPLOY-LAN.md) — Docker + LAN + host nginx
-- [docs/PRODUCTION.md](docs/PRODUCTION.md) — production checklist
-- [host-nginx-examples/](host-nginx-examples/) — sample nginx config
-- [docs/PERFORMANCE-SECURITY.md](docs/PERFORMANCE-SECURITY.md) — Redis, Celery, rate limits
-
-## Quick commands
-
-```powershell
-docker compose ps
-curl http://127.0.0.1:8000/health
-docker compose logs celery-worker --tail 30
-.\docker-update.ps1 -NoBuild
-.\docker-update.ps1 -BackendReplicas 2
-```
+- [docs/DEPLOY-FROM-GITHUB.md](docs/DEPLOY-FROM-GITHUB.md) — clone on another PC (what is / is not in Git)
+- [docs/NGINX-UBUNTU.md](docs/NGINX-UBUNTU.md) — nginx on Ubuntu (HTTPS, `/api` proxy)
+- [Backend/README.md](Backend/README.md) — API and Docker details

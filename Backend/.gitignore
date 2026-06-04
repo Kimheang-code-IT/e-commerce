@@ -1,10 +1,18 @@
+# Local secrets (templates live in ../.env.example at repo root)
 .env
-*.db.bak-*
-app.db-journal
+.env.local
+.env.*.local
+
+# Runtime
 __pycache__/
 *.py[cod]
 .pytest_cache/
-.venv/
-venv/
 exports/
-credentials/
+uploads/
+*.db
+*.db.bak-*
+
+# Google / Telegram secrets — copy JSON here on each server (gitignored)
+credentials/*
+!credentials/.gitkeep
+!credentials/README.md

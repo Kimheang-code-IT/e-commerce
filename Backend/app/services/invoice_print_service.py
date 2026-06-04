@@ -1,4 +1,4 @@
-"""Optional server-side print via HTTP webhook (LAN receipt printer bridge)."""
+"""Optional server-side print via HTTP webhook (receipt printer bridge URL)."""
 
 from __future__ import annotations
 

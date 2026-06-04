@@ -1,7 +1,5 @@
-# Production overlay for single VPS. Use:
-#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --scale backend=2
-#
-# Pair with Backend/.env: APP_ENV=production, SCHEDULER_ENABLED=false, CORS_ALLOW_LAN=false
+# Production overlay. Use: .\docker-update.ps1 -Prod
+# Backend/.env: APP_ENV=production, SCHEDULER_ENABLED=false, explicit CORS_ORIGINS
 
 x-logging: &default-logging
   driver: json-file
@@ -13,7 +11,6 @@ services:
   backend:
     environment:
       APP_ENV: production
-      CORS_ALLOW_LAN: ${CORS_ALLOW_LAN:-false}
       SCHEDULER_ENABLED: ${SCHEDULER_ENABLED:-false}
       BACKEND_REPLICAS: ${BACKEND_REPLICAS:-2}
     logging: *default-logging
