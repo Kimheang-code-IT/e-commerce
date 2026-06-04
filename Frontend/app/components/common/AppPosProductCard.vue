@@ -25,11 +25,11 @@ const stockColor = computed<'primary' | 'warning' | 'error'>(() => {
     :ui="{ body: 'p-0 sm:p-0 flex flex-col h-full', root: 'rounded-none overflow-hidden transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 bg-card group h-full' }"
     :class="inCart ? 'border-primary/60 ring-1 ring-primary/30' : 'border-default'"
   >
-    <div class="relative flex-1 min-h-44 bg-muted overflow-hidden">
+    <div class="relative flex-1 min-h-44 max-h-50 bg-muted overflow-hidden">
       <img
         :src="product.image"
         :alt="product.name"
-        class="w-full h-full min-h-44 object-contain object-center transition-transform duration-300 group-hover:scale-[1.02]"
+        class="w-full h-full min-h-44 max-h-50 object-contain object-center transition-transform duration-300 group-hover:scale-[1.02]"
         loading="lazy"
       />
       <div class="absolute top-2 right-2 z-10">
@@ -38,7 +38,7 @@ const stockColor = computed<'primary' | 'warning' | 'error'>(() => {
         </UBadge>
       </div>
       <div
-        class="absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black/80 via-black/50 to-transparent pt-10 pb-2 px-2.5 pointer-events-none"
+        class="absolute inset-x-0 bottom-0 z-10 bg-linear-to-t from-black/80 via-black/50 to-transparent pt-10 pb-2 px-2.5 pointer-events-none"
       >
         <p class="text-sm font-semibold text-white leading-snug line-clamp-2 drop-shadow-sm">
           {{ product.name }}

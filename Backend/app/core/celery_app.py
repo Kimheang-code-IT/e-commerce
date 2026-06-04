@@ -12,19 +12,32 @@ def _get_result_backend() -> str:
     return settings.celery_result_backend or settings.redis_url
 
 
-def _parse_backup_cron() -> tuple[int, int]:
+def _parse_time_hhmm(value: str, *, default_hour: int, default_minute: int) -> tuple[int, int]:
     try:
-        hour, minute = map(int, (settings.google_backup_time or "19:00").split(":"))
+        hour, minute = map(int, (value or "").split(":"))
         if not (0 <= hour <= 23 and 0 <= minute <= 59):
             raise ValueError("Hour/minute out of cron range")
         return hour, minute
     except (TypeError, ValueError):
-        return 19, 0
+        return default_hour, default_minute
+
+
+def _parse_backup_cron() -> tuple[int, int]:
+    return _parse_time_hhmm(settings.google_backup_time or "19:00", default_hour=19, default_minute=0)
 
 
 def _build_beat_schedule() -> dict:
     backup_hour, backup_minute = _parse_backup_cron()
+    sales_hour, sales_minute = _parse_time_hhmm(
+        settings.DAILY_SALES_SUMMARY_TIME,
+        default_hour=19,
+        default_minute=5,
+    )
     schedule: dict = {
+        "daily-sales-summary-telegram": {
+            "task": "app.tasks.send_daily_sales_summary_task",
+            "schedule": crontab(hour=sales_hour, minute=sales_minute),
+        },
         "daily-product-report": {
             "task": "app.tasks.send_daily_product_report",
             "schedule": crontab(hour=8, minute=0),

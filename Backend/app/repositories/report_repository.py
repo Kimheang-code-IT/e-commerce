@@ -322,6 +322,79 @@ class ReportRepository:
             "total_invoices": int(result[2])
         }
 
+    def get_daily_sales_lines(self, db: Session, start_date=None, end_date=None):
+        """Paid checkout lines in range (excludes refunded lines), grouped by product + unit price."""
+        query = text("""
+            SELECT
+                ci.product_name,
+                COALESCE(ci.price, 0) AS unit_price,
+                COALESCE(SUM(ci.quantity), 0) AS qty,
+                COALESCE(SUM(ci.total), 0) AS line_total
+            FROM checkout_items ci
+            INNER JOIN invoices i ON i.id = ci.invoice_id
+            WHERE i.status = 'paid'
+              AND (:start_date IS NULL OR i.created_at >= :start_date)
+              AND (:end_date IS NULL OR i.created_at <= :end_date)
+              AND ci.id NOT IN (
+                  SELECT checkout_item_id FROM refund_records
+                  WHERE checkout_item_id IS NOT NULL
+              )
+            GROUP BY ci.product_name, ci.price
+            HAVING COALESCE(SUM(ci.quantity), 0) > 0
+            ORDER BY line_total DESC, ci.product_name ASC, unit_price ASC
+        """)
+        rows = db.execute(query, {"start_date": start_date, "end_date": end_date}).fetchall()
+        return [
+            {
+                "product_name": r[0] or "",
+                "unit_price": float(r[1] or 0),
+                "qty": int(r[2] or 0),
+                "line_total": float(r[3] or 0),
+            }
+            for r in rows
+        ]
+
+    def get_daily_sales_totals(self, db: Session, start_date=None, end_date=None):
+        """Invoice totals for paid invoices with at least one non-refunded line in range."""
+        query = text("""
+            SELECT
+                COALESCE(SUM(inv.subtotal), 0) AS subtotal,
+                COALESCE(SUM(inv.delivery_price), 0) AS delivery_total,
+                COALESCE(SUM(inv.discount), 0) AS discount_total,
+                COALESCE(SUM(inv.total), 0) AS grand_total
+            FROM (
+                SELECT DISTINCT
+                    i.id,
+                    i.subtotal,
+                    i.delivery_price,
+                    i.discount,
+                    i.total
+                FROM invoices i
+                INNER JOIN checkout_items ci ON ci.invoice_id = i.id
+                WHERE i.status = 'paid'
+                  AND (:start_date IS NULL OR i.created_at >= :start_date)
+                  AND (:end_date IS NULL OR i.created_at <= :end_date)
+                  AND ci.id NOT IN (
+                      SELECT checkout_item_id FROM refund_records
+                      WHERE checkout_item_id IS NOT NULL
+                  )
+            ) inv
+        """)
+        row = db.execute(query, {"start_date": start_date, "end_date": end_date}).fetchone()
+        if not row:
+            return {
+                "subtotal": 0.0,
+                "delivery_total": 0.0,
+                "discount_total": 0.0,
+                "grand_total": 0.0,
+            }
+        return {
+            "subtotal": float(row[0] or 0),
+            "delivery_total": float(row[1] or 0),
+            "discount_total": float(row[2] or 0),
+            "grand_total": float(row[3] or 0),
+        }
+
     def get_product_report_rows(self, db: Session):
         # Sold $ = sold_qty × unit price × invoice discount share (proportional to line subtotal).
         # Excludes delivery; uses (subtotal - discount) / subtotal per paid invoice.

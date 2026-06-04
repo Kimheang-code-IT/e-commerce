@@ -623,7 +623,7 @@ function onSave() {
                                 <img
                                     :src="filePreviewSources[field.key]"
                                     alt="Current image"
-                                    class="block w-full h-auto max-w-full object-contain"
+                                    class="block w-full max-h-50 max-w-full object-contain"
                                 />
                                 <div class="absolute inset-x-0 bottom-0 bg-black/25 flex items-end justify-center p-2">
                                     <span class="text-white text-xs font-medium">

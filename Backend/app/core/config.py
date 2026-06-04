@@ -53,8 +53,13 @@ class Settings(BaseSettings):
     TELEGRAM_CHAT_ID: str | None = None
     TELEGRAM_NOTIFY_ENABLED: bool = False
     TELEGRAM_REPORT_ENABLED: bool = False
+    TELEGRAM_DAILY_SALES_SUMMARY_ENABLED: bool = True
     TELEGRAM_BACKUP_ALERT_ENABLED: bool = True
     TELEGRAM_WEBHOOK_SECRET: str | None = None
+    # Cambodia local time (Asia/Phnom_Penh) — Celery Beat uses SCHEDULER_TIMEZONE.
+    DAILY_SALES_SUMMARY_TIME: str = "19:05"
+    DAILY_SALES_WINDOW_START: str = "07:00"
+    DAILY_SALES_WINDOW_END: str = "19:00"
 
     LOW_STOCK_ALERT_ENABLED: bool = True
     LOW_STOCK_THRESHOLD: int = 10
@@ -201,6 +206,15 @@ class Settings(BaseSettings):
     @property
     def telegram_notify_enabled(self) -> bool:
         return self.TELEGRAM_NOTIFY_ENABLED
+
+    @property
+    def telegram_daily_sales_summary_enabled(self) -> bool:
+        return bool(
+            self.TELEGRAM_DAILY_SALES_SUMMARY_ENABLED
+            and self.telegram_notify_enabled
+            and (self.telegram_chat_id or "").strip()
+            and (self.telegram_bot_token or "").strip()
+        )
 
     @property
     def telegram_report_enabled(self) -> bool:

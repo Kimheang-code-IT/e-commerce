@@ -179,6 +179,40 @@ class ReportService:
     TELEGRAM_MAX_MESSAGE_LEN = 4096
     TELEGRAM_SAFE_MESSAGE_LEN = 3500
 
+    def format_daily_sales_summary(
+        self,
+        db: Session,
+        start_date=None,
+        end_date=None,
+        *,
+        date_label: str,
+        time_label: str = "7:00AM-7:00PM",
+    ) -> str:
+        from app.services.alert_service import _escape_telegram_html
+
+        lines = report_repo.get_daily_sales_lines(db, start_date, end_date)
+        totals = report_repo.get_daily_sales_totals(db, start_date, end_date)
+
+        msg = f"📊 <b>Report Today</b> ({_escape_telegram_html(date_label)} : {time_label})\n\n"
+        if not lines:
+            msg += "<i>No sales in this period.</i>\n"
+        else:
+            for row in lines:
+                name = _escape_telegram_html((row.get("product_name") or "").strip() or "—")
+                qty = int(row.get("qty") or 0)
+                unit = float(row.get("unit_price") or 0)
+                line_total = float(row.get("line_total") or 0)
+                msg += f". {name} : {qty} * ${unit:.2f} = ${line_total:.2f}\n"
+
+        msg += (
+            "\n-------------------------------------------\n"
+            f". subtotal : ${float(totals.get('subtotal') or 0):.2f}\n"
+            f". Delivery total : ${float(totals.get('delivery_total') or 0):.2f}\n"
+            f". discount Total : ${float(totals.get('discount_total') or 0):.2f}\n"
+            f". Total Price : ${float(totals.get('grand_total') or 0):.2f}\n"
+        )
+        return msg.rstrip()
+
     def format_summary_price(self, db: Session, start_date=None, end_date=None, label="Today") -> str:
         data = report_repo.get_summary_price(db, start_date, end_date)
         msg = f"💰 <b>Summary Price</b>\n"

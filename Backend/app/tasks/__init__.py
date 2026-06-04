@@ -10,6 +10,7 @@ from app.tasks.checkout_tasks import (
     send_checkout_notification_task,
     send_refund_notification_task,
     send_daily_product_report,
+    send_daily_sales_summary_task,
 )
 
 __all__ = [
@@ -22,4 +23,5 @@ __all__ = [
     "send_checkout_notification_task",
     "send_refund_notification_task",
     "send_daily_product_report",
+    "send_daily_sales_summary_task",
 ]

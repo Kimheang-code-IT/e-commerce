@@ -173,6 +173,52 @@ def scheduled_google_backup_task() -> dict:
         db.close()
 
 
+@celery_app.task(name="app.tasks.send_daily_sales_summary_task", base=IdempotentTask)
+def send_daily_sales_summary_task() -> dict:
+    from app.core.scheduler_lock import try_acquire_scheduler_lock
+    from app.utils.timezone import cambodia_today_sales_window, format_cambodia_report_date_label
+
+    if not settings.telegram_daily_sales_summary_enabled:
+        return {"status": "skipped", "reason": "telegram_daily_sales_disabled"}
+
+    if not try_acquire_scheduler_lock("daily_sales_summary", ttl_seconds=3600):
+        return {"status": "skipped", "reason": "lock_held"}
+
+    def _parse_hhmm(value: str, default_h: int, default_m: int) -> tuple[int, int]:
+        try:
+            h, m = map(int, (value or "").split(":"))
+            return h, m
+        except (TypeError, ValueError):
+            return default_h, default_m
+
+    sh, sm = _parse_hhmm(settings.DAILY_SALES_WINDOW_START, 7, 0)
+    eh, em = _parse_hhmm(settings.DAILY_SALES_WINDOW_END, 19, 0)
+    start, end, now = cambodia_today_sales_window(
+        start_hour=sh, start_minute=sm, end_hour=eh, end_minute=em
+    )
+    date_label = format_cambodia_report_date_label(now)
+
+    def _ampm(hour: int, minute: int) -> str:
+        h12 = hour % 12 or 12
+        suffix = "AM" if hour < 12 else "PM"
+        return f"{h12}:{minute:02d}{suffix}"
+
+    time_label = f"{_ampm(sh, sm)}-{_ampm(eh, em)}"
+
+    db = SessionLocal()
+    try:
+        msg = report_service.format_daily_sales_summary(
+            db, start, end, date_label=date_label, time_label=time_label
+        )
+        asyncio.run(telegram_service.send_message(settings.telegram_chat_id, msg))
+        return {"status": "ok", "window_start": start.isoformat(), "window_end": end.isoformat()}
+    except Exception as exc:
+        logger.exception("Daily sales summary task failed: %s", exc)
+        return {"status": "error", "error": str(exc)}
+    finally:
+        db.close()
+
+
 @celery_app.task(name="app.tasks.send_daily_product_report", base=IdempotentTask)
 def send_daily_product_report() -> dict:
     if not settings.telegram_report_enabled or not settings.telegram_chat_id:
