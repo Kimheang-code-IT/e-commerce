@@ -54,7 +54,7 @@ function onProductImageError(event: Event) {
 
 <template>
     <div class="flex flex-col h-full bg-background overflow-hidden text-foreground tracking-tight">
-        <LayoutAppHeader :title="$t('pages.dataEntry.title')" show-datepicker>
+        <LayoutAppHeader :title="$t('pages.product.title')" show-datepicker>
             <template #right>
                 <UButton v-if="canExport" icon="i-lucide-download" color="neutral" variant="subtle"
                     class="font-normal shadow-sm shrink-0" @click="isExportOpen = true">
@@ -62,13 +62,13 @@ function onProductImageError(event: Event) {
                 </UButton>
                 <UButton v-if="canCreate" icon="i-lucide-circle-plus" color="primary" variant="solid"
                     class="font-normal shadow-sm shrink-0" @click="handleAddNew">
-                    <span class="hidden sm:inline">{{ $t('pages.dataEntry.addBtn') }}</span>
+                    <span class="hidden sm:inline">{{ $t('pages.product.addBtn') }}</span>
                 </UButton>
             </template>
         </LayoutAppHeader>
 
         <div class="flex-1 p-2 overflow-hidden">
-            <TableApptable :title="$t('pages.dataEntry.tableTitle')" v-model:row-selection="rowSelection"
+            <TableApptable :title="$t('pages.product.tableTitle')" v-model:row-selection="rowSelection"
                 v-model:sorting="sorting"
                 v-model:column-visibility="columnVisibility" v-model:pagination="pagination"
                 v-model:column-filters="columnFilters" v-model:filter-value="selectedCategories"
@@ -175,9 +175,14 @@ function onProductImageError(event: Event) {
             </TableApptable>
         </div>
 
-        <CommonAppSlideoverForm v-model:open="isFormOpen" :data="selectedEntry || undefined" :fields="entryFormFields"
-            :title="selectedEntry ? $t('pages.dataEntry.formTitleEdit') : $t('pages.dataEntry.formTitleNew')"
-            :submit-label="selectedEntry ? $t('actions.save') : $t('actions.add')" @submit="onSubmitProduct" />
+        <CommonAppSlideoverForm
+            v-model:open="isFormOpen"
+            :data="selectedEntry || undefined"
+            :fields="entryFormFields"
+            :title-key="selectedEntry ? 'pages.product.formTitleEdit' : 'pages.product.formTitleNew'"
+            :submit-label-key="selectedEntry ? 'actions.save' : 'actions.add'"
+            @submit="onSubmitProduct"
+        />
         <CommonAppModalCURD v-model:open="isConfirmOpen" v-bind="confirmConfig" @submit="finalizeAction" />
         <CommonAppStockAdjustModal
             v-model:open="isStockAdjustOpen"

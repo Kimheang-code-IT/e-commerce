@@ -131,7 +131,23 @@
             "title": "Supplier"
         },
         "product": {
-            "title": "Product"
+            "title": "Product",
+            "tableTitle": "Products",
+            "addBtn": "Add Product",
+            "formTitleNew": "Add Product",
+            "formTitleEdit": "Edit Product",
+            "confirmNewTitle": "Confirm Add Product",
+            "confirmEditTitle": "Confirm Edit Product",
+            "confirmDeleteTitle": "Delete Product",
+            "confirmNewDesc": "You are creating product \"{name}\".\nPlease verify all fields before submit.\nClick confirm to add this product.",
+            "confirmEditDesc": "You updated product #{id}.\nPlease verify stock, prices, and category.\nClick save to apply changes.",
+            "confirmDeleteDesc": "You are about to delete product #{id}.\nThis will remove the product from your catalog.\nThis action is permanent and cannot be undone.",
+            "toastAdded": "Product Added",
+            "toastAddedDesc": "New product added successfully.",
+            "toastUpdated": "Product Updated",
+            "toastUpdatedDesc": "Product #{id} updated.",
+            "toastDeleted": "Product Deleted",
+            "toastDeletedDesc": "Product #{id} has been removed."
         },
         "pos": {
             "title": "POS System",

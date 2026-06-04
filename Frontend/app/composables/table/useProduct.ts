@@ -246,24 +246,29 @@ export function useProduct() {
   const confirmConfig = computed(() => {
     if (confirmMode.value === "delete") {
       return {
-        title: t("actions.delete"),
-        description: `You are about to delete product #${selectedEntry.value?.id}.\nThis will remove the product from your catalog.\nThis action is permanent and cannot be undone.`,
+        title: t("pages.product.confirmDeleteTitle"),
+        description: t("pages.product.confirmDeleteDesc", {
+          id: selectedEntry.value?.id ?? "",
+        }),
         type: "error" as const,
         submitLabel: t("actions.delete"),
         icon: "i-lucide-trash-2",
       };
     }
+    const isEdit = Boolean(selectedEntry.value);
     return {
-      title: selectedEntry.value
-        ? t("pages.dataEntry.formTitleEdit")
-        : t("pages.dataEntry.formTitleNew"),
-      description: selectedEntry.value
-        ? `You updated product #${pendingEntry.value?.id}.\nPlease verify stock, prices, and category.\nClick save to apply changes.`
-        : `You are creating product "${pendingEntry.value?.name}".\nPlease verify all fields before submit.\nClick confirm to add this product.`,
+      title: isEdit
+        ? t("pages.product.confirmEditTitle")
+        : t("pages.product.confirmNewTitle"),
+      description: isEdit
+        ? t("pages.product.confirmEditDesc", {
+            id: pendingEntry.value?.id ?? "",
+          })
+        : t("pages.product.confirmNewDesc", {
+            name: pendingEntry.value?.name ?? "",
+          }),
       type: "primary" as const,
-      submitLabel: selectedEntry.value
-        ? t("actions.save")
-        : t("actions.confirm"),
+      submitLabel: isEdit ? t("actions.save") : t("actions.confirm"),
       icon: "i-lucide-check-circle",
     };
   });
@@ -542,8 +547,10 @@ export function useProduct() {
       );
       await resource.refresh();
       toast.add({
-        title: "Product Deleted",
-        description: `Product #${selectedEntry.value.id} has been removed.`,
+        title: t("pages.product.toastDeleted"),
+        description: t("pages.product.toastDeletedDesc", {
+          id: selectedEntry.value.id,
+        }),
         color: "error",
       });
     } else if (confirmMode.value === "save" && pendingEntry.value) {
@@ -556,8 +563,8 @@ export function useProduct() {
         await mutation.run(() => productApi.create(payload), "products-view");
         await resource.refresh();
         toast.add({
-          title: "Product Added",
-          description: `New product added successfully.`,
+          title: t("pages.product.toastAdded"),
+          description: t("pages.product.toastAddedDesc"),
           color: "primary",
         });
       } else {
@@ -567,8 +574,10 @@ export function useProduct() {
         );
         await resource.refresh();
         toast.add({
-          title: "Product Updated",
-          description: `Product #${pendingEntry.value.id} updated.`,
+          title: t("pages.product.toastUpdated"),
+          description: t("pages.product.toastUpdatedDesc", {
+            id: pendingEntry.value.id,
+          }),
           color: "primary",
         });
       }

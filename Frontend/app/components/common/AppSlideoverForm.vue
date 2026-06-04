@@ -8,10 +8,24 @@ type FormRecord = Record<string, any>
 
 const props = defineProps<{
     data?: FormRecord
+    /** Pre-translated title (optional if titleKey is set). */
     title?: string
+    /** i18n key — preferred; updates when locale changes. */
+    titleKey?: string
     submitLabel?: string
+    submitLabelKey?: string
     fields?: FormField[]
 }>()
+
+const resolvedTitle = computed(() => {
+    if (props.titleKey) return t(props.titleKey)
+    return props.title || t('components.processData')
+})
+
+const resolvedSubmitLabel = computed(() => {
+    if (props.submitLabelKey) return t(props.submitLabelKey)
+    return props.submitLabel || t('components.saveChanges')
+})
 
 const emit = defineEmits<{
     (e: 'submit', data: FormRecord): void
@@ -441,12 +455,12 @@ function onSave() {
 </script>
 
 <template>
-    <USlideover v-model:open="open" :title="title || $t('components.processData')" :dismissible="false"
+    <USlideover v-model:open="open" :title="resolvedTitle" :dismissible="false"
         class="max-w-md">
         <template #header>
             <div class="flex items-center justify-between w-full px-1">
                 <h3 class="font-semibold text-highlighted">
-                    {{ title || $t('components.processData') }}
+                    {{ resolvedTitle }}
                 </h3>
                 <UButton icon="i-lucide-x" color="neutral" variant="ghost" size="sm" @click="open = false" />
             </div>
@@ -573,7 +587,7 @@ function onSave() {
         <template #footer>
             <div class="flex items-center justify-end gap-3 w-full px-1">
                 <UButton :label="$t('components.cancel')" color="neutral" variant="soft" @click="open = false" />
-                <UButton :label="submitLabel || $t('components.saveChanges')" color="primary" variant="solid"
+                <UButton :label="resolvedSubmitLabel" color="primary" variant="solid"
                     class="font-semibold shadow-sm px-6" @click="onSave" />
             </div>
         </template>

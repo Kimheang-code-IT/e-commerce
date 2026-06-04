@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+
+const { t } = useI18n()
 const open = defineModel<boolean>('open')
 
 interface Props {
@@ -47,10 +49,10 @@ const modalUi = {
   header: 'border-none p-0'
 } as const
 
-const resolvedTitle = computed(() => props.title || $t('components.confirmAction'))
-const resolvedDescription = computed(() => props.description || $t('components.confirmDesc'))
-const resolvedCancelLabel = computed(() => props.cancelLabel || $t('components.cancel'))
-const resolvedSubmitLabel = computed(() => props.submitLabel || $t('components.proceed'))
+const resolvedTitle = computed(() => props.title || t('components.confirmAction'))
+const resolvedDescription = computed(() => props.description || t('components.confirmDesc'))
+const resolvedCancelLabel = computed(() => props.cancelLabel || t('components.cancel'))
+const resolvedSubmitLabel = computed(() => props.submitLabel || t('components.proceed'))
 
 function onCancel() {
   if (props.loading) return
@@ -78,7 +80,7 @@ function onSubmit() {
     </template>
 
     <template #body>
-      <div class="px-3">
+      <div class="px-3 -pt-4">
         <!-- Message -->
         <p class="text-sm text-muted-foreground font-medium leading-relaxed ">
           {{ resolvedDescription }}

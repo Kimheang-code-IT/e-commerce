@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { usePos } from '~/composables/table/usePos'
 import { useInvoicePrinter } from '~/composables/useInvoicePrinter'
-import { formatDate } from '~/utils/format/date'
 import { formatCurrency } from '~/utils/format/currency'
 
 const { t } = useI18n()
@@ -249,8 +248,10 @@ const previewCart = computed(() => {
                         </div>
 
                         <!-- ── GRID View ── -->
-                        <div v-else-if="viewMode === 'grid'" class="grid gap-3"
-                            style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr))">
+                        <div
+                            v-else-if="viewMode === 'grid'"
+                            class="grid grid-cols-2 gap-3 sm:grid-cols-[repeat(auto-fill,minmax(200px,1fr))]"
+                        >
 
                             <CommonAppPosProductCard v-for="product in filteredProducts" :key="product.id"
                                 :product="product" :in-cart="isInCart(product.id)" :cart-qty="getCartQty(product.id)"
