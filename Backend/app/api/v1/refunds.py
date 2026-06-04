@@ -135,35 +135,64 @@ def search_refund_invoices(
     return list_response(result, len(result))
 
 
-def _resolve_checkout_item(db: Session, item) -> CheckoutItem | None:
+def _resolve_checkout_items(db: Session, item) -> list[CheckoutItem]:
+    """Report rows use invoice id; legacy rows use checkout_item id."""
+    invoice = db.execute(
+        select(Invoice).where(Invoice.invoice_no == item.invoiceNo).limit(1)
+    ).scalar_one_or_none()
+    if not invoice:
+        return []
+
+    refunded_ids = _refunded_checkout_item_ids_subquery()
+    if int(item.id or 0) == int(invoice.id):
+        return list(
+            db.scalars(
+                select(CheckoutItem)
+                .where(
+                    CheckoutItem.invoice_id == invoice.id,
+                    ~CheckoutItem.id.in_(refunded_ids),
+                )
+                .order_by(CheckoutItem.id.asc())
+            ).all()
+        )
+
     checkout_item_id = int(item.id or 0)
     if checkout_item_id > 0:
         row = db.execute(
             select(CheckoutItem)
-            .join(Invoice, CheckoutItem.invoice_id == Invoice.id)
             .where(
                 CheckoutItem.id == checkout_item_id,
-                Invoice.invoice_no == item.invoiceNo,
+                CheckoutItem.invoice_id == invoice.id,
             )
             .limit(1)
         ).scalar_one_or_none()
-        if row:
-            return row
+        if not row:
+            return []
+        already = db.execute(
+            select(RefundRecord.id).where(RefundRecord.checkout_item_id == row.id).limit(1)
+        ).scalar_one_or_none()
+        return [] if already else [row]
 
     q = (
         select(CheckoutItem)
-        .join(Invoice, CheckoutItem.invoice_id == Invoice.id)
         .where(
-            Invoice.invoice_no == item.invoiceNo,
+            CheckoutItem.invoice_id == invoice.id,
             CheckoutItem.product_name == item.product,
             CheckoutItem.total == float(item.amount),
+            ~CheckoutItem.id.in_(refunded_ids),
         )
         .order_by(CheckoutItem.id.asc())
     )
     product_id = int(item.productId or 0)
     if product_id > 0:
         q = q.where(CheckoutItem.product_id == product_id)
-    return db.execute(q.limit(1)).scalar_one_or_none()
+    one = db.execute(q.limit(1)).scalar_one_or_none()
+    return [one] if one else []
+
+
+def _resolve_checkout_item(db: Session, item) -> CheckoutItem | None:
+    rows = _resolve_checkout_items(db, item)
+    return rows[0] if rows else None
 
 
 def _return_refund_stock(db: Session, *, checkout_item: CheckoutItem | None, item) -> tuple[int | None, int, int | None]:
@@ -201,44 +230,52 @@ def create_refunds(
     created: list[RefundRecord] = []
     skipped = 0
     for item in payload.records:
-        checkout_item = _resolve_checkout_item(db, item)
-        duplicate_q = select(RefundRecord)
-        if checkout_item:
-            duplicate_q = duplicate_q.where(RefundRecord.checkout_item_id == checkout_item.id)
-        else:
-            duplicate_q = duplicate_q.where(
-                RefundRecord.invoice_no == item.invoiceNo,
-                RefundRecord.product == item.product,
-                RefundRecord.sale_date == item.date,
-                RefundRecord.amount == float(item.amount),
+        checkout_items = _resolve_checkout_items(db, item)
+        if not checkout_items:
+            skipped += 1
+            continue
+
+        for checkout_item in checkout_items:
+            duplicate = db.execute(
+                select(RefundRecord.id).where(RefundRecord.checkout_item_id == checkout_item.id).limit(1)
+            ).scalar_one_or_none()
+            if duplicate:
+                skipped += 1
+                continue
+
+            line_item = item.model_copy(
+                update={
+                    "product": checkout_item.product_name,
+                    "productId": checkout_item.product_id,
+                    "qty": int(checkout_item.quantity or 0),
+                    "price": float(checkout_item.price or 0),
+                    "amount": float(checkout_item.total or 0),
+                }
             )
-        duplicate = db.execute(duplicate_q).scalar_one_or_none()
-        if duplicate:
-            skipped += 1
-            continue
+            product_id, returned_qty, checkout_item_id = _return_refund_stock(
+                db, checkout_item=checkout_item, item=line_item
+            )
+            if returned_qty <= 0 and int(checkout_item.product_id or 0) > 0:
+                skipped += 1
+                continue
 
-        product_id, returned_qty, checkout_item_id = _return_refund_stock(db, checkout_item=checkout_item, item=item)
-        if checkout_item and returned_qty <= 0 and int(checkout_item.product_id or 0) > 0:
-            skipped += 1
-            continue
-
-        row = RefundRecord(
-            invoice_no=item.invoiceNo,
-            sale_date=item.date,
-            customer=item.customer,
-            product=item.product,
-            seller=item.seller,
-            source=item.source,
-            address=item.address,
-            amount=float(item.amount),
-            checkout_item_id=checkout_item_id,
-            product_id=product_id,
-            qty=returned_qty,
-            refund_reason=(item.refundReason or "").strip(),
-            created_by=current_user.id,
-        )
-        db.add(row)
-        created.append(row)
+            row = RefundRecord(
+                invoice_no=item.invoiceNo,
+                sale_date=item.date,
+                customer=item.customer,
+                product=checkout_item.product_name,
+                seller=item.seller,
+                source=item.source,
+                address=item.address,
+                amount=float(checkout_item.total or 0),
+                checkout_item_id=checkout_item_id,
+                product_id=product_id,
+                qty=returned_qty,
+                refund_reason=(item.refundReason or "").strip(),
+                created_by=current_user.id,
+            )
+            db.add(row)
+            created.append(row)
 
     if not created:
         if skipped >= len(payload.records):

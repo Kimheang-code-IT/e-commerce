@@ -80,13 +80,12 @@ export function useReport(handlers?: ReportRowActionHandlers) {
 
   const reportSummary = computed(() => {
     const rows = filteredReportRows.value
-    const invoiceCount = new Set(rows.map((row) => row.invoiceNo)).size
-    const productCount = rows.length
+    const invoiceCount = rows.length
     const amountSum = rows.reduce((sum, row) => sum + Number(row.amount || 0), 0)
 
     return {
       invoiceCount,
-      productCount,
+      productCount: invoiceCount,
       amountSum
     }
   })
