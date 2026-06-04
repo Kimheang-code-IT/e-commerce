@@ -116,18 +116,6 @@ const displayRows = computed(() => buildInvoiceDisplayRows(props.cart ?? []))
                   <td class="px-2 sm:px-3 py-2 border-[0.5px] border-slate-200">
                     <p class="font-bold text-slate-800 wrap-break-word leading-snug">
                       {{ row.item.product.name }}
-                      <span
-                        v-if="row.showPriceRef"
-                        class="text-primary font-semibold text-[11px] ml-1"
-                      >
-                        ({{ t('pages.pos.invoice.lineRef', { ref: row.priceRef }) }})
-                      </span>
-                    </p>
-                    <p
-                      v-if="row.showPriceRef"
-                      class="text-[10px] text-slate-500 mt-0.5 tabular-nums"
-                    >
-                      {{ t('pages.pos.invoice.unitAt', { price: formatCurrency(row.unitPrice, 'USD') }) }}
                     </p>
                     <p
                       v-if="row.editedPrice"
