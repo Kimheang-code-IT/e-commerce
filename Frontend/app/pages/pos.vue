@@ -150,8 +150,6 @@ const previewCart = computed(() => {
     }
     return cart.value
 })
-
-const isPosSearchExpanded = ref(false)
 </script>
 
 <template>
@@ -159,29 +157,16 @@ const isPosSearchExpanded = ref(false)
         <!-- ── Header ── -->
         <LayoutAppHeader hide-sidebar-toggle title="">
             <template #leading>
-                <UButton
-                    to="/"
-                    color="primary"
-                    variant="solid"
-                    size="sm"
-                    icon="i-lucide-layout-dashboard"
-                    :aria-label="t('navigation.dashboard')"
-                    class="shrink-0"
-                >
+                <UButton to="/" color="primary" variant="solid" size="sm" icon="i-lucide-layout-dashboard"
+                    :aria-label="t('navigation.dashboard')" class="shrink-0">
                     {{ t('navigation.dashboard') }}
                 </UButton>
             </template>
             <template #right>
                 <div class="flex items-center gap-2">
                     <template v-if="isInvoicePreviewMode">
-                        <UButton
-                            icon="i-lucide-printer"
-                            color="primary"
-                            variant="solid"
-                            size="sm"
-                            class="shrink-0"
-                            @click="printInvoice"
-                        >
+                        <UButton icon="i-lucide-printer" color="primary" variant="solid" size="sm" class="shrink-0"
+                            @click="printInvoice">
                             <span class="hidden sm:inline">{{ t('pages.pos.preview.print') }}</span>
                         </UButton>
                     </template>
@@ -193,40 +178,38 @@ const isPosSearchExpanded = ref(false)
                 </div>
             </template>
         </LayoutAppHeader>
-        <div v-if="!isInvoicePreviewMode" class="lg:hidden px-1.5 pt-1">
+        <div v-if="!isInvoicePreviewMode" class="lg:hidden px-2 pt-2">
             <UTabs v-model="mobilePanel" :items="mobilePanelItems" :content="false" color="primary" class="w-full" />
         </div>
 
         <!-- ── Body: Split Layout ── -->
         <div class="flex flex-col lg:flex-row flex-1 overflow-hidden min-h-0">
-            <div
-                :class="[
-                    isInvoicePreviewMode ? 'flex' : (mobilePanel === 'left' ? 'flex' : 'hidden'),
-                    isInvoicePreviewMode ? 'lg:flex w-full' : 'lg:flex w-full lg:w-[65%]',
-                    'min-w-0 overflow-hidden',
-                    !isInvoicePreviewMode ? 'lg:border-r border-default' : '',
-                ]">
+            <div :class="[
+                isInvoicePreviewMode ? 'flex' : (mobilePanel === 'left' ? 'flex' : 'hidden'),
+                isInvoicePreviewMode ? 'lg:flex w-full' : 'lg:flex w-full lg:w-[65%]',
+                'min-w-0 overflow-hidden',
+                !isInvoicePreviewMode ? 'lg:border-r border-default' : '',
+            ]">
                 <!-- ══ LEFT: Content Panel ══ -->
                 <div v-if="currentStep === 0" class="w-full flex flex-col min-w-0 overflow-hidden">
 
                     <!-- Toolbar -->
                     <div
-                        class="flex flex-nowrap items-center gap-1 px-1.5 py-1.5 sm:px-3 sm:py-3 border-b border-default shrink-0 bg-background/80 backdrop-blur-sm overflow-hidden">
-                        <div class="min-w-0 flex-1 overflow-x-auto overscroll-x-contain">
+                        class="flex flex-wrap items-center gap-2 px-3 py-3 border-b border-default shrink-0 bg-background/80 backdrop-blur-sm">
+                        <!-- Category Pills -->
+                        <div class="min-w-0 flex-1 overflow-x-auto">
                             <UTabs v-model="selectedCategoryId" :items="categoryTabs" size="xs" color="primary"
                                 :content="false" class="w-max min-w-full" />
                         </div>
-                        <div class="shrink-0 flex items-center">
-                            <CommonAppSearch
-                                v-model="searchQuery"
-                                v-model:expanded="isPosSearchExpanded"
-                                :placeholder="t('common.search')"
-                            />
+
+                        <div class="flex items-center gap-2 ml-auto">
+                            <!-- Search -->
+                            <CommonAppSearch v-model="searchQuery" :placeholder="t('common.search')" class="w-52" />
                         </div>
                     </div>
 
                     <!-- Product Area — scrollable -->
-                    <div class="flex-1 overflow-y-auto p-1.5 sm:p-3 max-sm:pb-8 relative">
+                    <div class="flex-1 overflow-y-auto p-3 relative">
 
                         <!-- Empty State -->
                         <div v-if="!isLoadingProducts && filteredProducts.length === 0"
@@ -236,10 +219,8 @@ const isPosSearchExpanded = ref(false)
                         </div>
 
                         <!-- ── GRID View ── -->
-                        <div
-                            v-else-if="viewMode === 'grid'"
-                            class="grid grid-cols-2 gap-1.5 sm:gap-3 sm:grid-cols-[repeat(auto-fill,minmax(200px,1fr))]"
-                        >
+                        <div v-else-if="viewMode === 'grid'" class="grid gap-3"
+                            style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr))">
 
                             <CommonAppPosProductCard v-for="product in filteredProducts" :key="product.id"
                                 :product="product" :in-cart="isInCart(product.id)" :cart-qty="getCartQty(product.id)"
@@ -263,7 +244,7 @@ const isPosSearchExpanded = ref(false)
                     v-model:seller-id="sellerId" />
 
                 <!-- ══ LEFT: Invoice/Checkout Panel ══ -->
-                <div v-else class="w-full min-h-0 flex flex-col bg-muted/30 px-2 py-1 sm:px-6 overflow-y-auto">
+                <div v-else class="w-full min-h-0 flex flex-col bg-muted/30 px-6 py-1 overflow-y-auto">
                     <div ref="invoicePrintRef" class="invoice-print-target">
                         <!-- Bulk Preview (Multiple separate invoices) -->
                         <template v-if="groupedReportInvoices.length > 0 && selectedReportInvoiceLines.length === 0">
@@ -284,47 +265,35 @@ const isPosSearchExpanded = ref(false)
                             :customer-name="selectedReportInvoice?.customer || customerName"
                             :customer-phone="selectedReportInvoice?.phoneCustomer || customerPhone"
                             :delivery-type="selectedReportInvoice?.deliveryType || deliveryType"
-                            :delivery-price="selectedReportInvoice?.deliveryPrice || deliveryPrice" :selected-report-invoice="selectedReportInvoice"
-                            :checkout-invoice-no="checkoutInvoiceNo" :display-subtotal="displaySubtotal"
-                            :display-discount="displayDiscount" :display-total="displayTotal" />
+                            :delivery-price="selectedReportInvoice?.deliveryPrice || deliveryPrice"
+                            :selected-report-invoice="selectedReportInvoice" :checkout-invoice-no="checkoutInvoiceNo"
+                            :display-subtotal="displaySubtotal" :display-discount="displayDiscount"
+                            :display-total="displayTotal" />
                     </div>
                 </div>
             </div>
 
-            <div
-                v-if="!isInvoicePreviewMode"
-                :class="[
-                    mobilePanel === 'right' ? 'flex' : 'hidden',
-                    'lg:flex w-full lg:w-[35%] min-h-0 h-full flex-col',
-                    'max-sm:shrink-0',
-                ]">
+            <div v-if="!isInvoicePreviewMode"
+                :class="[mobilePanel === 'right' ? 'flex' : 'hidden', 'lg:flex w-full lg:w-[35%] min-h-0 h-full flex-col']">
                 <CommonAppPosCartPanel :cart="cart" :item-count="itemCount" :subtotal="subtotal"
                     v-model:discount-mode="discountMode" v-model:discount-input="discountInput"
-                    :discount-amount="discountAmount" :total="total"
-                    :current-step="currentStep" :total-steps="items.length"
-                    :allow-finish-without-cart="hasReportPreviewInvoices" :can-checkout="canCheckout"
-                    @clear-cart="clearCart"
-                    @update-qty="updateQty" @remove-item="removeFromCart"
-                    @set-line-price="setLineUnitPrice" @reset-line-price="resetLineUnitPrice"
-                    @next="requestFinish" />
+                    :discount-amount="discountAmount" :total="total" :current-step="currentStep"
+                    :total-steps="items.length" :allow-finish-without-cart="hasReportPreviewInvoices"
+                    :can-checkout="canCheckout" @clear-cart="clearCart" @update-qty="updateQty"
+                    @remove-item="removeFromCart" @set-line-price="setLineUnitPrice"
+                    @reset-line-price="resetLineUnitPrice" @next="requestFinish" />
             </div>
         </div>
 
-        <CommonAppModalCURD
-            v-if="!isInvoicePreviewMode"
-            v-model:open="isCheckoutConfirmOpen"
-            :title="t('pages.pos.checkoutConfirm.title')"
-            :description="t('pages.pos.checkoutConfirm.description')"
-            :submit-label="t('pages.pos.checkoutConfirm.submit')"
-            :cancel-label="t('components.cancel')"
-            type="warning"
-            @submit="confirmCheckoutAndContinue"
-            @cancel="closeCheckoutConfirm"
-        >
+        <CommonAppModalCURD v-if="!isInvoicePreviewMode" v-model:open="isCheckoutConfirmOpen"
+            :title="t('pages.pos.checkoutConfirm.title')" :description="t('pages.pos.checkoutConfirm.description')"
+            :submit-label="t('pages.pos.checkoutConfirm.submit')" :cancel-label="t('components.cancel')" type="warning"
+            @submit="confirmCheckoutAndContinue" @cancel="closeCheckoutConfirm">
             <div class="rounded-lg border border-default bg-muted/30 p-3 text-sm space-y-2">
                 <div class="flex justify-between gap-2">
                     <span class="text-muted-foreground">{{ t('pages.pos.checkoutConfirm.customer') }}</span>
-                    <span class="font-medium text-foreground text-right">{{ checkoutConfirmSummary.customerName }}</span>
+                    <span class="font-medium text-foreground text-right">{{ checkoutConfirmSummary.customerName
+                        }}</span>
                 </div>
                 <div class="flex justify-between gap-2">
                     <span class="text-muted-foreground">{{ t('pages.pos.checkoutConfirm.phone') }}</span>
@@ -332,7 +301,8 @@ const isPosSearchExpanded = ref(false)
                 </div>
                 <div class="flex justify-between gap-2">
                     <span class="text-muted-foreground">{{ t('pages.pos.checkoutConfirm.address') }}</span>
-                    <span class="font-medium text-foreground text-right">{{ checkoutConfirmSummary.customerAddress }}</span>
+                    <span class="font-medium text-foreground text-right">{{ checkoutConfirmSummary.customerAddress
+                        }}</span>
                 </div>
                 <div class="flex justify-between gap-2">
                     <span class="text-muted-foreground">{{ t('pages.pos.checkoutConfirm.delivery') }}</span>
@@ -360,22 +330,15 @@ const isPosSearchExpanded = ref(false)
                 </div>
                 <div class="flex justify-between gap-2 text-base">
                     <span class="font-semibold text-foreground">{{ t('pages.pos.checkoutConfirm.total') }}</span>
-                    <span class="font-bold text-primary">{{ formatCurrency(checkoutConfirmSummary.total, 'USD') }}</span>
+                    <span class="font-bold text-primary">{{ formatCurrency(checkoutConfirmSummary.total, 'USD')
+                        }}</span>
                 </div>
             </div>
         </CommonAppModalCURD>
 
-        <CommonAppModalCURD
-            v-if="!isInvoicePreviewMode"
-            v-model:open="isFinishDialogOpen"
-            :title="t('pages.pos.printConfirm.title')"
-            :description="t('pages.pos.printConfirm.description')"
-            :submit-label="t('pages.pos.printConfirm.print')"
-            :cancel-label="t('pages.pos.printConfirm.skip')"
-            type="primary"
-            :loading="isFinishing"
-            @submit="handleFinishWithPrint"
-            @cancel="finishWithoutPrint"
-        />
+        <CommonAppModalCURD v-if="!isInvoicePreviewMode" v-model:open="isFinishDialogOpen"
+            :title="t('pages.pos.printConfirm.title')" :description="t('pages.pos.printConfirm.description')"
+            :submit-label="t('pages.pos.printConfirm.print')" :cancel-label="t('pages.pos.printConfirm.skip')"
+            type="primary" :loading="isFinishing" @submit="handleFinishWithPrint" @cancel="finishWithoutPrint" />
     </div>
 </template>

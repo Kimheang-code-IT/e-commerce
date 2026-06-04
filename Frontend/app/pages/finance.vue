@@ -45,7 +45,7 @@ async function fetchFinanceExportData(args: { startDate?: string; endDate?: stri
       </template>
     </LayoutAppHeader>
 
-    <div class="flex-1 p-1 sm:p-2 overflow-hidden">
+    <div class="flex-1 p-2 overflow-hidden">
       <TableApptable
         :title="t('pages.finance.tableTitle')"
         :data="data"

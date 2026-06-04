@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { formatCurrency } from '~/utils/format/currency'
-import { formatDateOnly } from '~/utils/format/date'
+import { formatDate } from '~/utils/format/date'
 import {
   buildInvoiceDisplayRows,
   type PosCartItem,
@@ -42,11 +42,13 @@ const displayRows = computed(() => buildInvoiceDisplayRows(props.cart ?? []))
 <template>
   <div class="h-full min-h-0 overflow-y-auto">
     <div class="w-[153.846%] sm:w-full origin-top-left scale-[0.65] sm:scale-100">
-      <UCard :ui="{ body: 'p-0 sm:p-0' }" class="max-w-2xl mx-auto w-full text-slate-900 rounded-none border-0 ring-0 shadow-none">
+      <UCard :ui="{ body: 'p-0 sm:p-0' }"
+        class="max-w-2xl mx-auto w-full text-slate-900 rounded-none border-0 ring-0 shadow-none">
         <div class="px-6 pb-4 flex flex-col gap-5 bg-white">
           <div class="flex justify-between items-start">
             <div class="flex items-center gap-3 mt-2">
-              <img :src="logo" alt="PDME-Revenue logo" class="w-36 h-20 shrink-0 object-contain" loading="eager" decoding="sync">
+              <img :src="logo" alt="PDME-Revenue logo" class="w-36 h-20 shrink-0 object-contain" loading="eager"
+                decoding="sync">
             </div>
             <h1 class="text-2xl font-black text-slate-800 uppercase italic mr-10 mt-8">
               {{ t('pages.pos.invoice.title') }}
@@ -56,13 +58,16 @@ const displayRows = computed(() => buildInvoiceDisplayRows(props.cart ?? []))
           <div class="grid grid-cols-2 gap-2 text-sm">
             <div class="space-y-1">
               <div class="flex justify-between border-b border-slate-100 pb-1">
-                <span class="text-slate-500 font-bold uppercase text-[10px]">{{ t('pages.pos.invoice.section.invoiceInfo') }}</span>
+                <span class="text-slate-500 font-bold uppercase text-[10px]">{{
+                  t('pages.pos.invoice.section.invoiceInfo') }}</span>
               </div>
               <div class="grid grid-cols-[110px_1fr] gap-2 pt-2">
                 <span class="text-slate-600 font-medium">{{ t('pages.pos.invoice.fields.invoiceNo') }}:</span>
-                <span class="font-medium text-slate-900">{{ selectedReportInvoice?.invoiceNo || checkoutInvoiceNo || '-' }}</span>
+                <span class="font-medium text-slate-900">{{ selectedReportInvoice?.invoiceNo || checkoutInvoiceNo || '-'
+                  }}</span>
                 <span class="text-slate-600 font-medium">{{ t('pages.pos.invoice.fields.date') }}:</span>
-                <span class="font-medium text-slate-900">{{ formatDateOnly(selectedReportInvoice?.date || new Date()) }}</span>
+                <span class="font-medium text-slate-900">{{ formatDate(selectedReportInvoice?.date || new Date())
+                  }}</span>
                 <span class="text-slate-600 font-medium">{{ t('pages.pos.invoice.fields.deliveryPrice') }}:</span>
                 <span class="font-medium text-slate-900">{{ formatCurrency(deliveryPrice || 0, 'USD') }}</span>
               </div>
@@ -70,15 +75,18 @@ const displayRows = computed(() => buildInvoiceDisplayRows(props.cart ?? []))
 
             <div class="space-y-1 -mr-12">
               <div class="flex justify-between border-b border-slate-100 pb-1">
-                <span class="text-slate-500 font-bold uppercase text-[10px]">{{ t('pages.pos.invoice.section.customer') }}</span>
+                <span class="text-slate-500 font-bold uppercase text-[10px]">{{ t('pages.pos.invoice.section.customer')
+                  }}</span>
               </div>
               <div class="grid grid-cols-[110px_1fr] gap-2 pt-2">
                 <span class="text-slate-600 font-medium">{{ t('pages.pos.invoice.fields.name') }}:</span>
-                <span class="font-medium text-slate-900">{{ selectedReportInvoice?.customer || customerName || 'N/A' }}</span>
+                <span class="font-medium text-slate-900">{{ selectedReportInvoice?.customer || customerName || 'N/A'
+                  }}</span>
                 <span class="text-slate-600 font-medium">{{ t('pages.pos.invoice.fields.phone') }}:</span>
                 <span>{{ selectedReportInvoice?.phoneCustomer || customerPhone || 'N/A' }}</span>
                 <span class="text-slate-600 font-medium">{{ t('pages.pos.invoice.fields.deliveryType') }}:</span>
-                <span class="font-medium text-slate-900">{{ selectedReportInvoice?.deliveryType || deliveryType || 'N/A' }}</span>
+                <span class="font-medium text-slate-900">{{ selectedReportInvoice?.deliveryType || deliveryType || 'N/A'
+                  }}</span>
               </div>
             </div>
           </div>
@@ -87,30 +95,31 @@ const displayRows = computed(() => buildInvoiceDisplayRows(props.cart ?? []))
             <table class="w-full border-collapse table-auto">
               <thead>
                 <tr class="bg-primary text-white text-[9px] sm:text-[10px] uppercase font-bold text-left">
-                  <th class="px-2 sm:px-3 py-1 border-[0.5px] border-primary-foreground/20 w-10 sm:w-12 text-center whitespace-nowrap">
+                  <th
+                    class="px-2 sm:px-3 py-1 border-[0.5px] border-primary-foreground/20 w-10 sm:w-12 text-center whitespace-nowrap">
                     {{ t('pages.pos.invoice.table.noKm') }}<br>{{ t('pages.pos.invoice.table.no') }}
                   </th>
                   <th class="px-2 text-center sm:px-3 py-1 border-[0.5px] border-primary-foreground/20 min-w-[140px]">
                     {{ t('pages.pos.invoice.table.descriptionKm') }}<br>{{ t('pages.pos.invoice.table.description') }}
                   </th>
-                  <th class="px-2 text-center sm:px-3 py-1 border-[0.5px] border-primary-foreground/20 whitespace-nowrap">
+                  <th
+                    class="px-2 text-center sm:px-3 py-1 border-[0.5px] border-primary-foreground/20 whitespace-nowrap">
                     {{ t('pages.pos.invoice.table.priceKm') }}<br>{{ t('pages.pos.invoice.table.price') }}
                   </th>
-                  <th class="px-2 text-center sm:px-3 py-1 border-[0.5px] border-primary-foreground/20 whitespace-nowrap">
+                  <th
+                    class="px-2 text-center sm:px-3 py-1 border-[0.5px] border-primary-foreground/20 whitespace-nowrap">
                     {{ t('pages.pos.invoice.table.qtyKm') }}<br>{{ t('pages.pos.invoice.table.qty') }}
                   </th>
-                  <th class="px-2 text-center sm:px-3 py-1 border-[0.5px] border-primary-foreground/20 whitespace-nowrap">
+                  <th
+                    class="px-2 text-center sm:px-3 py-1 border-[0.5px] border-primary-foreground/20 whitespace-nowrap">
                     {{ t('pages.pos.invoice.table.totalKm') }}<br>{{ t('pages.pos.invoice.table.total') }}
                   </th>
                 </tr>
               </thead>
               <tbody class="text-xs sm:text-sm">
-                <tr
-                  v-for="row in displayRows"
-                  :key="row.lineKey"
-                  class="border-[0.5px] border-slate-200"
-                >
-                  <td class="px-2 sm:px-3 py-2 text-center border-[0.5px] border-slate-200 text-slate-400 font-medium whitespace-nowrap">
+                <tr v-for="row in displayRows" :key="row.lineKey" class="border-[0.5px] border-slate-200">
+                  <td
+                    class="px-2 sm:px-3 py-2 text-center border-[0.5px] border-slate-200 text-slate-400 font-medium whitespace-nowrap">
                     {{ String(row.rowNo).padStart(2, '0') }}
                   </td>
                   <td class="px-2 sm:px-3 py-2 border-[0.5px] border-slate-200">
@@ -118,10 +127,12 @@ const displayRows = computed(() => buildInvoiceDisplayRows(props.cart ?? []))
                       {{ row.item.product.name }}
                     </p>
                   </td>
-                  <td class="px-2 sm:px-3 py-2 text-center border-[0.5px] border-slate-200 text-slate-600 whitespace-nowrap tabular-nums">
+                  <td
+                    class="px-2 sm:px-3 py-2 text-center border-[0.5px] border-slate-200 text-slate-600 whitespace-nowrap tabular-nums">
                     {{ formatCurrency(row.unitPrice, 'USD') }}
                   </td>
-                  <td class="px-2 sm:px-3 py-2 text-center border-[0.5px] border-slate-200 text-slate-600 whitespace-nowrap tabular-nums">
+                  <td
+                    class="px-2 sm:px-3 py-2 text-center border-[0.5px] border-slate-200 text-slate-600 whitespace-nowrap tabular-nums">
                     {{ row.item.qty }}
                   </td>
                   <td class="px-2 text-center sm:px-3 py-2 font-black text-slate-900 whitespace-nowrap tabular-nums">
@@ -136,7 +147,8 @@ const displayRows = computed(() => buildInvoiceDisplayRows(props.cart ?? []))
             <div class="grid grid-cols-[1fr_250px] gap-8">
               <div class="space-y-4">
                 <div class="space-y-2 mt-4">
-                  <h3 class="text-[12px] font-bold text-slate-500 uppercase tracking-widest">{{ t('pages.pos.invoice.terms.title') }}</h3>
+                  <h3 class="text-[12px] font-bold text-slate-500 uppercase tracking-widest">{{
+                    t('pages.pos.invoice.terms.title') }}</h3>
                   <p class="text-[14px] text-slate-600 font-bold">{{ t('pages.pos.invoice.terms.km') }}</p>
                   <p class="text-[14px] text-slate-400 font-bold">{{ t('pages.pos.invoice.terms.en') }}</p>
                 </div>
@@ -157,19 +169,24 @@ const displayRows = computed(() => buildInvoiceDisplayRows(props.cart ?? []))
                 </div>
                 <div class="flex justify-between items-center bg-slate-100 p-2 rounded-sm">
                   <span class="text-sm font-black text-slate-900">{{ t('pages.pos.invoice.summary.grandTotal') }}</span>
-                  <span class="text-lg font-black text-slate-900">{{ formatCurrency(selectedReportInvoice?.grandTotal ?? (displayTotal + deliveryPrice), 'USD') }}</span>
+                  <span class="text-lg font-black text-slate-900">{{ formatCurrency(selectedReportInvoice?.grandTotal ??
+                    (displayTotal + deliveryPrice), 'USD') }}</span>
                 </div>
 
                 <USeparator class="mt-4" />
 
                 <div class="grid grid-cols-2 gap-4 text-center">
                   <div>
-                    <p class="text-[14px] font-black text-slate-900">{{ selectedReportInvoice?.customer || customerName || 'Student Name' }}</p>
-                    <p class="text-[10px] mt-2 text-slate-400 uppercase font-bold">{{ t('pages.pos.invoice.footer.customer') }}</p>
+                    <p class="text-[14px] font-black text-slate-900">{{ selectedReportInvoice?.customer || customerName
+                      || 'Student Name' }}</p>
+                    <p class="text-[10px] mt-2 text-slate-400 uppercase font-bold">{{
+                      t('pages.pos.invoice.footer.customer') }}</p>
                   </div>
                   <div>
-                    <p class="text-[14px] font-black text-slate-900">{{ selectedReportInvoice?.seller || authStore.user?.name || 'Seller' }}</p>
-                    <p class="text-[10px] mt-2 text-slate-400 uppercase font-bold">{{ t('pages.pos.invoice.footer.seller') }}</p>
+                    <p class="text-[14px] font-black text-slate-900">{{ selectedReportInvoice?.seller ||
+                      authStore.user?.name || 'Seller' }}</p>
+                    <p class="text-[10px] mt-2 text-slate-400 uppercase font-bold">{{
+                      t('pages.pos.invoice.footer.seller') }}</p>
                   </div>
                 </div>
               </div>
@@ -177,7 +194,8 @@ const displayRows = computed(() => buildInvoiceDisplayRows(props.cart ?? []))
           </div>
 
           <div class="w-[133.333%] sm:w-full origin-top-left scale-[0.75] sm:scale-100">
-            <div class="bg-primary text-white px-2 py-2.5 flex justify-between items-center gap-3 text-[10px] font-bold">
+            <div
+              class="bg-primary text-white px-2 py-2.5 flex justify-between items-center gap-3 text-[10px] font-bold">
               <span class="font-bold text-sm flex items-center gap-1.5">
                 <UIcon name="i-lucide-phone-call" class="size-3.5 shrink-0" />
                 015222723

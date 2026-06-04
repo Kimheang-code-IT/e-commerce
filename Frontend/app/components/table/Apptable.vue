@@ -3,41 +3,32 @@
     <!-- Header Toolbar -->
     <div
       v-if="title || $slots.header || globalFilter !== undefined || columnVisibility !== undefined || filterValue !== undefined || filterValueSecondary !== undefined"
-      class="flex flex-nowrap items-center gap-1 max-sm:px-1.5 max-sm:py-1 px-2 py-2 sm:px-3 sm:py-2.5 border-b border-accented shrink-0 overflow-hidden">
-      <div class="hidden md:flex flex-1 items-center gap-2 min-w-0">
+      class="flex flex-row items-center gap-2 px-3 py-2.5 border-b border-accented shrink-0 overflow-hidden">
+      <div class="flex-1 flex items-center gap-2 min-w-0">
         <ClientOnly>
-          <div v-if="title" class="min-w-0">
-            <h2 v-if="title" class="text-sm font-medium text-foreground tracking-tight leading-none truncate">{{ title }}
+          <div v-if="title" class="min-w-0 hidden md:block">
+            <h2 v-if="title" class="font-medium text-foreground tracking-tight leading-none truncate">{{ title }}
             </h2>
           </div>
         </ClientOnly>
+
+        <!-- Custom Header Content Slot -->
         <slot name="header" />
       </div>
 
-      <div class="flex flex-1 justify-end items-center gap-1 min-w-0 overflow-hidden ml-auto">
-        <div class="flex flex-nowrap items-center gap-1 min-w-0 overflow-x-auto overscroll-x-contain">
-          <CommonAppMutilSelect
-            v-if="filterValue !== undefined && filterItems"
-            v-model="filterValue"
-            :items="filterItems"
-            :placeholder="filterPlaceholder || $t('components.search')"
-          />
-          <CommonAppMutilSelect
-            v-if="filterValueSecondary !== undefined && filterItemsSecondary"
-            v-model="filterValueSecondary"
-            :items="filterItemsSecondary"
-            :placeholder="filterPlaceholderSecondary || $t('components.search')"
-          />
-          <CommonAppMutilSelect
-            v-if="filterValueThird !== undefined && filterItemsThird"
-            v-model="filterValueThird"
-            :items="filterItemsThird"
-            :placeholder="filterPlaceholderThird || $t('components.search')"
-          />
-        </div>
+      <div class="flex flex-nowrap items-center gap-2 max-w-full overflow-hidden shrink-0">
+        <!-- Multi-Select Filters -->
+        <CommonAppMutilSelect v-if="filterValue !== undefined && filterItems" v-model="filterValue" :items="filterItems"
+          :placeholder="filterPlaceholder || $t('components.search')" />
+        <CommonAppMutilSelect v-if="filterValueSecondary !== undefined && filterItemsSecondary"
+          v-model="filterValueSecondary" :items="filterItemsSecondary"
+          :placeholder="filterPlaceholderSecondary || $t('components.search')" />
+        <CommonAppMutilSelect v-if="filterValueThird !== undefined && filterItemsThird" v-model="filterValueThird"
+          :items="filterItemsThird" :placeholder="filterPlaceholderThird || $t('components.search')" />
 
-        <div v-if="globalFilter !== undefined" class="shrink-0 flex items-center">
-          <CommonAppSearch v-model="globalFilter" v-model:expanded="tableSearchExpanded" />
+        <!-- Global Filter Input -->
+        <div v-if="globalFilter !== undefined" class="w-52">
+          <CommonAppSearch v-model="globalFilter" />
         </div>
       </div>
     </div>
@@ -50,12 +41,14 @@
       :data="data" :columns="processedColumns" :loading="loading" :loading-options="{
         color: 'primary',
         animation: 'carousel'
-      }" 
-      :virtualize="virtualizeOptions"
-      :sticky="tableSticky"
-      class="flex-1 overflow-auto min-h-0 relative scroll-shadow-right"
-      :ui="tableUi"
-    >
+      }" :virtualize="virtualize ? { estimateSize: 44, overscan: 10 } : false" :sticky="tableSticky"
+      class="flex-1 overflow-auto min-h-0 relative scroll-shadow-right" :ui="{
+        thead: 'sticky top-0 inset-x-0 z-20 bg-neutral-100 dark:bg-slate-800',
+        th: 'py-2 px-3 text-sm font-normal text-muted-foreground bg-neutral-100 dark:bg-slate-800 whitespace-nowrap',
+        tfoot: 'sticky bottom-0 inset-x-0 z-20 bg-neutral-100 dark:bg-slate-800 border-t border-default shadow-[0_-2px_8px_rgba(0,0,0,0.06)] dark:shadow-[0_-2px_8px_rgba(0,0,0,0.25)]',
+        tr: 'border-b border-accented/50 last:border-b-0',
+        td: 'py-2 px-3 text-sm font-normal'
+      }">
       <!-- Loading State: Skeleton Rows -->
       <template #loading-state>
         <div class="flex flex-col">
@@ -99,20 +92,17 @@
 
     <!-- Unified Footer Pagination -->
     <ClientOnly>
-      <CommonAppFooterPagin v-if="pagination" v-model:pagination="pagination"
-        :total="props.totalRows ?? data.length"
-        :selectable="selectable"
-        :selected-count="Object.keys(rowSelection || {}).length"
+      <CommonAppFooterPagin v-if="pagination" v-model:pagination="pagination" :total="props.totalRows ?? data.length"
+        :selectable="selectable" :selected-count="Object.keys(rowSelection || {}).length"
         :all-selected="table?.table?.getIsAllRowsSelected() || false"
-        @toggle-select-all="(val) => table?.table?.toggleAllRowsSelected(val)"
-      />
+        @toggle-select-all="(val) => table?.table?.toggleAllRowsSelected(val)" />
     </ClientOnly>
   </div>
 </template>
 
 <script setup lang="ts" generic="T">
-import { h, computed, onMounted, ref, useTemplateRef, resolveComponent, useAttrs } from 'vue'
-import { breakpointsTailwind, useBreakpoints, useInfiniteScroll } from '@vueuse/core'
+import { h, computed, onMounted, useTemplateRef, resolveComponent, useAttrs } from 'vue'
+import { useInfiniteScroll } from '@vueuse/core'
 import type { TableColumn, DropdownMenuItem } from '@nuxt/ui'
 import { getPaginationRowModel } from '@tanstack/vue-table'
 import type { Column } from '@tanstack/vue-table'
@@ -138,53 +128,10 @@ const props = withDefaults(defineProps<{
   title?: string
   selectable?: boolean
   totalRows?: number
-  density?: 'default' | 'compact'
 }>(), {
   canLoadMore: true,
   virtualize: true,
-  selectable: true, // Default to true if rowSelection is provided
-  density: 'default',
-})
-
-const tableSearchExpanded = ref(false)
-const isMobileToolbar = useBreakpoints(breakpointsTailwind).smaller('sm')
-
-const tableUi = computed(() => {
-  if (isMobileToolbar.value) {
-    const mobileCell =
-      'py-0.5 px-0.5 text-[8px] leading-none font-normal whitespace-nowrap'
-    const mobileHead =
-      'py-0.5 px-0.5 text-[8px] leading-none font-medium text-muted-foreground bg-neutral-100 dark:bg-slate-800 whitespace-nowrap'
-    return {
-      thead: 'sticky top-0 inset-x-0 z-20 bg-neutral-100 dark:bg-slate-800 text-[8px]',
-      th: mobileHead,
-      tfoot:
-        'sticky bottom-0 inset-x-0 z-20 bg-neutral-100 dark:bg-slate-800 border-t border-default text-[8px] leading-none py-0.5 px-0.5',
-      tr: 'border-b border-accented/50 last:border-b-0',
-      td: mobileCell,
-    }
-  }
-  const compact = props.density === 'compact'
-  const cell = compact
-    ? 'py-1.5 px-2 text-xs sm:text-sm font-normal whitespace-nowrap'
-    : 'py-2 px-3 text-sm font-normal'
-  const head = compact
-    ? 'py-1.5 px-2 text-xs sm:text-sm font-normal text-muted-foreground bg-neutral-100 dark:bg-slate-800 whitespace-nowrap'
-    : 'py-2 px-3 text-sm font-normal text-muted-foreground bg-neutral-100 dark:bg-slate-800 whitespace-nowrap'
-  return {
-    thead: 'sticky top-0 inset-x-0 z-20 bg-neutral-100 dark:bg-slate-800',
-    th: head,
-    tfoot:
-      'sticky bottom-0 inset-x-0 z-20 bg-neutral-100 dark:bg-slate-800 border-t border-default shadow-[0_-2px_8px_rgba(0,0,0,0.06)] dark:shadow-[0_-2px_8px_rgba(0,0,0,0.25)]',
-    tr: 'border-b border-accented/50 last:border-b-0',
-    td: cell,
-  }
-})
-
-const virtualizeOptions = computed(() => {
-  if (!props.virtualize) return false
-  const size = isMobileToolbar.value ? 26 : props.density === 'compact' ? 36 : 44
-  return { estimateSize: size, overscan: 10 }
+  selectable: true // Default to true if rowSelection is provided 
 })
 
 // V-Models for TanStack Table state
@@ -238,23 +185,23 @@ function processColumnDefinitions(cols: any[]): any[] {
         columns: processColumnDefinitions(col.columns)
       }
     }
-    
+
     // Process new column definition
     const processed = { ...col }
-    
+
 
 
     // Wrap sortable string headers with reusable AppHeaderCell (supports multi-sort logic)
     if (typeof processed.header === 'string' && processed.id !== 'action' && processed.accessorKey !== 'action' && processed.enableSorting !== false) {
       const label = processed.header
       const icon = processed.icon
-      processed.header = ({ column }: { column: Column<T, any> }) => h(AppHeaderCell as any, { 
-        column, 
-        label, 
+      processed.header = ({ column }: { column: Column<T, any> }) => h(AppHeaderCell as any, {
+        column,
+        label,
         icon: icon as string | undefined
       })
     }
-    
+
     // Action column — render label as plain styled text (no sorting)
     if (typeof processed.header === 'string' && (processed.id === 'action' || processed.accessorKey === 'action')) {
       const label = processed.header

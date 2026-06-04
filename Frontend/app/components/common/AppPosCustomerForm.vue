@@ -180,7 +180,7 @@ watch([deliveryDatePart, deliveryTimePart], () => {
 </script>
 
 <template>
-  <div class="w-full flex flex-col px-2 py-1.5 sm:px-6 sm:py-2 lg:px-8 bg-card overflow-y-auto lg:border-r border-default">
+  <div class="w-full flex flex-col px-6 py-2 lg:px-8 bg-card overflow-y-auto lg:border-r border-default">
     <div class="max-w-2xl mx-auto w-full space-y-4">
       <div class="w-full">
         <UTabs

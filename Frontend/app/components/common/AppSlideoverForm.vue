@@ -1,7 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, computed, onBeforeUnmount, nextTick, resolveComponent } from 'vue'
-import { breakpointsTailwind, useBreakpoints } from '@vueuse/core'
-import { modalUiForm, dialogFooterActions } from '~/utils/ui/overlayUi'
+import { ref, watch, computed, onBeforeUnmount, nextTick } from 'vue'
 import { parseDate } from '@internationalized/date'
 import type { FormField } from '~/types'
 import { sanitizeByTextRule, textRuleErrorMessage, resolveCurrencyPrefix } from '~/utils/validation/textRules'
@@ -20,16 +18,6 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
-
-const breakpoints = useBreakpoints(breakpointsTailwind)
-const isMobile = breakpoints.smaller('sm')
-const UModal = resolveComponent('UModal')
-const USlideover = resolveComponent('USlideover')
-
-const overlayComponent = computed(() => (isMobile.value ? UModal : USlideover))
-
-const resolvedTitle = computed(() => props.title || t('components.processData'))
-const resolvedSubmitLabel = computed(() => props.submitLabel || t('components.saveChanges'))
 
 // Internal form state
 const formData = ref<FormRecord>({})
@@ -453,229 +441,141 @@ function onSave() {
 </script>
 
 <template>
-  <component
-    :is="overlayComponent"
-    v-model:open="open"
-    :dismissible="false"
-    :title="isMobile ? undefined : resolvedTitle"
-    :ui="isMobile ? modalUiForm : undefined"
-    :class="isMobile ? 'max-sm:rounded-none' : 'max-w-md'"
-  >
-    <template #header>
-      <div class="flex items-center justify-between w-full px-2">
-        <h3 class="font-semibold text-highlighted text-base sm:text-lg line-clamp-2 min-w-0">
-          {{ resolvedTitle }}
-        </h3>
-        <UButton
-          icon="i-lucide-x"
-          color="neutral"
-          variant="ghost"
-          size="sm"
-          @click="open = false"
-        />
-      </div>
-    </template>
-
-    <template #body>
-      <div
-        ref="formBodyRef"
-        class="flex flex-col space-y-3 px-2 sm:px-2 w-full overflow-auto flex-1 min-h-0 max-sm:max-h-none sm:max-h-none"
-      >
-        <template v-for="field in activeFields" :key="field.key">
-            <UFormField
-                class="w-full"
-                :data-field-error="hasFieldError(field) ? 'true' : undefined"
-                :error="getFieldError(field) || undefined"
-            >
-                <template #label>
-                    <div class="flex items-center gap-1.5">
- 
-                        <span class="font-medium text-highlighted">{{ field.label }}</span>
-                        <span v-if="field.required" class="text-error font-bold leading-none -mt-1">*</span>
-                    </div>
-                </template>
-
-                <!-- INPUT TYPE -->
-                <UInput 
-                    v-if="!field.type || field.type === 'input' || field.type === 'password'"
-                    v-model="formData[field.key]"
-                    :type="field.type === 'password' ? (showPasswords[field.key] ? 'text' : 'password') : 'text'"
-                    :placeholder="field.placeholder" 
-                    :disabled="field.readonly"
-                    :color="hasFieldError(field) ? 'error' : undefined"
-                    size="lg" 
-                    class="w-full" 
-                    @input="onTextInput(field, $event)"
-                >
-                    <template v-if="field.type === 'password'" #trailing>
-                        <UButton
-                            color="neutral"
-                            variant="ghost"
-                            :icon="showPasswords[field.key] ? 'i-lucide-eye-off' : 'i-lucide-eye'"
-                            class="-mr-1.5"
-                            size="sm"
-                            @click="togglePassword(field.key)"
-                        />
-                    </template>
-                </UInput>
-
-                <!-- MONEY TABS (% or USD) — toggle on left of input; saves USD in field.key -->
-                <CommonAppMoneyModeInput
-                    v-else-if="field.type === 'money-tabs'"
-                    v-model:mode="formData[moneyTabsModeKey(field.key)]"
-                    v-model:input-value="formData[moneyTabsInputKey(field.key)]"
-                    :placeholder="field.placeholder"
-                    :disabled="field.readonly"
-                    :max-usd="moneyTabsRefPrice(field) || field.max"
-                    :error-message="moneyTabsError(field)"
-                    :usd-preview="Number(formData[field.key] ?? 0)"
-                    show-usd-preview
-                    size="lg"
-                    @mode-change="(m: 'usd' | 'percent') => onMoneyTabsModeChange(field, m)"
-                    @input="syncMoneyTabsField(field)"
-                />
-
-                <!-- NUMBER / CURRENCY (USD) TYPE -->
-                <div v-else-if="field.type === 'number' || field.type === 'currency' || field.currency === 'USD'" class="w-full space-y-1">
-                    <UInput
-                        v-model="formData[field.key]"
-                        type="number"
-                        inputmode="decimal"
-                        :step="isUsdField(field) ? 0.01 : 'any'"
-                        :min="field.min ?? 0"
-                        :max="field.max"
-                        :placeholder="field.placeholder"
-                        :disabled="field.readonly"
-                        :color="hasFieldError(field) ? 'error' : undefined"
-                        size="lg"
-                        class="w-full tabular-nums"
-                        :ui="isUsdField(field) ? { leading: 'ps-2' } : undefined"
-                        @input="onNumberInput(field.key, $event)"
-                    >
-                        <template v-if="isUsdField(field)" #leading>
-                            <span class="text-xs font-semibold text-muted-foreground select-none">{{ currencyPrefix(field) }}</span>
-                        </template>
-                    </UInput>
-                </div>
-
-                <!-- SELECT TYPE -->
-                <CommonAppMutilSelect
-                    v-else-if="field.type === 'select' && field.multiple"
-                    v-model="formData[field.key]"
-                    :items="field.items || []"
-                    :placeholder="field.placeholder || $t('components.select')"
-                    :class="['w-full', hasFieldError(field) ? 'ring-2 ring-error rounded-md' : '']"
-                />
-
-                <USelect 
-                    v-else-if="field.type === 'select'"
-                    v-model="formData[field.key]"
-                    :items="field.items"
-                    :color="hasFieldError(field) ? 'error' : undefined"
-                    size="lg" 
-                    class="w-full" 
-                />
-
-                <!-- PERMISSION TREE TYPE -->
-                <div
-                    v-else-if="field.type === 'permission-tree'"
-                    :class="hasFieldError(field) ? 'rounded-lg ring-2 ring-error p-0.5' : ''"
-                >
-                    <CommonAppPermissionTreeSelect
-                        v-model="formData[field.key]"
-                        :pages="(field.items || []) as string[]"
-                        :actions="(field.childItems || []) as string[]"
-                        :actions-by-page="field.actionsByPage || {}"
-                    />
-                </div>
-
-                <!-- TEXTAREA TYPE -->
-                <UTextarea 
-                    v-else-if="field.type === 'textarea'"
-                    v-model="formData[field.key]"
-                    :placeholder="field.placeholder"
-                    :color="hasFieldError(field) ? 'error' : undefined"
-                    autoresize 
-                    size="md"
-                    class="w-full"
-                    @input="onTextInput(field, $event)"
-                />
-
-                <!-- DATE TYPE -->
-                <UPopover v-else-if="field.type === 'date'" class="w-full">
-                    <UButton 
-                        :color="hasFieldError(field) ? 'error' : 'neutral'"
-                        variant="soft" 
-                        size="lg"
-                        class="w-full justify-start font-normal"
-                        :class="hasFieldError(field) ? '' : 'text-muted-foreground'"
-                        :label="formData[field.key] ? formData[field.key].toString() : (field.placeholder || $t('components.selectDate'))"
-                    />
-                    <template #content>
-                        <UCalendar v-model="formData[field.key]" class="p-2" />
-                    </template>
-                </UPopover>
-
-                <!-- FILE TYPE (IMAGE ONLY) -->
-                <div
-                    v-else-if="field.type === 'file'"
-                    class="w-full"
-                    :class="hasFieldError(field) ? 'rounded-lg ring-2 ring-error' : ''"
-                >
-                    <UFileUpload
-                        :key="`${field.key}-${fileUploadRenderKeys[field.key] || 0}`"
-                        v-model="formData[field.key]"
-                        icon="i-lucide-image"
-                        :label="field.placeholder || $t('components.imageUploadReplace')"
-                        :description="$t('components.imageUploadHint')"
-                        accept="image/*"
-                        :multiple="false"
-                        class="w-full relative **:data-[slot=base]:min-h-0 **:data-[slot=base]:py-3"
-                    >
-                        <template #default>
-                            <div
-                                v-if="filePreviewSources[field.key]"
-                                class="w-full relative rounded-lg overflow-hidden border border-default pointer-events-none"
-                            >
-                                <img
-                                    :src="filePreviewSources[field.key]"
-                                    alt="Current image"
-                                    class="block w-full max-h-50 max-w-full object-contain"
-                                />
-                                <div class="absolute inset-x-0 bottom-0 bg-black/25 flex items-end justify-center p-2">
-                                    <span class="text-white text-xs font-medium">
-                                        {{ $t('components.imageUploadReplace') }}
-                                    </span>
-                                </div>
-                            </div>
-                            <UButton
-                                v-if="filePreviewSources[field.key]"
-                                icon="i-lucide-x"
-                                color="primary"
-                                variant="solid"
-                                size="xs"
-                                class="absolute top-2 right-2 z-10 pointer-events-auto"
-                                @click.stop.prevent="clearImageSelection(field.key)"
-                            />
-                        </template>
-                    </UFileUpload>
-                </div>
-            </UFormField>
+    <USlideover v-model:open="open" :title="title || $t('components.processData')" :dismissible="false"
+        class="max-w-md">
+        <template #header>
+            <div class="flex items-center justify-between w-full px-1">
+                <h3 class="font-semibold text-highlighted">
+                    {{ title || $t('components.processData') }}
+                </h3>
+                <UButton icon="i-lucide-x" color="neutral" variant="ghost" size="sm" @click="open = false" />
+            </div>
         </template>
-      </div>
-    </template>
 
-    <template #footer>
-      <div :class="[dialogFooterActions, 'px-2']">
-        <UButton :label="$t('components.cancel')" color="neutral" variant="soft" @click="open = false" />
-        <UButton
-          :label="resolvedSubmitLabel"
-          color="primary"
-          variant="solid"
-          class="font-semibold shadow-sm px-6"
-          @click="onSave"
-        />
-      </div>
-    </template>
-  </component>
+        <template #body>
+            <div ref="formBodyRef" class="flex flex-col space-y-3 px-1 w-full overflow-hidden">
+                <template v-for="field in activeFields" :key="field.key">
+                    <UFormField class="w-full" :data-field-error="hasFieldError(field) ? 'true' : undefined"
+                        :error="getFieldError(field) || undefined">
+                        <template #label>
+                            <div class="flex items-center gap-1.5">
+
+                                <span class="font-medium text-highlighted">{{ field.label }}</span>
+                                <span v-if="field.required" class="text-error font-bold leading-none -mt-1">*</span>
+                            </div>
+                        </template>
+
+                        <!-- INPUT TYPE -->
+                        <UInput v-if="!field.type || field.type === 'input' || field.type === 'password'"
+                            v-model="formData[field.key]"
+                            :type="field.type === 'password' ? (showPasswords[field.key] ? 'text' : 'password') : 'text'"
+                            :placeholder="field.placeholder" :disabled="field.readonly"
+                            :color="hasFieldError(field) ? 'error' : undefined" size="lg" class="w-full"
+                            @input="onTextInput(field, $event)">
+                            <template v-if="field.type === 'password'" #trailing>
+                                <UButton color="neutral" variant="ghost"
+                                    :icon="showPasswords[field.key] ? 'i-lucide-eye-off' : 'i-lucide-eye'"
+                                    class="-mr-1.5" size="sm" @click="togglePassword(field.key)" />
+                            </template>
+                        </UInput>
+
+                        <!-- MONEY TABS (% or USD) — toggle on left of input; saves USD in field.key -->
+                        <CommonAppMoneyModeInput v-else-if="field.type === 'money-tabs'"
+                            v-model:mode="formData[moneyTabsModeKey(field.key)]"
+                            v-model:input-value="formData[moneyTabsInputKey(field.key)]"
+                            :placeholder="field.placeholder" :disabled="field.readonly"
+                            :max-usd="moneyTabsRefPrice(field) || field.max" :error-message="moneyTabsError(field)"
+                            :usd-preview="Number(formData[field.key] ?? 0)" show-usd-preview size="lg"
+                            @mode-change="(m: 'usd' | 'percent') => onMoneyTabsModeChange(field, m)"
+                            @input="syncMoneyTabsField(field)" />
+
+                        <!-- NUMBER / CURRENCY (USD) TYPE -->
+                        <div v-else-if="field.type === 'number' || field.type === 'currency' || field.currency === 'USD'"
+                            class="w-full space-y-1">
+                            <UInput v-model="formData[field.key]" type="number" inputmode="decimal"
+                                :step="isUsdField(field) ? 0.01 : 'any'" :min="field.min ?? 0" :max="field.max"
+                                :placeholder="field.placeholder" :disabled="field.readonly"
+                                :color="hasFieldError(field) ? 'error' : undefined" size="lg"
+                                class="w-full tabular-nums" :ui="isUsdField(field) ? { leading: 'ps-2' } : undefined"
+                                @input="onNumberInput(field.key, $event)">
+                                <template v-if="isUsdField(field)" #leading>
+                                    <span class="text-xs font-semibold text-muted-foreground select-none">{{
+                                        currencyPrefix(field) }}</span>
+                                </template>
+                            </UInput>
+                        </div>
+
+                        <!-- SELECT TYPE -->
+                        <CommonAppMutilSelect v-else-if="field.type === 'select' && field.multiple"
+                            v-model="formData[field.key]" :items="field.items || []"
+                            :placeholder="field.placeholder || $t('components.select')"
+                            :class="['w-full', hasFieldError(field) ? 'ring-2 ring-error rounded-md' : '']" />
+
+                        <USelect v-else-if="field.type === 'select'" v-model="formData[field.key]" :items="field.items"
+                            :color="hasFieldError(field) ? 'error' : undefined" size="lg" class="w-full" />
+
+                        <!-- PERMISSION TREE TYPE -->
+                        <div v-else-if="field.type === 'permission-tree'"
+                            :class="hasFieldError(field) ? 'rounded-lg ring-2 ring-error p-0.5' : ''">
+                            <CommonAppPermissionTreeSelect v-model="formData[field.key]"
+                                :pages="(field.items || []) as string[]" :actions="(field.childItems || []) as string[]"
+                                :actions-by-page="field.actionsByPage || {}" />
+                        </div>
+
+                        <!-- TEXTAREA TYPE -->
+                        <UTextarea v-else-if="field.type === 'textarea'" v-model="formData[field.key]"
+                            :placeholder="field.placeholder" :color="hasFieldError(field) ? 'error' : undefined"
+                            autoresize size="md" class="w-full" @input="onTextInput(field, $event)" />
+
+                        <!-- DATE TYPE -->
+                        <UPopover v-else-if="field.type === 'date'" class="w-full">
+                            <UButton :color="hasFieldError(field) ? 'error' : 'neutral'" variant="soft" size="lg"
+                                class="w-full justify-start font-normal"
+                                :class="hasFieldError(field) ? '' : 'text-muted-foreground'"
+                                :label="formData[field.key] ? formData[field.key].toString() : (field.placeholder || $t('components.selectDate'))" />
+                            <template #content>
+                                <UCalendar v-model="formData[field.key]" class="p-2" />
+                            </template>
+                        </UPopover>
+
+                        <!-- FILE TYPE (IMAGE ONLY) -->
+                        <div v-else-if="field.type === 'file'" class="w-full"
+                            :class="hasFieldError(field) ? 'rounded-lg ring-2 ring-error' : ''">
+                            <UFileUpload :key="`${field.key}-${fileUploadRenderKeys[field.key] || 0}`"
+                                v-model="formData[field.key]" icon="i-lucide-image"
+                                :label="field.placeholder || $t('components.imageUploadReplace')"
+                                :description="$t('components.imageUploadHint')" accept="image/*" :multiple="false"
+                                class="w-full relative **:data-[slot=base]:min-h-0 **:data-[slot=base]:py-3">
+                                <template #default>
+                                    <div v-if="filePreviewSources[field.key]"
+                                        class="w-full relative rounded-lg overflow-hidden border border-default pointer-events-none">
+                                        <img :src="filePreviewSources[field.key]" alt="Current image"
+                                            class="block w-full max-h-50 max-w-full object-contain" />
+                                        <div
+                                            class="absolute inset-x-0 bottom-0 bg-black/25 flex items-end justify-center p-2">
+                                            <span class="text-white text-xs font-medium">
+                                                {{ $t('components.imageUploadReplace') }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <UButton v-if="filePreviewSources[field.key]" icon="i-lucide-x" color="primary"
+                                        variant="solid" size="xs"
+                                        class="absolute top-2 right-2 z-10 pointer-events-auto"
+                                        @click.stop.prevent="clearImageSelection(field.key)" />
+                                </template>
+                            </UFileUpload>
+                        </div>
+                    </UFormField>
+                </template>
+            </div>
+        </template>
+
+        <template #footer>
+            <div class="flex items-center justify-end gap-3 w-full px-1">
+                <UButton :label="$t('components.cancel')" color="neutral" variant="soft" @click="open = false" />
+                <UButton :label="submitLabel || $t('components.saveChanges')" color="primary" variant="solid"
+                    class="font-semibold shadow-sm px-6" @click="onSave" />
+            </div>
+        </template>
+    </USlideover>
 </template>

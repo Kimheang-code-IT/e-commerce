@@ -94,36 +94,25 @@ async function fetchReportExportData(args: { startDate?: string; endDate?: strin
   <div class="flex flex-col h-full bg-background overflow-hidden text-foreground tracking-tight">
     <LayoutAppHeader :title="t('pages.report.title')" show-datepicker>
       <template #right>
-        <UButton
-          v-if="canViewPos || canCheckoutPos"
-          icon="i-lucide-receipt-text"
-          color="primary"
-          variant="solid"
-          class="font-normal shadow-sm shrink-0"
-          :disabled="selectedReportRows.length === 0"
-          @click="goToSelectedInvoices"
-        >
+        <UButton v-if="canViewPos || canCheckoutPos" icon="i-lucide-receipt-text" color="primary" variant="solid"
+          class="font-normal shadow-sm shrink-0" :disabled="selectedReportRows.length === 0"
+          @click="goToSelectedInvoices">
           <span class="hidden sm:inline">Preview Selected</span>
         </UButton>
-        <UButton v-if="canExportReport" icon="i-lucide-download" color="neutral" variant="subtle" class="font-normal shadow-sm shrink-0"
-          @click="isExportOpen = true">
+        <UButton v-if="canExportReport" icon="i-lucide-download" color="neutral" variant="subtle"
+          class="font-normal shadow-sm shrink-0" @click="isExportOpen = true">
           <span class="hidden sm:inline">{{ $t('common.export') }}</span>
         </UButton>
       </template>
     </LayoutAppHeader>
-    <div class="flex-1 p-1 sm:p-2 overflow-hidden">
+    <div class="flex-1 p-2 overflow-hidden">
       <TableApptable :title="t('pages.report.tableTitle')" v-model:row-selection="rowSelection"
         v-model:sorting="sorting" v-model:column-visibility="columnVisibility" v-model:pagination="pagination"
-        v-model:column-filters="columnFilters"
-        v-model:filter-value="selectedProducts"
-        v-model:filter-value-secondary="selectedProvinces"
-        v-model:global-filter="searchQuery"
-        :filter-items="productItems"
-        :filter-items-secondary="provinceItems"
-        :filter-placeholder="$t('product.name')"
-        :filter-placeholder-secondary="$t('pages.report.filterProvince')"
-        :data="filteredReportRows" :total-rows="totalRows" :columns="columns"
-        :selectable="true" :loading="isLoading"
+        v-model:column-filters="columnFilters" v-model:filter-value="selectedProducts"
+        v-model:filter-value-secondary="selectedProvinces" v-model:global-filter="searchQuery"
+        :filter-items="productItems" :filter-items-secondary="provinceItems" :filter-placeholder="$t('product.name')"
+        :filter-placeholder-secondary="$t('pages.report.filterProvince')" :data="filteredReportRows"
+        :total-rows="totalRows" :columns="columns" :selectable="true" :loading="isLoading"
         :get-row-actions="getDropdownActions">
         <template #no-header>
           <div class="flex items-center gap-2">
@@ -165,12 +154,7 @@ async function fetchReportExportData(args: { startDate?: string; endDate?: strin
         filename="report" date-field="date" />
     </div>
 
-    <CommonAppRefundDialog
-      v-model:open="isRefundDialogOpen"
-      v-model:reason="refundReason"
-      :row="refundTargetRow"
-      :submitting="submittingRefund"
-      @confirm="onConfirmRefund"
-    />
+    <CommonAppRefundDialog v-model:open="isRefundDialogOpen" v-model:reason="refundReason" :row="refundTargetRow"
+      :submitting="submittingRefund" @confirm="onConfirmRefund" />
   </div>
 </template>

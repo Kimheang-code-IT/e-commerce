@@ -112,7 +112,3 @@ html::-webkit-scrollbar-corner, body::-webkit-scrollbar-corner, *::-webkit-scrol
 .dark html::-webkit-scrollbar-corner, .dark body::-webkit-scrollbar-corner, .dark *::-webkit-scrollbar-corner {
   background: transparent;
 }
-
-.overlay-safe-footer {
-  padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
-}

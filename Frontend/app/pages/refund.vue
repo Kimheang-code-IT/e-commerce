@@ -57,76 +57,39 @@ const isExportOpen = ref(false)
   <div class="flex flex-col h-full bg-background overflow-hidden text-foreground tracking-tight">
     <LayoutAppHeader :title="$t('pages.refund.title')" show-datepicker>
       <template #right>
-        <UButton
-          v-if="canViewPos || canCheckoutPos"
-          icon="i-lucide-receipt-text"
-          color="primary"
-          variant="solid"
-          class="font-normal shadow-sm shrink-0"
-          :disabled="selectedRefundRows.length === 0"
-          @click="goToSelectedInvoices"
-        >
+        <UButton v-if="canViewPos || canCheckoutPos" icon="i-lucide-receipt-text" color="primary" variant="solid"
+          class="font-normal shadow-sm shrink-0" :disabled="selectedRefundRows.length === 0"
+          @click="goToSelectedInvoices">
           <span class="hidden sm:inline">{{ $t('pages.refund.previewSelected') }}</span>
         </UButton>
-        <UButton
-          v-if="canView"
-          icon="i-lucide-download"
-          color="neutral"
-          variant="subtle"
-          class="font-normal shadow-sm shrink-0"
-          @click="isExportOpen = true"
-        >
+        <UButton v-if="canView" icon="i-lucide-download" color="neutral" variant="subtle"
+          class="font-normal shadow-sm shrink-0" @click="isExportOpen = true">
           <span class="hidden sm:inline">{{ $t('common.export') }}</span>
         </UButton>
       </template>
     </LayoutAppHeader>
 
-    <div class="flex-1 p-1 sm:p-2 overflow-hidden flex flex-col gap-2">
+    <div class="flex-1 p-2 overflow-hidden flex flex-col gap-2">
       <div class="flex-1 min-h-0">
-        <TableApptable
-          :title="$t('pages.refund.recordsTitle')"
-          v-model:row-selection="rowSelection"
-          v-model:sorting="sorting"
-          v-model:column-visibility="columnVisibility"
-          v-model:pagination="pagination"
-          v-model:column-filters="columnFilters"
-          v-model:filter-value="selectedProducts"
-          v-model:filter-value-secondary="selectedAddresses"
-          v-model:global-filter="searchQuery"
-          :filter-items="productItems"
-          :filter-items-secondary="addressItems"
-          :filter-placeholder="$t('product.name')"
-          :filter-placeholder-secondary="$t('pages.report.filterProvince')"
-          :data="filteredRefundRows"
-          :columns="refundColumns"
-          :loading="isLoading"
-          :total-rows="totalRows"
-          :selectable="true"
-          :get-row-actions="getDropdownActions"
-        >
+        <TableApptable :title="$t('pages.refund.recordsTitle')" v-model:row-selection="rowSelection"
+          v-model:sorting="sorting" v-model:column-visibility="columnVisibility" v-model:pagination="pagination"
+          v-model:column-filters="columnFilters" v-model:filter-value="selectedProducts"
+          v-model:filter-value-secondary="selectedAddresses" v-model:global-filter="searchQuery"
+          :filter-items="productItems" :filter-items-secondary="addressItems" :filter-placeholder="$t('product.name')"
+          :filter-placeholder-secondary="$t('pages.report.filterProvince')" :data="filteredRefundRows"
+          :columns="refundColumns" :loading="isLoading" :total-rows="totalRows" :selectable="true"
+          :get-row-actions="getDropdownActions">
           <template #no-header>
             <div class="flex items-center gap-2">
-              <UCheckbox
-                :model-value="allFilteredSelected"
-                :indeterminate="someFilteredSelected"
-                @update:model-value="toggleSelectAllFiltered(!!$event)"
-              />
-              <UButton
-                v-if="selectedRefundRows.length > 0 && (canViewPos || canCheckoutPos)"
-                icon="i-lucide-receipt-text"
-                color="primary"
-                variant="ghost"
-                size="xs"
-                @click="goToSelectedInvoices"
-              />
+              <UCheckbox :model-value="allFilteredSelected" :indeterminate="someFilteredSelected"
+                @update:model-value="toggleSelectAllFiltered(!!$event)" />
+              <UButton v-if="selectedRefundRows.length > 0 && (canViewPos || canCheckoutPos)"
+                icon="i-lucide-receipt-text" color="primary" variant="ghost" size="xs" @click="goToSelectedInvoices" />
             </div>
           </template>
           <template #no-cell="{ row }">
             <div class="flex items-center gap-2">
-              <UCheckbox
-                :model-value="row.getIsSelected()"
-                @update:model-value="row.toggleSelected(!!$event)"
-              />
+              <UCheckbox :model-value="row.getIsSelected()" @update:model-value="row.toggleSelected(!!$event)" />
             </div>
           </template>
 
@@ -160,24 +123,14 @@ const isExportOpen = ref(false)
             <span class="line-clamp-2">{{ row.original.refundReason || 'N/A' }}</span>
           </template>
           <template #action-cell="{ row }">
-            <UButton
-              v-if="canDelete"
-              icon="i-lucide-trash"
-              color="error"
-              variant="ghost"
-              size="xs"
-              @click="removeRefundInvoice(row.original)"
-            />
+            <UButton v-if="canDelete" icon="i-lucide-trash" color="error" variant="ghost" size="xs"
+              @click="removeRefundInvoice(row.original)" />
           </template>
         </TableApptable>
       </div>
     </div>
 
-    <CommonAppExport
-      v-model:open="isExportOpen"
-      :data="filteredRefundRows"
-      filename="refunds"
-      date-field="refundedAt"
-    />
+    <CommonAppExport v-model:open="isExportOpen" :data="filteredRefundRows" filename="refunds"
+      date-field="refundedAt" />
   </div>
 </template>

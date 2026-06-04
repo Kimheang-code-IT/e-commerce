@@ -128,8 +128,7 @@
             "title": "Category"
         },
         "supplier": {
-            "title": "Supplier",
-            "addBtn": "Add Supplier"
+            "title": "Supplier"
         },
         "product": {
             "title": "Product"

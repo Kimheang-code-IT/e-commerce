@@ -2,7 +2,6 @@
 import { ref, computed, watch } from 'vue'
 import { DateFormatter, getLocalTimeZone, parseDate } from '@internationalized/date'
 import { exportToCSV } from '~/utils/helpers/common'
-import { modalUiConfirm, dialogFooterActions } from '~/utils/ui/overlayUi'
 const open = defineModel<boolean>('open')
 type ExportRow = Record<string, any>
 type DateRangeModel = {
@@ -120,7 +119,10 @@ function onClose() {
 </script>
 
 <template>
-  <UModal v-model:open="open" :dismissible="false" :ui="modalUiConfirm">
+  <UModal :dismissible="false"
+    v-model:open="open"
+    :ui="{ content: 'max-w-md w-[95vw] sm:w-full', header: 'border-none p-0' }"
+  >
     <template #header>
       <div class="flex items-center justify-between w-full px-4 pt-4">
         <div class="flex items-center gap-2.5">
@@ -141,7 +143,7 @@ function onClose() {
     </template>
 
     <template #body>
-      <div class="px-3 sm:px-4 space-y-4 overflow-auto flex-1 min-h-0">
+      <div class="px-4 space-y-4">
 
         <!-- Date Range Picker -->
         <div class="space-y-2">
@@ -151,7 +153,7 @@ function onClose() {
           <div class="border border-default rounded-xl overflow-hidden bg-muted/10">
             <UCalendar
               v-model="localRange"
-              class="p-1 sm:p-2 w-full"
+              class="p-2 w-full"
               :number-of-months="1"
               range
             />
@@ -188,7 +190,7 @@ function onClose() {
     </template>
 
     <template #footer>
-      <div :class="dialogFooterActions">
+      <div class="flex items-center justify-end gap-2 w-full">
         <UButton
           :label="$t('components.cancel')"
           color="neutral"

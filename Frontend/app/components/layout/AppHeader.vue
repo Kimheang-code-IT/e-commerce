@@ -24,9 +24,9 @@ withDefaults(defineProps<Props>(), {
       <div class="flex-1" />
 
       <template #right>
-        <div class="flex flex-nowrap items-center justify-end gap-1 max-sm:px-1.5 px-2">
+        <div class="flex flex-nowrap items-center justify-end gap-2 px-2">
           <slot name="right" />
-          <CommonAppDatepicker v-if="showDatepicker" icon-only-on-mobile class="shrink-0" />
+          <CommonAppDatepicker v-if="showDatepicker" class="shrink-0" />
         </div>
       </template>
     </UDashboardNavbar>

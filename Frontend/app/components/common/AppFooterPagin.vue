@@ -38,7 +38,7 @@ function handlePageChange(page: number) {
 </script>
 
 <template>
-  <div class="flex flex-row items-center justify-between border-t border-accented max-sm:py-1 max-sm:px-1.5 py-1.5 px-2 sm:py-2 sm:px-3 gap-1 sm:gap-2 shrink-0 bg-background/50 w-full overflow-hidden max-sm:text-[8px]">
+  <div class="flex flex-row items-center justify-between border-t border-accented py-2 px-3 gap-2 shrink-0 bg-background/50 w-full overflow-hidden">
     <!-- Rows per page selector (Left) -->
     <div class="flex items-center gap-1 shrink-0">
       <span class="text-[10px] text-muted-foreground whitespace-nowrap hidden sm:inline">{{ $t('components.rowsPerPage') }}</span>
@@ -48,7 +48,7 @@ function handlePageChange(page: number) {
         :items="PAGE_SIZE_OPTIONS"
         variant="ghost"
         size="xs"
-        class="font-normal text-foreground w-12 sm:w-20 text-[8px] sm:text-xs"
+        class="font-normal text-foreground w-20"
       />
     </div>
 
@@ -62,7 +62,7 @@ function handlePageChange(page: number) {
         @update:page="handlePageChange"
         active-color="primary"
         size="xs"
-        class="shrink-0 max-sm:[&_button]:min-w-5 max-sm:[&_button]:h-5 max-sm:text-[8px]"
+        class="shrink-0"
       />
     </div>
   </div>

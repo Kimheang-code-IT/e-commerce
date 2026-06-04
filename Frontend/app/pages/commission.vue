@@ -30,7 +30,7 @@ async function fetchCommissionExportData(args: { startDate?: string; endDate?: s
       </template>
     </LayoutAppHeader>
 
-    <div class="flex-1 p-1 sm:p-2 overflow-hidden">
+    <div class="flex-1 p-2 overflow-hidden">
       <TableApptable
         :title="t('pages.commission.tableTitle')"
         :data="data"

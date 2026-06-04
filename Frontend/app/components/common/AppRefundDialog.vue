@@ -3,7 +3,6 @@ import { watch } from 'vue'
 import { formatCurrency } from '~/utils/format/currency'
 import type { ReportRow } from '~/types'
 import { sanitizeByTextRule } from '~/utils/validation/textRules'
-import { modalUiConfirm, dialogFooterActions, dialogHeaderRow } from '~/utils/ui/overlayUi'
 
 const open = defineModel<boolean>('open', { default: false })
 const refundReason = defineModel<string>('reason', { default: '' })
@@ -26,20 +25,11 @@ watch(refundReason, (value) => {
 </script>
 
 <template>
-  <UModal v-model:open="open" :dismissible="false" :ui="modalUiConfirm">
+  <UModal v-model:open="open" :dismissible="false" :ui="{ content: 'sm:max-w-md flex flex-col' }">
     <template #header>
-      <div :class="dialogHeaderRow">
-        <h3 class="flex-1 min-w-0 text-sm font-semibold truncate">
-          {{ t('pages.report.refundDialog.title') }}
-        </h3>
-        <UButton
-          icon="i-lucide-x"
-          color="neutral"
-          variant="ghost"
-          size="sm"
-          square
-          @click="open = false"
-        />
+      <div class="flex items-center gap-2 w-full">
+        <h3 class="font-semibold mr-auto">{{ t('pages.report.refundDialog.title') }}</h3>
+        <UButton icon="i-lucide-x" color="neutral" variant="ghost" size="sm" @click="open = false" />
       </div>
     </template>
 
@@ -61,30 +51,19 @@ watch(refundReason, (value) => {
         </div>
 
         <UFormField :label="t('pages.report.refundDialog.reason')" required>
-          <UTextarea
-            v-model="refundReason"
-            :placeholder="t('pages.report.refundDialog.reasonPlaceholder')"
-            :rows="3"
-            class="w-full"
-          />
+          <UTextarea v-model="refundReason" :placeholder="t('pages.report.refundDialog.reasonPlaceholder')" :rows="3"
+            class="w-full" />
         </UFormField>
       </div>
     </template>
 
     <template #footer>
-      <div :class="dialogFooterActions">
+      <div class="flex justify-end gap-2 w-full">
         <UButton color="neutral" variant="ghost" @click="open = false">
           {{ t('actions.cancel') }}
         </UButton>
-        <UButton
-          type="button"
-          color="warning"
-          variant="solid"
-          icon="i-lucide-rotate-ccw"
-          :loading="submitting"
-          :disabled="!refundReason.trim() || submitting"
-          @click.stop="emit('confirm')"
-        >
+        <UButton type="button" color="warning" variant="solid" icon="i-lucide-rotate-ccw" :loading="submitting"
+          :disabled="!refundReason.trim() || submitting" @click.stop="emit('confirm')">
           {{ t('pages.report.refundDialog.confirm') }}
         </UButton>
       </div>
