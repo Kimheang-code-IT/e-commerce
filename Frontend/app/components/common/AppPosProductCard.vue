@@ -22,7 +22,7 @@ const stockColor = computed<'primary' | 'warning' | 'error'>(() => {
 
 <template>
   <UCard
-    :ui="{ body: 'p-0 sm:p-0 flex flex-col h-full', root: 'rounded-none overflow-hidden transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 bg-card group h-full' }"
+    :ui="{ body: 'p-0 sm:p-0 flex flex-col h-full', root: 'rounded-sm overflow-hidden transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 bg-card group h-full' }"
     :class="inCart ? 'border-primary/60 ring-1 ring-primary/30' : 'border-default'"
   >
     <div class="relative flex-1 min-h-44 max-h-50 bg-muted overflow-hidden">
@@ -33,7 +33,7 @@ const stockColor = computed<'primary' | 'warning' | 'error'>(() => {
         loading="lazy"
       />
       <div class="absolute top-2 right-2 z-10">
-        <UBadge :color="stockColor" variant="solid" size="xs">
+        <UBadge :color="stockColor" variant="solid" size="md">
           {{ product.inStock }} {{ $t('pages.pos.productCard.inStock') }}
         </UBadge>
       </div>
