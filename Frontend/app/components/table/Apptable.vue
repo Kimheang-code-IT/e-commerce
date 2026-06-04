@@ -3,8 +3,11 @@
     <!-- Header Toolbar -->
     <div
       v-if="title || $slots.header || globalFilter !== undefined || columnVisibility !== undefined || filterValue !== undefined || filterValueSecondary !== undefined"
-      class="flex flex-row items-center gap-2 px-3 py-2.5 border-b border-accented shrink-0 overflow-hidden">
-      <div class="flex-1 flex items-center gap-2 min-w-0">
+      class="flex flex-wrap items-center gap-2 px-3 py-2.5 border-b border-accented shrink-0 overflow-hidden">
+      <div
+        v-show="!isMobileSearchExpanded"
+        class="flex flex-1 items-center gap-2 min-w-0 basis-full sm:basis-auto"
+      >
         <ClientOnly>
           <div v-if="title" class="min-w-0 hidden md:block">
             <h2 v-if="title" class="font-medium text-foreground tracking-tight leading-none truncate">{{ title }}
@@ -16,7 +19,10 @@
         <slot name="header" />
       </div>
 
-      <div class="flex flex-nowrap items-center gap-2 max-w-full overflow-hidden shrink-0">
+      <div
+        v-show="!isMobileSearchExpanded"
+        class="flex flex-nowrap items-center gap-2 max-w-full overflow-hidden shrink-0 basis-full sm:basis-auto sm:ml-auto"
+      >
         <!-- Multi-Select Filters -->
         <CommonAppMutilSelect v-if="filterValue !== undefined && filterItems" v-model="filterValue" :items="filterItems"
           :placeholder="filterPlaceholder || $t('components.search')" />
@@ -32,11 +38,15 @@
           :items="filterItemsThird"
           :placeholder="filterPlaceholderThird || $t('components.search')"
         />
+      </div>
 
-        <!-- Global Filter Input -->
-        <div v-if="globalFilter !== undefined" class="w-52">
-          <CommonAppSearch v-model="globalFilter" />
-        </div>
+      <!-- Global Filter Input -->
+      <div
+        v-if="globalFilter !== undefined"
+        class="shrink-0"
+        :class="isMobileSearchExpanded ? 'w-full basis-full' : 'w-auto sm:w-52 ml-auto sm:ml-0'"
+      >
+        <CommonAppSearch v-model="globalFilter" v-model:expanded="tableSearchExpanded" />
       </div>
     </div>
 
@@ -49,16 +59,11 @@
         color: 'primary',
         animation: 'carousel'
       }" 
-      :virtualize="virtualize ? { estimateSize: 44, overscan: 10 } : false"
+      :virtualize="virtualizeOptions"
       :sticky="tableSticky"
       class="flex-1 overflow-auto min-h-0 relative scroll-shadow-right"
-      :ui="{
-        thead: 'sticky top-0 inset-x-0 z-20 bg-neutral-100 dark:bg-slate-800',
-        th: 'py-2 px-3 text-sm font-normal text-muted-foreground bg-neutral-100 dark:bg-slate-800 whitespace-nowrap',
-        tfoot: 'sticky bottom-0 inset-x-0 z-20 bg-neutral-100 dark:bg-slate-800 border-t border-default shadow-[0_-2px_8px_rgba(0,0,0,0.06)] dark:shadow-[0_-2px_8px_rgba(0,0,0,0.25)]',
-        tr: 'border-b border-accented/50 last:border-b-0',
-        td: 'py-2 px-3 text-sm font-normal'
-      }">
+      :ui="tableUi"
+    >
       <!-- Loading State: Skeleton Rows -->
       <template #loading-state>
         <div class="flex flex-col">
@@ -114,8 +119,8 @@
 </template>
 
 <script setup lang="ts" generic="T">
-import { h, computed, onMounted, useTemplateRef, resolveComponent, useAttrs } from 'vue'
-import { useInfiniteScroll } from '@vueuse/core'
+import { h, computed, onMounted, ref, useTemplateRef, resolveComponent, useAttrs } from 'vue'
+import { breakpointsTailwind, useBreakpoints, useInfiniteScroll } from '@vueuse/core'
 import type { TableColumn, DropdownMenuItem } from '@nuxt/ui'
 import { getPaginationRowModel } from '@tanstack/vue-table'
 import type { Column } from '@tanstack/vue-table'
@@ -141,11 +146,37 @@ const props = withDefaults(defineProps<{
   title?: string
   selectable?: boolean
   totalRows?: number
+  density?: 'default' | 'compact'
 }>(), {
   canLoadMore: true,
   virtualize: true,
-  selectable: true // Default to true if rowSelection is provided 
+  selectable: true, // Default to true if rowSelection is provided
+  density: 'default',
 })
+
+const tableUi = computed(() => {
+  const compact = props.density === 'compact'
+  const cell = compact
+    ? 'py-1.5 px-2 text-xs sm:text-sm font-normal whitespace-nowrap'
+    : 'py-2 px-3 text-sm font-normal'
+  const head = compact
+    ? 'py-1.5 px-2 text-xs sm:text-sm font-normal text-muted-foreground bg-neutral-100 dark:bg-slate-800 whitespace-nowrap'
+    : 'py-2 px-3 text-sm font-normal text-muted-foreground bg-neutral-100 dark:bg-slate-800 whitespace-nowrap'
+  return {
+    thead: 'sticky top-0 inset-x-0 z-20 bg-neutral-100 dark:bg-slate-800',
+    th: head,
+    tfoot:
+      'sticky bottom-0 inset-x-0 z-20 bg-neutral-100 dark:bg-slate-800 border-t border-default shadow-[0_-2px_8px_rgba(0,0,0,0.06)] dark:shadow-[0_-2px_8px_rgba(0,0,0,0.25)]',
+    tr: 'border-b border-accented/50 last:border-b-0',
+    td: cell,
+  }
+})
+
+const virtualizeOptions = computed(() =>
+  props.virtualize
+    ? { estimateSize: props.density === 'compact' ? 36 : 44, overscan: 10 }
+    : false,
+)
 
 // V-Models for TanStack Table state
 const filterValue = defineModel<any[]>('filterValue')
@@ -168,6 +199,12 @@ const emit = defineEmits<{
 
 const table = useTemplateRef<any>('table')
 const attrs = useAttrs()
+
+const tableSearchExpanded = ref(false)
+const isMobileToolbar = useBreakpoints(breakpointsTailwind).smaller('sm')
+const isMobileSearchExpanded = computed(
+  () => isMobileToolbar.value && tableSearchExpanded.value,
+)
 
 function columnsHaveFooter(cols: any[]): boolean {
   for (const col of cols) {

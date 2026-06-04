@@ -25,11 +25,11 @@ const stockColor = computed<'primary' | 'warning' | 'error'>(() => {
     :ui="{ body: 'p-0 sm:p-0 flex flex-col h-full', root: 'rounded-sm overflow-hidden transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 bg-card group h-full' }"
     :class="inCart ? 'border-primary/60 ring-1 ring-primary/30' : 'border-default'"
   >
-    <div class="relative flex-1 min-h-44 max-h-50 bg-muted overflow-hidden">
+    <div class="relative flex-1 min-h-32 max-h-44 sm:min-h-44 sm:max-h-50 bg-muted overflow-hidden">
       <img
         :src="product.image"
         :alt="product.name"
-        class="w-full h-full min-h-44 max-h-50 object-contain object-center transition-transform duration-300 group-hover:scale-[1.02]"
+        class="w-full h-full min-h-32 max-h-44 sm:min-h-44 sm:max-h-50 object-contain object-center transition-transform duration-300 group-hover:scale-[1.02]"
         loading="lazy"
       />
       <div class="absolute top-2 right-2 z-10">
@@ -45,18 +45,30 @@ const stockColor = computed<'primary' | 'warning' | 'error'>(() => {
         </p>
       </div>
     </div>
-    <div class="flex flex-col gap-1.5 px-3 pt-2.5 pb-1 shrink-0">
-      <p class="text-base font-bold text-primary">
+    <div class="flex flex-col gap-1 px-2 pt-2 pb-1 sm:gap-1.5 sm:px-3 sm:pt-2.5 shrink-0">
+      <p class="text-sm sm:text-base font-bold text-primary">
         {{ formatCurrency(product.outPrice, 'USD') }}
       </p>
     </div>
 
-    <div class="px-3 pb-3 pt-1 shrink-0">
+    <div class="px-2 pb-2 pt-1 sm:px-3 sm:pb-3 shrink-0">
+      <UButton
+        block
+        size="sm"
+        class="sm:hidden"
+        icon="i-lucide-plus"
+        color="primary"
+        :variant="inCart ? 'outline' : 'solid'"
+        :disabled="(product.inStock || 0) === 0 || (cartQty || 0) >= (product.inStock || 0)"
+        :aria-label="inCart ? $t('pages.pos.productCard.addMore') : $t('pages.pos.productCard.addToCart')"
+        @click="emit('add', product)"
+      />
       <UButton
         block
         size="md"
         icon="i-lucide-plus"
         color="primary"
+        class="hidden sm:flex"
         :variant="inCart ? 'outline' : 'solid'"
         :disabled="(product.inStock || 0) === 0 || (cartQty || 0) >= (product.inStock || 0)"
         @click="emit('add', product)"

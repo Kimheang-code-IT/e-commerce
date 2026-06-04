@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { modalUiSm, dialogFooterActions } from '~/utils/ui/overlayUi'
+
 const open = defineModel<boolean>("open", { default: false });
 const qty = defineModel<number>("qty", { default: 0 });
 const inPrice = defineModel<number>("inPrice", { default: 0 });
@@ -61,7 +63,7 @@ const canApply = computed(() => {
 </script>
 
 <template>
-  <UModal v-model:open="open" :dismissible="false" :ui="{ content: 'max-w-md' }">
+  <UModal v-model:open="open" :dismissible="false" :ui="modalUiSm">
     <template #header>
       <div class="flex items-center justify-between w-full">
         <div class="flex items-center gap-2">
@@ -81,7 +83,7 @@ const canApply = computed(() => {
     </template>
 
     <template #body>
-      <div class="space-y-3">
+      <div class="space-y-3 overflow-auto flex-1 min-h-0 px-1">
         <template v-if="mode === 'damaged'">
           <p class="text-xs text-muted-foreground">
             {{ $t("components.stockAdjust.damagedLotHint") }}
@@ -165,7 +167,7 @@ const canApply = computed(() => {
     </template>
 
     <template #footer>
-      <div class="flex justify-end gap-2 w-full">
+      <div :class="dialogFooterActions">
         <UButton color="neutral" variant="soft" @click="open = false">
           {{ $t("actions.cancel") }}
         </UButton>

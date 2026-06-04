@@ -3,6 +3,7 @@
  * Stock addition / damage history with per-row edit (adjust totals).
  */
 import { useProductApi } from '~/utils/api'
+import { modalUiSm, dialogFooterActions, dialogBody } from '~/utils/ui/overlayUi'
 
 const open = defineModel<boolean>('open', { default: false })
 const range = defineModel<any>('range')
@@ -122,42 +123,35 @@ async function saveEdit() {
 </script>
 
 <template>
-  <UModal v-model:open="open" :dismissible="false" :ui="{ content: 'sm:max-w-5xl h-[80vh] flex flex-col' }">
-    <template #header>
-      <div class="flex flex-col gap-2 w-full sm:flex-row sm:items-center sm:justify-between">
-        <div class="flex flex-wrap items-center gap-2">
-          <h3 class="font-semibold">{{ productName }}</h3>
-          <UBadge :color="type === 'added' ? 'primary' : 'error'" variant="soft" size="sm">
-            {{ type === 'added' ? $t('product.historyTitleAdded') : $t('product.historyTitleDamaged') }}
-          </UBadge>
-          <UBadge color="neutral" variant="outline" size="sm">
-            {{ $t('product.historyPageQtyTotal') }}: {{ pageQtyTotal }}
-          </UBadge>
-          <span class="text-xs text-muted">{{ $t('product.historyRecordsTotal', { count: total }) }}</span>
-        </div>
-        <div class="flex items-center gap-2">
-          <CommonAppDatepicker v-model:range="range" />
-          <UButton
-            icon="i-lucide-x"
-            color="neutral"
-            variant="ghost"
-            size="sm"
-            @click="open = false"
-          />
-        </div>
+  <CommonAppDataTableModal v-model:open="open" :title="productName">
+    <template #header-meta>
+      <div class="flex flex-wrap items-center gap-2">
+        <UBadge :color="type === 'added' ? 'primary' : 'error'" variant="soft" size="sm">
+          {{ type === 'added' ? $t('product.historyTitleAdded') : $t('product.historyTitleDamaged') }}
+        </UBadge>
+        <UBadge color="neutral" variant="outline" size="sm">
+          {{ $t('product.historyPageQtyTotal') }}: {{ pageQtyTotal }}
+        </UBadge>
+        <span class="text-xs text-muted-foreground">
+          {{ $t('product.historyRecordsTotal', { count: total }) }}
+        </span>
       </div>
     </template>
 
-    <template #body>
-      <TableApptable
-        :columns="columns"
-        :data="data"
-        :loading="loading"
-        :total-rows="total"
-        v-model:pagination="pagination"
-        :selectable="false"
-        class="h-full"
-      >
+    <template #header-actions>
+      <CommonAppDatepicker v-model:range="range" class="w-full sm:w-auto shrink-0" />
+    </template>
+
+    <TableApptable
+      density="compact"
+      :columns="columns"
+      :data="data"
+      :loading="loading"
+      :total-rows="total"
+      v-model:pagination="pagination"
+      :selectable="false"
+      class="h-full min-h-[200px]"
+    >
         <template #id-cell="{ row }">
           <span class="text-xs text-muted-foreground">#{{ row.original.id }}</span>
         </template>
@@ -193,11 +187,10 @@ async function saveEdit() {
             @click="openEdit(row.original)"
           />
         </template>
-      </TableApptable>
-    </template>
-  </UModal>
+    </TableApptable>
+  </CommonAppDataTableModal>
 
-  <UModal v-model:open="isEditOpen" :dismissible="false" :ui="{ content: 'max-w-md' }">
+  <UModal v-model:open="isEditOpen" :dismissible="false" :ui="modalUiSm">
     <template #header>
       <div class="flex items-center justify-between w-full">
         <h3 class="font-semibold">
@@ -208,7 +201,7 @@ async function saveEdit() {
       </div>
     </template>
     <template #body>
-      <div class="space-y-3">
+      <div :class="[dialogBody, 'space-y-3']">
         <UFormField :label="$t('product.qty')">
           <UInput v-model.number="editQty" type="number" min="1" step="1" class="w-full" />
         </UFormField>
@@ -226,7 +219,7 @@ async function saveEdit() {
       </div>
     </template>
     <template #footer>
-      <div class="flex justify-end gap-2 w-full">
+      <div :class="dialogFooterActions">
         <UButton color="neutral" variant="soft" @click="isEditOpen = false">
           {{ $t('actions.cancel') }}
         </UButton>

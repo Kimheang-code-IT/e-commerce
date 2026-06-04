@@ -42,10 +42,7 @@ const typeConfig = computed(() => {
   }
 })
 
-const modalUi = {
-  content: 'max-w-md w-[95vw] sm:w-full',
-  header: 'border-none p-0'
-} as const
+import { modalUiSm, dialogFooterActions } from '~/utils/ui/overlayUi'
 
 const resolvedTitle = computed(() => props.title || $t('components.confirmAction'))
 const resolvedDescription = computed(() => props.description || $t('components.confirmDesc'))
@@ -65,11 +62,11 @@ function onSubmit() {
 </script>
 
 <template>
-  <UModal v-model:open="open" :dismissible="false" :ui="modalUi">
+  <UModal v-model:open="open" :dismissible="false" :ui="modalUiSm">
     <template #header>
-      <div class="flex items-center justify-between w-full px-3 py-2">
-        <div class="flex items-center gap-2">
-          <h3 class="text-xl font-bold text-highlighted tracking-tight leading-tight">
+      <div class="flex items-center justify-between w-full px-3 py-2 sm:px-4">
+        <div class="flex items-center gap-2 min-w-0">
+          <h3 class="text-lg sm:text-xl font-bold text-highlighted tracking-tight leading-tight line-clamp-2">
             {{ resolvedTitle }}
           </h3>
         </div>
@@ -78,7 +75,7 @@ function onSubmit() {
     </template>
 
     <template #body>
-      <div class="px-3">
+      <div class="px-3 sm:px-4 overflow-auto flex-1 min-h-0">
         <!-- Message -->
         <p class="text-sm text-muted-foreground font-medium leading-relaxed ">
           {{ resolvedDescription }}
@@ -91,7 +88,7 @@ function onSubmit() {
     </template>
 
     <template #footer>
-      <div class="flex items-center justify-end gap-3 w-full">
+      <div :class="dialogFooterActions">
         <UButton :label="resolvedCancelLabel" color="neutral" variant="soft" size="lg" class="font-semibold"
           :disabled="loading" @click="onCancel" />
         <UButton :label="resolvedSubmitLabel" :color="typeConfig.color" variant="solid" size="lg"

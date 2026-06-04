@@ -1,7 +1,10 @@
 <script setup lang="ts">
+import { breakpointsTailwind, useBreakpoints } from '@vueuse/core'
 import { formatCurrency } from '~/utils/format/currency'
 import { useSupplierTable } from '~/composables/table/usersupplier'
 import type { Supplier } from '~/types'
+
+const isMobileHeader = useBreakpoints(breakpointsTailwind).smaller('sm')
 
 const {
   rowSelection,
@@ -71,9 +74,11 @@ function onSubmitSupplierProduct(data: Record<string, any>) {
           color="primary"
           variant="solid"
           class="font-normal shadow-sm shrink-0"
+          :aria-label="$t('pages.supplier.addBtn')"
+          :square="isMobileHeader"
           @click="handleAddNew"
         >
-          Add Supplier
+          <span class="hidden sm:inline">{{ $t('pages.supplier.addBtn') }}</span>
         </UButton>
       </template>
     </LayoutAppHeader>

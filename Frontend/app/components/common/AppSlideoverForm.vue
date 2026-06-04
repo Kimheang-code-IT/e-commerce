@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { ref, watch, computed, onBeforeUnmount, nextTick } from 'vue'
+import { ref, watch, computed, onBeforeUnmount, nextTick, resolveComponent } from 'vue'
+import { breakpointsTailwind, useBreakpoints } from '@vueuse/core'
+import { modalUiSm, dialogFooterActions } from '~/utils/ui/overlayUi'
 import { parseDate } from '@internationalized/date'
 import type { FormField } from '~/types'
 import { sanitizeByTextRule, textRuleErrorMessage, resolveCurrencyPrefix } from '~/utils/validation/textRules'
@@ -18,6 +20,16 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
+
+const breakpoints = useBreakpoints(breakpointsTailwind)
+const isMobile = breakpoints.smaller('sm')
+const UModal = resolveComponent('UModal')
+const USlideover = resolveComponent('USlideover')
+
+const overlayComponent = computed(() => (isMobile.value ? UModal : USlideover))
+
+const resolvedTitle = computed(() => props.title || t('components.processData'))
+const resolvedSubmitLabel = computed(() => props.submitLabel || t('components.saveChanges'))
 
 // Internal form state
 const formData = ref<FormRecord>({})
@@ -441,16 +453,18 @@ function onSave() {
 </script>
 
 <template>
-  <USlideover 
-    v-model:open="open" 
-    :title="title || $t('components.processData')"
+  <component
+    :is="overlayComponent"
+    v-model:open="open"
     :dismissible="false"
-    class="max-w-md"
+    :title="isMobile ? undefined : resolvedTitle"
+    :ui="isMobile ? modalUiSm : undefined"
+    :class="isMobile ? undefined : 'max-w-md'"
   >
     <template #header>
-      <div class="flex items-center justify-between w-full px-1">
-        <h3 class="font-semibold text-highlighted">
-          {{ title || $t('components.processData') }}
+      <div class="flex items-center justify-between w-full px-1 sm:px-2">
+        <h3 class="font-semibold text-highlighted text-base sm:text-lg line-clamp-2 min-w-0">
+          {{ resolvedTitle }}
         </h3>
         <UButton
           icon="i-lucide-x"
@@ -463,7 +477,10 @@ function onSave() {
     </template>
 
     <template #body>
-      <div ref="formBodyRef" class="flex flex-col space-y-3 px-1 w-full overflow-hidden">
+      <div
+        ref="formBodyRef"
+        class="flex flex-col space-y-3 px-1 sm:px-2 w-full overflow-auto flex-1 min-h-0 max-h-[min(70dvh,560px)] sm:max-h-none"
+      >
         <template v-for="field in activeFields" :key="field.key">
             <UFormField
                 class="w-full"
@@ -649,16 +666,16 @@ function onSave() {
     </template>
 
     <template #footer>
-      <div class="flex items-center justify-end gap-3 w-full px-1">
+      <div :class="[dialogFooterActions, 'px-1 sm:px-2']">
         <UButton :label="$t('components.cancel')" color="neutral" variant="soft" @click="open = false" />
-        <UButton 
-            :label="submitLabel || $t('components.saveChanges')" 
-            color="primary" 
-            variant="solid" 
-            class="font-semibold shadow-sm px-6"
-            @click="onSave" 
+        <UButton
+          :label="resolvedSubmitLabel"
+          color="primary"
+          variant="solid"
+          class="font-semibold shadow-sm px-6"
+          @click="onSave"
         />
       </div>
     </template>
-  </USlideover>
+  </component>
 </template>

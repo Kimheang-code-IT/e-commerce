@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { breakpointsTailwind, useBreakpoints } from '@vueuse/core'
 import { usePos } from '~/composables/table/usePos'
 import { useInvoicePrinter } from '~/composables/useInvoicePrinter'
 import { formatDate } from '~/utils/format/date'
@@ -150,6 +151,10 @@ const previewCart = computed(() => {
     }
     return cart.value
 })
+
+const isPosSearchExpanded = ref(false)
+const isMobileToolbar = useBreakpoints(breakpointsTailwind).smaller('sm')
+const showCategoryTabs = computed(() => !isMobileToolbar.value || !isPosSearchExpanded.value)
 </script>
 
 <template>
@@ -211,14 +216,20 @@ const previewCart = computed(() => {
                     <div
                         class="flex flex-wrap items-center gap-2 px-3 py-3 border-b border-default shrink-0 bg-background/80 backdrop-blur-sm">
                         <!-- Category Pills -->
-                        <div class="min-w-0 flex-1 overflow-x-auto">
+                        <div v-show="showCategoryTabs" class="min-w-0 flex-1 overflow-x-auto">
                             <UTabs v-model="selectedCategoryId" :items="categoryTabs" size="xs" color="primary"
                                 :content="false" class="w-max min-w-full" />
                         </div>
 
-                        <div class="flex items-center gap-2 ml-auto">
-                            <!-- Search -->
-                            <CommonAppSearch v-model="searchQuery" :placeholder="t('common.search')" class="w-52" />
+                        <div
+                            class="flex items-center gap-2 shrink-0"
+                            :class="isPosSearchExpanded ? 'w-full sm:w-auto sm:ml-auto' : 'ml-auto'"
+                        >
+                            <CommonAppSearch
+                                v-model="searchQuery"
+                                v-model:expanded="isPosSearchExpanded"
+                                :placeholder="t('common.search')"
+                            />
                         </div>
                     </div>
 
@@ -233,8 +244,10 @@ const previewCart = computed(() => {
                         </div>
 
                         <!-- ── GRID View ── -->
-                        <div v-else-if="viewMode === 'grid'" class="grid gap-3"
-                            style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr))">
+                        <div
+                            v-else-if="viewMode === 'grid'"
+                            class="grid grid-cols-2 gap-2 sm:gap-3 sm:grid-cols-[repeat(auto-fill,minmax(200px,1fr))]"
+                        >
 
                             <CommonAppPosProductCard v-for="product in filteredProducts" :key="product.id"
                                 :product="product" :in-cart="isInCart(product.id)" :cart-qty="getCartQty(product.id)"
