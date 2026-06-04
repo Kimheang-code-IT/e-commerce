@@ -46,7 +46,7 @@ const dialogTitle = computed(
 <template>
   <CommonAppDataTableModal v-model:open="open" :title="dialogTitle">
     <template #header-actions>
-      <CommonAppDatepicker v-model:range="dateRange" class="w-full sm:w-auto shrink-0" />
+      <CommonAppDatepicker v-model:range="dateRange" icon-only-on-mobile class="shrink-0" />
     </template>
 
     <TableApptable

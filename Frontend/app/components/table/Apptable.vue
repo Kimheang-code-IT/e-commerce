@@ -7,14 +7,14 @@
       <div class="hidden md:flex flex-1 items-center gap-2 min-w-0">
         <ClientOnly>
           <div v-if="title" class="min-w-0">
-            <h2 v-if="title" class="font-medium text-foreground tracking-tight leading-none truncate">{{ title }}
+            <h2 v-if="title" class="text-sm font-medium text-foreground tracking-tight leading-none truncate">{{ title }}
             </h2>
           </div>
         </ClientOnly>
         <slot name="header" />
       </div>
 
-      <div class="flex flex-1 sm:flex-none sm:ml-auto items-center gap-1.5 min-w-0 overflow-hidden">
+      <div class="flex flex-1 justify-end items-center gap-1.5 min-w-0 overflow-hidden ml-auto">
         <div class="flex flex-nowrap items-center gap-1.5 min-w-0 overflow-x-auto overscroll-x-contain">
           <CommonAppMutilSelect
             v-if="filterValue !== undefined && filterItems"
@@ -152,14 +152,14 @@ const isMobileToolbar = useBreakpoints(breakpointsTailwind).smaller('sm')
 const tableUi = computed(() => {
   if (isMobileToolbar.value) {
     const mobileCell =
-      'py-1 px-1.5 text-[10px] leading-tight font-normal whitespace-nowrap'
+      'py-0.5 px-1 text-[9px] leading-tight font-normal whitespace-nowrap'
     const mobileHead =
-      'py-1 px-1.5 text-[10px] leading-tight font-medium text-muted-foreground bg-neutral-100 dark:bg-slate-800 whitespace-nowrap'
+      'py-0.5 px-1 text-[9px] leading-tight font-medium text-muted-foreground bg-neutral-100 dark:bg-slate-800 whitespace-nowrap'
     return {
       thead: 'sticky top-0 inset-x-0 z-20 bg-neutral-100 dark:bg-slate-800',
       th: mobileHead,
       tfoot:
-        'sticky bottom-0 inset-x-0 z-20 bg-neutral-100 dark:bg-slate-800 border-t border-default text-[10px]',
+        'sticky bottom-0 inset-x-0 z-20 bg-neutral-100 dark:bg-slate-800 border-t border-default text-[9px] py-0.5 px-1',
       tr: 'border-b border-accented/50 last:border-b-0',
       td: mobileCell,
     }

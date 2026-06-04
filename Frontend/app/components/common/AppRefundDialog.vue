@@ -3,7 +3,7 @@ import { watch } from 'vue'
 import { formatCurrency } from '~/utils/format/currency'
 import type { ReportRow } from '~/types'
 import { sanitizeByTextRule } from '~/utils/validation/textRules'
-import { modalUiSm, dialogFooterActions } from '~/utils/ui/overlayUi'
+import { modalUiConfirm, dialogFooterActions, dialogHeaderRow } from '~/utils/ui/overlayUi'
 
 const open = defineModel<boolean>('open', { default: false })
 const refundReason = defineModel<string>('reason', { default: '' })
@@ -26,11 +26,20 @@ watch(refundReason, (value) => {
 </script>
 
 <template>
-  <UModal v-model:open="open" :dismissible="false" :ui="modalUiSm">
+  <UModal v-model:open="open" :dismissible="false" :ui="modalUiConfirm">
     <template #header>
-      <div class="flex items-center gap-2 w-full">
-        <h3 class="font-semibold mr-auto">{{ t('pages.report.refundDialog.title') }}</h3>
-        <UButton icon="i-lucide-x" color="neutral" variant="ghost" size="sm" @click="open = false" />
+      <div :class="dialogHeaderRow">
+        <h3 class="flex-1 min-w-0 text-sm font-semibold truncate">
+          {{ t('pages.report.refundDialog.title') }}
+        </h3>
+        <UButton
+          icon="i-lucide-x"
+          color="neutral"
+          variant="ghost"
+          size="sm"
+          square
+          @click="open = false"
+        />
       </div>
     </template>
 

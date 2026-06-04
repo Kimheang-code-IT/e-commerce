@@ -292,7 +292,7 @@ function catalogPrice(product: Product) {
     <!-- Step 0: Next only -->
     <div
       v-if="isCartStep"
-      class="border-t border-default px-4 py-3 bg-card shrink-0"
+      class="border-t border-default px-4 py-3 max-sm:pb-10 bg-card shrink-0"
     >
       <UButton
         block
@@ -311,7 +311,7 @@ function catalogPrice(product: Product) {
     <!-- Steps 1–2: full summary + Next / Finish -->
     <div
       v-else-if="isSummaryStep"
-      class="border-t border-default px-4 py-3 flex flex-col gap-2.5 bg-card shrink-0"
+      class="border-t border-default px-4 py-3 max-sm:pb-10 flex flex-col gap-2.5 bg-card shrink-0"
     >
       <div class="flex justify-between text-sm text-muted-foreground">
         <span>{{ $t('pages.pos.cart.items') }}</span>

@@ -1,9 +1,14 @@
-/** Shared UModal / overlay layout classes for mobile-friendly overlays. */
+/** Shared UModal / overlay layout classes. */
 
 const mobileFullscreen =
   'max-sm:w-[100dvw] max-sm:max-w-[100dvw] max-sm:h-[100dvh] max-sm:max-h-[100dvh] max-sm:min-h-[100dvh] max-sm:m-0 max-sm:rounded-none'
 
-export const dialogContentSm = [
+/** Centered confirm / small dialogs (all breakpoints). */
+export const dialogContentConfirm =
+  'w-[min(96vw,28rem)] max-w-[96vw] sm:max-w-md max-h-[min(88dvh,640px)] flex flex-col m-2 sm:m-0'
+
+/** Full-screen forms on mobile; slideover width on desktop. */
+export const dialogContentForm = [
   'flex flex-col',
   mobileFullscreen,
   'w-[min(96vw,28rem)] max-w-[96vw] sm:max-w-md',
@@ -11,6 +16,7 @@ export const dialogContentSm = [
   'sm:m-0',
 ].join(' ')
 
+/** Table data dialogs — full screen on mobile. */
 export const dialogContentTable = [
   'flex flex-col',
   mobileFullscreen,
@@ -20,19 +26,29 @@ export const dialogContentTable = [
   'sm:m-0',
 ].join(' ')
 
-export const dialogBody = 'flex-1 min-h-0 overflow-auto px-3 py-2 sm:px-4 sm:py-3 max-sm:px-2 max-sm:py-2'
+export const dialogBody = 'flex-1 min-h-0 overflow-auto px-2 py-2 sm:px-4 sm:py-3'
 
-export const dialogHeader =
-  'shrink-0 px-3 py-2 sm:px-4 max-sm:px-2 max-sm:py-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between w-full'
+export const dialogHeaderRow =
+  'shrink-0 px-2 py-2 flex flex-nowrap items-center gap-2 w-full min-w-0'
+
+export const dialogHeaderMeta = 'px-2 pb-2 flex flex-wrap items-center gap-1.5 w-full'
 
 export const dialogFooter =
-  'shrink-0 px-3 py-3 sm:px-4 max-sm:px-2 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end overlay-safe-footer w-full'
+  'shrink-0 px-2 py-2 sm:py-3 flex flex-row flex-wrap justify-end items-center gap-2 overlay-safe-footer w-full'
 
+/** Footer buttons always on one row (mobile + desktop). */
 export const dialogFooterActions =
-  'flex flex-col-reverse gap-2 sm:flex-row sm:justify-end w-full [&_button]:min-h-11'
+  'flex flex-row flex-wrap justify-end items-center gap-2 w-full [&_button]:min-h-10 sm:[&_button]:min-h-11'
 
-export const modalUiSm = {
-  content: dialogContentSm,
+export const modalUiConfirm = {
+  content: dialogContentConfirm,
+  header: 'border-none p-0 shrink-0',
+  body: 'p-0 flex-1 min-h-0 overflow-hidden flex flex-col',
+  footer: 'border-none p-0 shrink-0',
+} as const
+
+export const modalUiForm = {
+  content: dialogContentForm,
   header: 'border-none p-0 shrink-0',
   body: 'p-0 flex-1 min-h-0 overflow-hidden flex flex-col',
   footer: 'border-none p-0 shrink-0',
@@ -44,3 +60,6 @@ export const modalUiTable = {
   body: 'p-0 flex-1 min-h-0 overflow-hidden flex flex-col',
   footer: 'border-none p-0 shrink-0',
 } as const
+
+/** @deprecated Use modalUiConfirm or modalUiForm */
+export const modalUiSm = modalUiConfirm

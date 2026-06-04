@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { formatCurrency } from '~/utils/format/currency'
-import { formatDate } from '~/utils/format/date'
+import { formatDateOnly } from '~/utils/format/date'
 import {
   buildInvoiceDisplayRows,
   type PosCartItem,
@@ -62,7 +62,7 @@ const displayRows = computed(() => buildInvoiceDisplayRows(props.cart ?? []))
                 <span class="text-slate-600 font-medium">{{ t('pages.pos.invoice.fields.invoiceNo') }}:</span>
                 <span class="font-medium text-slate-900">{{ selectedReportInvoice?.invoiceNo || checkoutInvoiceNo || '-' }}</span>
                 <span class="text-slate-600 font-medium">{{ t('pages.pos.invoice.fields.date') }}:</span>
-                <span class="font-medium text-slate-900">{{ formatDate(selectedReportInvoice?.date || new Date()) }}</span>
+                <span class="font-medium text-slate-900">{{ formatDateOnly(selectedReportInvoice?.date || new Date()) }}</span>
                 <span class="text-slate-600 font-medium">{{ t('pages.pos.invoice.fields.deliveryPrice') }}:</span>
                 <span class="font-medium text-slate-900">{{ formatCurrency(deliveryPrice || 0, 'USD') }}</span>
               </div>

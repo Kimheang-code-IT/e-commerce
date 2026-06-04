@@ -13,11 +13,23 @@ const emit = defineEmits<{
   (e: 'filter-category', categoryId: string): void
 }>()
 
+const { t } = useI18n()
+
 const stockColor = computed<'primary' | 'warning' | 'error'>(() => {
   if (props.product.inStock > 10) return 'primary'
   if (props.product.inStock > 0) return 'warning'
   return 'error'
 })
+
+const addLabel = computed(() =>
+  props.inCart ? t('pages.pos.productCard.addMore') : t('pages.pos.productCard.addToCart'),
+)
+
+const cannotAdd = computed(
+  () =>
+    (props.product.inStock || 0) === 0 ||
+    (props.cartQty || 0) >= (props.product.inStock || 0),
+)
 </script>
 
 <template>
@@ -33,14 +45,14 @@ const stockColor = computed<'primary' | 'warning' | 'error'>(() => {
         loading="lazy"
       />
       <div class="absolute top-2 right-2 z-10">
-        <UBadge :color="stockColor" variant="solid" size="md">
+        <UBadge :color="stockColor" variant="solid" size="sm" class="max-sm:text-[10px]">
           {{ product.inStock }} {{ $t('pages.pos.productCard.inStock') }}
         </UBadge>
       </div>
       <div
         class="absolute inset-x-0 bottom-0 z-10 bg-linear-to-t from-black/80 via-black/50 to-transparent pt-10 pb-2 px-2.5 pointer-events-none"
       >
-        <p class="text-md font-semibold text-white leading-snug line-clamp-2 drop-shadow-sm">
+        <p class="text-sm sm:text-md font-semibold text-white leading-snug line-clamp-2 drop-shadow-sm">
           {{ product.name }}
         </p>
       </div>
@@ -55,14 +67,15 @@ const stockColor = computed<'primary' | 'warning' | 'error'>(() => {
       <UButton
         block
         size="sm"
-        class="sm:hidden"
         icon="i-lucide-plus"
         color="primary"
+        class="max-sm:text-xs max-sm:py-2 sm:hidden"
         :variant="inCart ? 'outline' : 'solid'"
-        :disabled="(product.inStock || 0) === 0 || (cartQty || 0) >= (product.inStock || 0)"
-        :aria-label="inCart ? $t('pages.pos.productCard.addMore') : $t('pages.pos.productCard.addToCart')"
+        :disabled="cannotAdd"
         @click="emit('add', product)"
-      />
+      >
+        {{ addLabel }}
+      </UButton>
       <UButton
         block
         size="md"
@@ -70,10 +83,10 @@ const stockColor = computed<'primary' | 'warning' | 'error'>(() => {
         color="primary"
         class="hidden sm:flex"
         :variant="inCart ? 'outline' : 'solid'"
-        :disabled="(product.inStock || 0) === 0 || (cartQty || 0) >= (product.inStock || 0)"
+        :disabled="cannotAdd"
         @click="emit('add', product)"
       >
-        {{ inCart ? $t('pages.pos.productCard.addMore') : $t('pages.pos.productCard.addToCart') }}
+        {{ addLabel }}
       </UButton>
     </div>
   </UCard>

@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { modalUiConfirm, dialogFooterActions } from '~/utils/ui/overlayUi'
+
 const open = defineModel<boolean>('open')
 
 interface Props {
@@ -42,8 +44,6 @@ const typeConfig = computed(() => {
   }
 })
 
-import { modalUiSm, dialogFooterActions } from '~/utils/ui/overlayUi'
-
 const resolvedTitle = computed(() => props.title || $t('components.confirmAction'))
 const resolvedDescription = computed(() => props.description || $t('components.confirmDesc'))
 const resolvedCancelLabel = computed(() => props.cancelLabel || $t('components.cancel'))
@@ -62,9 +62,9 @@ function onSubmit() {
 </script>
 
 <template>
-  <UModal v-model:open="open" :dismissible="false" :ui="modalUiSm">
+  <UModal v-model:open="open" :dismissible="false" :ui="modalUiConfirm">
     <template #header>
-      <div class="flex items-center justify-between w-full px-3 py-2 sm:px-4">
+      <div class="flex items-center justify-between w-full px-2 py-2">
         <div class="flex items-center gap-2 min-w-0">
           <h3 class="text-lg sm:text-xl font-bold text-highlighted tracking-tight leading-tight line-clamp-2">
             {{ resolvedTitle }}
@@ -75,7 +75,7 @@ function onSubmit() {
     </template>
 
     <template #body>
-      <div class="px-3 sm:px-4 overflow-auto flex-1 min-h-0">
+      <div class="px-2 overflow-auto flex-1 min-h-0">
         <!-- Message -->
         <p class="text-sm text-muted-foreground font-medium leading-relaxed ">
           {{ resolvedDescription }}

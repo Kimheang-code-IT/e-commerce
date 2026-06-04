@@ -46,7 +46,7 @@ const triggerLabel = computed(() => {
       color="neutral"
       variant="subtle"
       icon="i-lucide-filter"
-      :trailing-icon="isMobile ? undefined : 'i-lucide-chevron-down'"
+      :trailing-icon="isMobile ? 'i-lucide-chevrons-up-down' : 'i-lucide-chevron-down'"
       :square="isMobile"
       class="shrink-0 font-normal max-sm:w-9 max-sm:px-0 sm:w-40 sm:justify-between sm:px-3"
       :size="isMobile ? 'sm' : 'md'"

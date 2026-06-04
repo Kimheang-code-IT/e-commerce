@@ -2,7 +2,7 @@
 import { ref, computed, watch } from 'vue'
 import { DateFormatter, getLocalTimeZone, parseDate } from '@internationalized/date'
 import { exportToCSV } from '~/utils/helpers/common'
-import { modalUiSm, dialogFooterActions } from '~/utils/ui/overlayUi'
+import { modalUiConfirm, dialogFooterActions } from '~/utils/ui/overlayUi'
 const open = defineModel<boolean>('open')
 type ExportRow = Record<string, any>
 type DateRangeModel = {
@@ -120,7 +120,7 @@ function onClose() {
 </script>
 
 <template>
-  <UModal v-model:open="open" :dismissible="false" :ui="modalUiSm">
+  <UModal v-model:open="open" :dismissible="false" :ui="modalUiConfirm">
     <template #header>
       <div class="flex items-center justify-between w-full px-4 pt-4">
         <div class="flex items-center gap-2.5">

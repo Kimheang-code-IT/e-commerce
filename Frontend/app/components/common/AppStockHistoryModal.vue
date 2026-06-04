@@ -3,7 +3,7 @@
  * Stock addition / damage history with per-row edit (adjust totals).
  */
 import { useProductApi } from '~/utils/api'
-import { modalUiSm, dialogFooterActions, dialogBody } from '~/utils/ui/overlayUi'
+import { modalUiConfirm, dialogFooterActions, dialogBody } from '~/utils/ui/overlayUi'
 
 const open = defineModel<boolean>('open', { default: false })
 const range = defineModel<any>('range')
@@ -139,7 +139,7 @@ async function saveEdit() {
     </template>
 
     <template #header-actions>
-      <CommonAppDatepicker v-model:range="range" class="w-full sm:w-auto shrink-0" />
+      <CommonAppDatepicker v-model:range="range" icon-only-on-mobile class="shrink-0" />
     </template>
 
     <TableApptable
@@ -190,7 +190,7 @@ async function saveEdit() {
     </TableApptable>
   </CommonAppDataTableModal>
 
-  <UModal v-model:open="isEditOpen" :dismissible="false" :ui="modalUiSm">
+  <UModal v-model:open="isEditOpen" :dismissible="false" :ui="modalUiConfirm">
     <template #header>
       <div class="flex items-center justify-between w-full">
         <h3 class="font-semibold">

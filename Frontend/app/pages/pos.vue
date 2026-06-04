@@ -226,7 +226,7 @@ const isPosSearchExpanded = ref(false)
                     </div>
 
                     <!-- Product Area — scrollable -->
-                    <div class="flex-1 overflow-y-auto p-3 relative">
+                    <div class="flex-1 overflow-y-auto p-3 max-sm:pb-10 relative">
 
                         <!-- Empty State -->
                         <div v-if="!isLoadingProducts && filteredProducts.length === 0"
@@ -293,7 +293,11 @@ const isPosSearchExpanded = ref(false)
 
             <div
                 v-if="!isInvoicePreviewMode"
-                :class="[mobilePanel === 'right' ? 'flex' : 'hidden', 'lg:flex w-full lg:w-[35%] min-h-0 h-full flex-col']">
+                :class="[
+                    mobilePanel === 'right' ? 'flex' : 'hidden',
+                    'lg:flex w-full lg:w-[35%] min-h-0 h-full flex-col',
+                    'max-sm:shrink-0',
+                ]">
                 <CommonAppPosCartPanel :cart="cart" :item-count="itemCount" :subtotal="subtotal"
                     v-model:discount-mode="discountMode" v-model:discount-input="discountInput"
                     :discount-amount="discountAmount" :total="total"

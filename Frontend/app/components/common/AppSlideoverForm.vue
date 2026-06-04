@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watch, computed, onBeforeUnmount, nextTick, resolveComponent } from 'vue'
 import { breakpointsTailwind, useBreakpoints } from '@vueuse/core'
-import { modalUiSm, dialogFooterActions } from '~/utils/ui/overlayUi'
+import { modalUiForm, dialogFooterActions } from '~/utils/ui/overlayUi'
 import { parseDate } from '@internationalized/date'
 import type { FormField } from '~/types'
 import { sanitizeByTextRule, textRuleErrorMessage, resolveCurrencyPrefix } from '~/utils/validation/textRules'
@@ -458,11 +458,11 @@ function onSave() {
     v-model:open="open"
     :dismissible="false"
     :title="isMobile ? undefined : resolvedTitle"
-    :ui="isMobile ? modalUiSm : undefined"
+    :ui="isMobile ? modalUiForm : undefined"
     :class="isMobile ? 'max-sm:rounded-none' : 'max-w-md'"
   >
     <template #header>
-      <div class="flex items-center justify-between w-full px-1 sm:px-2">
+      <div class="flex items-center justify-between w-full px-2">
         <h3 class="font-semibold text-highlighted text-base sm:text-lg line-clamp-2 min-w-0">
           {{ resolvedTitle }}
         </h3>
@@ -666,7 +666,7 @@ function onSave() {
     </template>
 
     <template #footer>
-      <div :class="[dialogFooterActions, 'px-1 sm:px-2']">
+      <div :class="[dialogFooterActions, 'px-2']">
         <UButton :label="$t('components.cancel')" color="neutral" variant="soft" @click="open = false" />
         <UButton
           :label="resolvedSubmitLabel"

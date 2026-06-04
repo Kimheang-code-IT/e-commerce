@@ -48,7 +48,7 @@ function handlePageChange(page: number) {
         :items="PAGE_SIZE_OPTIONS"
         variant="ghost"
         size="xs"
-        class="font-normal text-foreground w-14 sm:w-20 text-[10px] sm:text-xs"
+        class="font-normal text-foreground w-14 sm:w-20 text-[9px] sm:text-xs"
       />
     </div>
 
@@ -62,7 +62,7 @@ function handlePageChange(page: number) {
         @update:page="handlePageChange"
         active-color="primary"
         size="xs"
-        class="shrink-0 max-sm:[&_button]:min-w-7 max-sm:[&_button]:h-7 max-sm:text-[10px]"
+        class="shrink-0 max-sm:[&_button]:min-w-6 max-sm:[&_button]:h-6 max-sm:text-[9px]"
       />
     </div>
   </div>
