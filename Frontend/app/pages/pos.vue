@@ -76,6 +76,7 @@ async function handleFinishWithPrint() {
 
 function buildCartFromLines(lines: any[]) {
     return lines.map((line: any, index: number) => ({
+        lineId: `preview-${index}-${line.productId || 0}-${line.price || 0}`,
         product: {
             id: line.productId || -3000 - index,
             image: '',
@@ -93,7 +94,8 @@ function buildCartFromLines(lines: any[]) {
             status: 'active' as const,
             createdAt: line.date || new Date().toISOString()
         },
-        qty: Number(line.qty || 1)
+        qty: Number(line.qty || 1),
+        unitPrice: Number(line.price || 0),
     }))
 }
 

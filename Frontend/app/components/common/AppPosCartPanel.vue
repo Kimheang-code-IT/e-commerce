@@ -36,16 +36,16 @@ const props = withDefaults(
 
 const emit = defineEmits<{
   (e: 'clear-cart'): void
-  (e: 'update-qty', productId: number, delta: number): void
-  (e: 'remove-item', productId: number): void
-  (e: 'set-line-price', productId: number, price: number): void
-  (e: 'reset-line-price', productId: number): void
+  (e: 'update-qty', lineId: string, delta: number): void
+  (e: 'remove-item', lineId: string): void
+  (e: 'set-line-price', lineId: string, price: number): void
+  (e: 'reset-line-price', lineId: string): void
   (e: 'next'): void
 }>()
 
 const { t } = useI18n()
 
-const editingProductId = ref<number | null>(null)
+const editingLineId = ref<string | null>(null)
 const priceDraft = ref(0)
 
 const isCartStep = computed(() => props.currentStep === 0)
@@ -88,11 +88,11 @@ watch(discountMode, () => {
 })
 
 function isEditingItem(item: PosCartItem) {
-  return editingProductId.value === item.product.id
+  return editingLineId.value === item.lineId
 }
 
 function openPriceEdit(item: PosCartItem) {
-  editingProductId.value = item.product.id
+  editingLineId.value = item.lineId
   priceDraft.value = getLineUnitPrice(item)
 }
 
@@ -100,18 +100,28 @@ function commitPriceEdit(item: PosCartItem) {
   if (!isEditingItem(item)) return
   const price = Number(priceDraft.value)
   if (Number.isFinite(price) && price >= 0) {
-    emit('set-line-price', item.product.id, price)
+    emit('set-line-price', item.lineId, price)
   }
-  editingProductId.value = null
+  editingLineId.value = null
 }
 
 function cancelPriceEdit() {
-  editingProductId.value = null
+  editingLineId.value = null
 }
 
 function resetInlinePrice(item: PosCartItem) {
-  emit('reset-line-price', item.product.id)
-  editingProductId.value = null
+  emit('reset-line-price', item.lineId)
+  editingLineId.value = null
+}
+
+function hasDuplicateProductName(item: PosCartItem) {
+  return props.cart.filter((row) => row.product.name === item.product.name).length > 1
+}
+
+function getCartQtyForProduct(item: PosCartItem) {
+  return props.cart
+    .filter((row) => row.product.id === item.product.id)
+    .reduce((sum, row) => sum + row.qty, 0)
 }
 
 function catalogPrice(product: Product) {
@@ -160,7 +170,7 @@ function catalogPrice(product: Product) {
       <div v-else class="flex flex-col">
         <div
           v-for="item in cart"
-          :key="item.product.id"
+          :key="item.lineId"
           class="px-4 py-3 border-b border-default transition-colors"
           :class="[
             isEditingItem(item) ? 'bg-primary/5 ring-1 ring-inset ring-primary/20 py-3.5' : 'hover:bg-muted/30',
@@ -170,6 +180,12 @@ function catalogPrice(product: Product) {
             <div class="flex-1 min-w-0">
               <p class="text-sm font-medium text-foreground leading-tight line-clamp-2">
                 {{ item.product.name }}
+                <span
+                  v-if="hasDuplicateProductName(item)"
+                  class="text-primary font-semibold"
+                >
+                  @ {{ formatCurrency(getLineUnitPrice(item), 'USD') }}
+                </span>
               </p>
               <p
                 v-if="!isEditingItem(item)"
@@ -189,7 +205,7 @@ function catalogPrice(product: Product) {
                     variant="outline"
                     icon="i-lucide-minus"
                     class="size-6 p-0 min-w-0 items-center justify-center"
-                    @click="emit('update-qty', item.product.id, -1)"
+                    @click="emit('update-qty', item.lineId, -1)"
                   />
                   <span class="w-7 text-center text-sm font-medium tabular-nums">
                     {{ item.qty }}
@@ -200,8 +216,8 @@ function catalogPrice(product: Product) {
                     variant="outline"
                     icon="i-lucide-plus"
                     class="size-6 p-0 min-w-0 items-center justify-center"
-                    :disabled="item.qty >= item.product.inStock"
-                    @click="emit('update-qty', item.product.id, 1)"
+                    :disabled="getCartQtyForProduct(item) >= item.product.inStock"
+                    @click="emit('update-qty', item.lineId, 1)"
                   />
                 </div>
 
@@ -263,7 +279,7 @@ function catalogPrice(product: Product) {
                     variant="ghost"
                     icon="i-lucide-trash-2"
                     class="size-6 p-0 min-w-0 items-center justify-center"
-                    @click="emit('remove-item', item.product.id)"
+                    @click="emit('remove-item', item.lineId)"
                   />
                 </template>
               </div>

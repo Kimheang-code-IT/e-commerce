@@ -178,6 +178,40 @@ def _build_checkout_lines(db: Session, payload: PosCheckoutPayload):
     }
 
 
+def expand_fifo_lines_service(*, db: Session, product_id: int, qty: int):
+    """Preview FIFO batches for POS cart (oldest stock price first)."""
+    product = db.get(Product, product_id)
+    if not product:
+        return error_response(status.HTTP_404_NOT_FOUND, "Product not found", "NOT_FOUND")
+    need = int(qty)
+    if need <= 0:
+        return error_response(status.HTTP_400_BAD_REQUEST, "Quantity must be positive", "BAD_REQUEST")
+    if int(product.in_stock or 0) < need:
+        return error_response(
+            status.HTTP_400_BAD_REQUEST,
+            f"Not enough stock for {product.name} (Available: {product.in_stock})",
+            "NOT_ENOUGH_STOCK",
+        )
+    slices = allocate_fifo(db, product.id, need, consume=False)
+    if not slices:
+        return error_response(
+            status.HTTP_400_BAD_REQUEST,
+            f"Not enough FIFO stock for {product.name}",
+            "NOT_ENOUGH_STOCK",
+        )
+    return {
+        "data": {
+            "productId": product.id,
+            "productName": product.name,
+            "inStock": int(product.in_stock or 0),
+            "lines": [
+                {"qty": int(s.qty), "unitPrice": float(s.out_price)}
+                for s in slices
+            ],
+        }
+    }
+
+
 def calculate_totals_service(*, db: Session, payload: PosCheckoutPayload):
     requested_qty = _requested_qty_by_product(payload)
     product_ids = list(requested_qty)
@@ -280,21 +314,28 @@ def complete_checkout_service(*, db: Session, payload: PosCheckoutPayload, curre
                 )
             if unit_price is not None:
                 sale_price = float(unit_price)
-                line_total = sale_price * total_qty
-            else:
-                line_total = sum(sl.out_price * sl.qty for sl in consumed)
-                sale_price = line_total / total_qty if total_qty else 0.0
-
-            db.add(
-                CheckoutItem(
-                    invoice_id=invoice.id,
-                    product_id=product.id,
-                    product_name=product.name,
-                    quantity=total_qty,
-                    price=float(sale_price),
-                    total=float(line_total if unit_price is None else sale_price * total_qty),
+                db.add(
+                    CheckoutItem(
+                        invoice_id=invoice.id,
+                        product_id=product.id,
+                        product_name=product.name,
+                        quantity=total_qty,
+                        price=sale_price,
+                        total=sale_price * total_qty,
+                    )
                 )
-            )
+            else:
+                for sl in consumed:
+                    db.add(
+                        CheckoutItem(
+                            invoice_id=invoice.id,
+                            product_id=product.id,
+                            product_name=product.name,
+                            quantity=sl.qty,
+                            price=float(sl.out_price),
+                            total=float(sl.out_price) * int(sl.qty),
+                        )
+                    )
             product.sold = int(product.sold or 0) + total_qty
             product.in_stock = max(0, int(product.in_stock or 0) - total_qty)
 

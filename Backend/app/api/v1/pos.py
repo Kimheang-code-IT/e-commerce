@@ -15,6 +15,7 @@ from app.services.pos_service import (
     complete_checkout_service,
     decode_preview,
     encode_preview,
+    expand_fifo_lines_service,
     invoice_preview_by_no,
 )
 from app.shared.api_response import error_response
@@ -43,6 +44,16 @@ def get_preview_session(
     except (ValueError, json.JSONDecodeError, UnicodeDecodeError):
         return error_response(status.HTTP_400_BAD_REQUEST, "Invalid preview key", "BAD_REQUEST")
     return {"invoices": invoices}
+
+
+@pos_router.get("/products/{product_id}/fifo-expand")
+def expand_fifo_lines(
+    product_id: int,
+    qty: int,
+    _=Depends(require_permission("pos:view")),
+    db: Session = Depends(get_db),
+):
+    return expand_fifo_lines_service(db=db, product_id=product_id, qty=qty)
 
 
 @router.post("/calculate-totals")

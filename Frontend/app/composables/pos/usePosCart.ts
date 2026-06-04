@@ -2,6 +2,7 @@ import { computed, ref, watch } from 'vue'
 import type { Product } from '~/types'
 import { usePosApi } from '~/utils/api'
 import {
+  createCartLineId,
   getCatalogUnitPrice,
   getLineTotal,
   getLineUnitPrice,
@@ -27,14 +28,23 @@ export function usePosCart() {
   const pendingRefresh = ref(false)
   const lastStockToastMessage = ref('')
   const lastStockToastAt = ref(0)
+  const isSyncingFifo = ref(false)
 
   const localSubtotal = computed(() =>
     cart.value.reduce((sum, entry) => sum + getLineTotal(entry), 0),
   )
 
   const discountUsd = computed(() =>
-    discountUsdFromInput(discountMode.value, discountInput.value, localSubtotal.value)
+    discountUsdFromInput(discountMode.value, discountInput.value, localSubtotal.value),
   )
+
+  function linesForProduct(productId: number) {
+    return cart.value.filter((entry) => entry.product.id === productId)
+  }
+
+  function totalQtyForProduct(productId: number) {
+    return linesForProduct(productId).reduce((sum, entry) => sum + entry.qty, 0)
+  }
 
   function resolveStockErrorItemName(message: string): string {
     const fifoMatch = message.match(/Not enough FIFO stock for (.+)$/i)
@@ -104,47 +114,85 @@ export function usePosCart() {
     } while (pendingRefresh.value && cart.value.length)
   }
 
-  function addItem(product: Product) {
-    const existing = cart.value.find((entry) => entry.product.id === product.id)
-    if (existing) {
-      const maxQty = Math.max(0, Number(existing.product.inStock || 0))
-      if (existing.qty >= maxQty) {
-        toast.add({
-          title: 'Stock limit reached',
-          description: `${existing.product.name} has only ${maxQty} in stock.`,
-          color: 'warning',
-        })
-        return
-      }
-      existing.qty += 1
+  async function syncFifoLinesForProduct(product: Product, targetQty: number) {
+    const customLines = linesForProduct(product.id).filter((entry) => entry.manualPrice)
+    const customQty = customLines.reduce((sum, entry) => sum + entry.qty, 0)
+    const fifoQty = Math.max(0, targetQty - customQty)
+
+    cart.value = cart.value.filter(
+      (entry) => entry.product.id !== product.id || entry.manualPrice,
+    )
+
+    if (fifoQty <= 0) {
+      await refreshTotals()
+      return
     }
-    else cart.value.push({ product, qty: 1 })
+
+    isSyncingFifo.value = true
+    try {
+      const res = await posApi.expandFifoLines(product.id, fifoQty)
+      const rows = Array.isArray(res?.data?.lines) ? res.data.lines : []
+      const inStock = Number(res?.data?.inStock ?? product.inStock ?? 0)
+      for (const row of rows) {
+        const qty = Math.max(1, Number(row.qty || 0))
+        const unitPrice = Number(row.unitPrice ?? 0)
+        cart.value.push({
+          lineId: createCartLineId(),
+          product: { ...product, inStock },
+          qty,
+          unitPrice,
+        })
+      }
+    } catch (error: any) {
+      const message = String(error?.response?._data?.message || error?.data?.message || error?.message || '')
+      notifyStockWarning(message || 'Could not load stock batches')
+    } finally {
+      isSyncingFifo.value = false
+      await refreshTotals()
+    }
   }
 
-  function setLineUnitPrice(productId: number, price: number) {
-    const item = cart.value.find((entry) => entry.product.id === productId)
+  async function addItem(product: Product) {
+    const maxQty = Math.max(0, Number(product.inStock || 0))
+    const current = totalQtyForProduct(product.id)
+    if (current >= maxQty) {
+      toast.add({
+        title: 'Stock limit reached',
+        description: `${product.name} has only ${maxQty} in stock.`,
+        color: 'warning',
+      })
+      return
+    }
+    await syncFifoLinesForProduct(product, current + 1)
+  }
+
+  function setLineUnitPrice(lineId: string, price: number) {
+    const item = cart.value.find((entry) => entry.lineId === lineId)
     if (!item) return
     item.unitPrice = Math.max(0, Number(price))
+    item.manualPrice = true
     void refreshTotals()
   }
 
-  function resetLineUnitPrice(productId: number) {
-    const item = cart.value.find((entry) => entry.product.id === productId)
+  async function resetLineUnitPrice(lineId: string) {
+    const item = cart.value.find((entry) => entry.lineId === lineId)
     if (!item) return
-    item.unitPrice = undefined
-    void refreshTotals()
+    item.manualPrice = false
+    const total = totalQtyForProduct(item.product.id)
+    await syncFifoLinesForProduct(item.product, total)
   }
 
-  function removeItem(productId: number) {
-    cart.value = cart.value.filter((entry) => entry.product.id !== productId)
+  function removeItem(lineId: string) {
+    cart.value = cart.value.filter((entry) => entry.lineId !== lineId)
   }
 
-  function updateQty(productId: number, delta: number) {
-    const item = cart.value.find((entry) => entry.product.id === productId)
+  function updateQty(lineId: string, delta: number) {
+    const item = cart.value.find((entry) => entry.lineId === lineId)
     if (!item) return
     if (delta > 0) {
       const maxQty = Math.max(0, Number(item.product.inStock || 0))
-      if (item.qty >= maxQty) {
+      const totalForProduct = totalQtyForProduct(item.product.id)
+      if (totalForProduct >= maxQty) {
         toast.add({
           title: 'Stock limit reached',
           description: `${item.product.name} has only ${maxQty} in stock.`,
@@ -154,7 +202,7 @@ export function usePosCart() {
       }
     }
     item.qty += delta
-    if (item.qty <= 0) removeItem(productId)
+    if (item.qty <= 0) removeItem(lineId)
   }
 
   function clearCart() {
@@ -175,8 +223,9 @@ export function usePosCart() {
       }
       const qty = Math.max(1, Number(line.qty || 1))
       const unitPrice = unitPriceFromLine(line, product)
-      const entry: PosCartItem = { product, qty }
+      const entry: PosCartItem = { lineId: createCartLineId(), product, qty }
       if (unitPrice != null) entry.unitPrice = unitPrice
+      else entry.unitPrice = Number(line.price ?? getCatalogUnitPrice(product))
       cart.value.push(entry)
     })
     if (skipped > 0) {
@@ -192,8 +241,7 @@ export function usePosCart() {
   const itemCount = computed(() => cart.value.reduce((sum, entry) => sum + entry.qty, 0))
   const cartProductIds = computed(() => new Set(cart.value.map((entry) => entry.product.id)))
   const isInCart = (productId: number) => cartProductIds.value.has(productId)
-  const getCartQty = (productId: number) =>
-    cart.value.find((entry) => entry.product.id === productId)?.qty || 0
+  const getCartQty = (productId: number) => totalQtyForProduct(productId)
 
   watch([cart, discountMode, discountInput], refreshTotals, { deep: true })
 
@@ -204,6 +252,7 @@ export function usePosCart() {
     discountUsd,
     totals,
     isCalculatingTotals,
+    isSyncingFifo,
     itemCount,
     localSubtotal,
     addItem,

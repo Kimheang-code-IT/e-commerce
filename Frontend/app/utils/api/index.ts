@@ -366,6 +366,15 @@ export function usePosApi() {
       api.get<{ data: { pdfUrl: string } }>(`/pos/invoice/${encodeURIComponent(invoiceNo)}/pdf-url`),
     invoicePdfDownloadPath: (invoiceNo: string) =>
       `/api/v1/pos/invoice/${encodeURIComponent(invoiceNo)}/pdf`,
+    expandFifoLines: (productId: number, qty: number) =>
+      api.get<{
+        data: {
+          productId: number
+          productName: string
+          inStock: number
+          lines: Array<{ qty: number; unitPrice: number }>
+        }
+      }>(`/pos/products/${productId}/fifo-expand`, { query: { qty }, suppressErrorToast: true }),
     calculateTotals: (payload: {
       discountAmount: number
       lines: Array<{ productId: number; qty: number; unitPrice?: number }>

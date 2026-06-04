@@ -16,10 +16,18 @@ export type InvoiceReopenLine = {
 }
 
 export type PosCartItem = {
+  /** Stable row id (same product may appear on multiple lines at different prices). */
+  lineId: string
   product: Product
   qty: number
-  /** Per-customer sale price override for this cart line (invoice/report use this). */
+  /** Sale unit price for this line (FIFO batch or manual edit). */
   unitPrice?: number
+  /** True when cashier edited price on this line (kept during FIFO resync). */
+  manualPrice?: boolean
+}
+
+export function createCartLineId(): string {
+  return `line-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
 }
 
 export function getCatalogUnitPrice(product: Product): number {
@@ -69,7 +77,7 @@ export function getLineUnitPrice(item: PosCartItem): number {
 }
 
 export function isLinePriceCustom(item: PosCartItem): boolean {
-  return item.unitPrice != null && Number.isFinite(item.unitPrice)
+  return Boolean(item.manualPrice)
 }
 
 export function getLineTotal(item: PosCartItem): number {
@@ -77,16 +85,11 @@ export function getLineTotal(item: PosCartItem): number {
 }
 
 export function mapCartToApiLines(cart: PosCartItem[]) {
-  return cart.map((item) => {
-    const line: { productId: number; qty: number; unitPrice?: number } = {
-      productId: item.product.id,
-      qty: item.qty,
-    }
-    if (isLinePriceCustom(item)) {
-      line.unitPrice = Number(item.unitPrice)
-    }
-    return line
-  })
+  return cart.map((item) => ({
+    productId: item.product.id,
+    qty: item.qty,
+    unitPrice: getLineUnitPrice(item),
+  }))
 }
 
 export function buildCheckoutPayload(input: {
