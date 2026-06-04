@@ -243,6 +243,13 @@ class RefundRecordCreatePayload(BaseModel):
     amount: float = Field(ge=0)
     refundReason: str | None = Field(default=None, max_length=2000)
 
+    @field_validator("productId", "qty", "price", "deliveryPrice", "discount", "amount", mode="before")
+    @classmethod
+    def coerce_null_numeric(cls, value):
+        if value is None:
+            return 0
+        return value
+
     @field_validator("invoiceNo", "product", "customer", "phoneCustomer", "seller", "phoneSaler", "source", "address", "date")
     @classmethod
     def normalize_refund_text(cls, value: str) -> str:

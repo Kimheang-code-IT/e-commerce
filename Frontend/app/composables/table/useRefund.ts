@@ -189,27 +189,42 @@ export function useRefund() {
 
 
   function buildRefundPayload(row: ReportRow, reason: string) {
-    const invoiceKey = row.invoiceId ?? row.id
-    return {
-      id: invoiceKey,
-      invoiceId: invoiceKey,
+    const invoiceKey = Number(row.invoiceId ?? row.id ?? 0)
+    const payload: ReportRow & { refundReason: string; invoiceId?: number; id?: number } = {
       invoiceNo: row.invoiceNo,
-      date: row.date,
-      product: row.product,
-      productId: row.productId,
-      qty: row.qty,
-      price: row.price,
-      customer: row.customer,
-      phoneCustomer: row.phoneCustomer,
+      date: row.date || '',
+      product: row.product || '',
+      productId: Number(row.productId ?? 0) || 0,
+      qty: Number(row.qty ?? 0) || 0,
+      price: Number(row.price ?? 0) || 0,
+      customer: row.customer || '',
+      phoneCustomer: row.phoneCustomer || '',
       phoneSaler: row.phoneSaler || '',
-      seller: row.seller,
-      source: row.source,
-      address: row.address,
-      deliveryPrice: row.deliveryPrice ?? 0,
-      discount: row.discount ?? 0,
-      amount: row.amount,
+      seller: row.seller || '',
+      source: row.source || '',
+      address: row.address || '',
+      deliveryPrice: Number(row.deliveryPrice ?? 0) || 0,
+      discount: Number(row.discount ?? 0) || 0,
+      amount: Number(row.amount ?? 0) || 0,
       refundReason: reason,
     }
+    if (invoiceKey >= 1) {
+      payload.id = invoiceKey
+      payload.invoiceId = invoiceKey
+    }
+    return payload
+  }
+
+  function formatRefundError(err: unknown): string {
+    const data = (err as { response?: { _data?: { message?: string; errors?: Record<string, string[]> } } })
+      ?.response?._data
+    if (data?.errors) {
+      const parts = Object.entries(data.errors).flatMap(([field, msgs]) =>
+        (msgs || []).map((m) => `${field}: ${m}`)
+      )
+      if (parts.length) return parts.join('; ')
+    }
+    return data?.message || 'Could not save refund.'
   }
 
   async function confirmRefund(onSuccess?: () => void | Promise<void>) {
@@ -274,17 +289,10 @@ export function useRefund() {
       refundReason.value = ''
 
     } catch (err: unknown) {
-
-      const message = (err as { response?: { _data?: { message?: string } } })?.response?._data?.message
-
       toast.add({
-
         title: 'Refund failed',
-
-        description: message || 'Could not save refund.',
-
-        color: 'error'
-
+        description: formatRefundError(err),
+        color: 'error',
       })
 
     } finally {

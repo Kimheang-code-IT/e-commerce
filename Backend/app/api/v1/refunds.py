@@ -148,7 +148,10 @@ def _resolve_checkout_items(db: Session, item) -> list[CheckoutItem]:
 
     refunded_ids = _refunded_checkout_item_ids_subquery()
     lookup_id = int(item.id or 0) or int(item.invoiceId or 0)
-    if lookup_id == int(invoice.id):
+    invoice_level = lookup_id == int(invoice.id) or (
+        lookup_id == 0 and bool((item.invoiceNo or "").strip())
+    )
+    if invoice_level:
         q = (
             select(CheckoutItem)
             .where(
