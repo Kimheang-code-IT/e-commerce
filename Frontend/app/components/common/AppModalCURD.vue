@@ -1,19 +1,12 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-
-const { t } = useI18n()
 const open = defineModel<boolean>('open')
 
 interface Props {
   title?: string
-  titleKey?: string
   description?: string
-  descriptionKey?: string
-  descriptionParams?: Record<string, string | number>
   submitLabel?: string
-  submitLabelKey?: string
   cancelLabel?: string
-  cancelLabelKey?: string
   type?: 'primary' | 'error' | 'warning' | 'neutral'
   loading?: boolean
 }
@@ -54,24 +47,10 @@ const modalUi = {
   header: 'border-none p-0'
 } as const
 
-const resolvedTitle = computed(() => {
-  if (props.titleKey) return t(props.titleKey)
-  return props.title || t('components.confirmAction')
-})
-const resolvedDescription = computed(() => {
-  if (props.descriptionKey) {
-    return t(props.descriptionKey, props.descriptionParams ?? {})
-  }
-  return props.description || t('components.confirmDesc')
-})
-const resolvedCancelLabel = computed(() => {
-  if (props.cancelLabelKey) return t(props.cancelLabelKey)
-  return props.cancelLabel || t('components.cancel')
-})
-const resolvedSubmitLabel = computed(() => {
-  if (props.submitLabelKey) return t(props.submitLabelKey)
-  return props.submitLabel || t('components.proceed')
-})
+const resolvedTitle = computed(() => props.title || $t('components.confirmAction'))
+const resolvedDescription = computed(() => props.description || $t('components.confirmDesc'))
+const resolvedCancelLabel = computed(() => props.cancelLabel || $t('components.cancel'))
+const resolvedSubmitLabel = computed(() => props.submitLabel || $t('components.proceed'))
 
 function onCancel() {
   if (props.loading) return
@@ -99,7 +78,7 @@ function onSubmit() {
     </template>
 
     <template #body>
-      <div class="px-3 -mt-4">
+      <div class="px-3">
         <!-- Message -->
         <p class="text-sm text-muted-foreground font-medium leading-relaxed ">
           {{ resolvedDescription }}
