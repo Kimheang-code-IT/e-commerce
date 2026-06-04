@@ -311,7 +311,11 @@ export function useRefundApi() {
       }),
     createMany: (records: Array<ReportRow & { refundReason?: string }>) =>
       api.post<{ data: RefundRecord[] }>('/refunds', { records }),
-    remove: (id: number | string) => api.delete<{ message: string }>(`/refunds/${id}`)
+    remove: (id: number | string) => api.delete<{ message: string }>(`/refunds/${id}`),
+    removeByInvoice: (invoiceNo: string) =>
+      api.delete<{ message: string; deleted?: number }>(
+        `/refunds/by-invoice/${encodeURIComponent(invoiceNo)}`
+      ),
   }
 }
 

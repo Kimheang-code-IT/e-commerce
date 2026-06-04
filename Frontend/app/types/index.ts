@@ -162,6 +162,8 @@ export interface RefundRecord extends ReportRow {
   id: number
   refundedAt: string
   refundReason: string
+  /** Underlying line-level refund record ids (grouped view). */
+  refundIds?: number[]
 }
 
 export interface SystemRole {

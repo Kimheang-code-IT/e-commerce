@@ -9,14 +9,12 @@ from app.schemas.common import ListQuery, RefundCreatePayload
 from app.services.auth_service import get_current_user, require_permission
 from app.services.cache_service import invalidate_after_checkout
 from app.services.data_service import (
-    apply_created_at_range,
-    apply_sort,
     list_response,
-    paginate_query,
     parse_csv,
     record_history,
     serialize_report_row,
 )
+from app.services.refund_list_service import list_grouped_refunds
 from app.services.checkout_enqueue import enqueue_refund_notification
 from app.services.stock_fifo_service import allocate_fifo, restore_refund_stock
 from app.services.telegram_service import telegram_service
@@ -58,44 +56,21 @@ def list_refunds(
     _: User = Depends(require_permission("refund:view")),
     db: Session = Depends(get_db),
 ):
-    q = select(RefundRecord)
-    if query.search:
-        keyword = query.search.strip()
-        q = q.where(
-            RefundRecord.invoice_no.ilike(f"%{keyword}%")
-            | RefundRecord.customer.ilike(f"%{keyword}%")
-            | RefundRecord.product.ilike(f"%{keyword}%")
-            | RefundRecord.seller.ilike(f"%{keyword}%")
-        )
-    products = parse_csv(product)
-    if products:
-        q = q.where(or_(*[RefundRecord.product.ilike(f"%{name}%") for name in products]))
-    sources = parse_csv(source)
-    if sources:
-        q = q.where(RefundRecord.source.in_(sources))
-    provinces = parse_csv(province)
-    if provinces:
-        q = q.where(RefundRecord.address.in_(provinces))
-
-    q = apply_created_at_range(q, query.dateFrom, query.dateTo, RefundRecord.refunded_at)
-    q = apply_sort(
-        q,
-        query.sortBy,
-        query.sortOrder,
-        {
-            "id": RefundRecord.id,
-            "invoiceNo": RefundRecord.invoice_no,
-            "amount": RefundRecord.amount,
-            "refundedAt": RefundRecord.refunded_at,
-            "date": RefundRecord.sale_date,
-            "product": RefundRecord.product,
-            "seller": RefundRecord.seller,
-            "source": RefundRecord.source,
-        },
+    """One row per invoice (products combined on one line, like reports-view)."""
+    result, total = list_grouped_refunds(
+        db,
+        page=query.page,
+        limit=query.limit,
+        search=query.search,
+        product=product,
+        source=source,
+        province=province,
+        date_from=query.dateFrom,
+        date_to=query.dateTo,
+        sort_by=query.sortBy,
+        sort_order=query.sortOrder,
     )
-    q = q.order_by(RefundRecord.refunded_at.desc())
-    rows, total = paginate_query(q, db, query.page, query.limit)
-    return list_response([serialize_refund(row[0]) for row in rows], total)
+    return list_response(result, total)
 
 
 @router.get("/search-invoices")
@@ -355,6 +330,52 @@ def create_refunds(
             )
 
     return {"data": [serialize_refund(row) for row in created], "skipped": skipped}
+
+
+@router.delete("/by-invoice/{invoice_no}")
+def delete_refunds_by_invoice(
+    invoice_no: str,
+    current_user: User = Depends(get_current_user),
+    _: User = Depends(require_permission("refund:delete")),
+    db: Session = Depends(get_db),
+):
+    keyword = invoice_no.strip()
+    if not keyword:
+        return error_response(status.HTTP_400_BAD_REQUEST, "Invoice number is required", "BAD_REQUEST")
+
+    rows = db.scalars(select(RefundRecord).where(RefundRecord.invoice_no == keyword)).all()
+    if not rows:
+        return error_response(status.HTTP_404_NOT_FOUND, "Refund not found", "NOT_FOUND")
+
+    for row in rows:
+        product_id = int(row.product_id or 0)
+        qty = int(row.qty or 0)
+        if product_id > 0 and qty > 0:
+            product = db.execute(
+                select(Product).where(Product.id == product_id).with_for_update()
+            ).scalar_one_or_none()
+            if product:
+                if int(product.in_stock or 0) < qty:
+                    return error_response(
+                        status.HTTP_409_CONFLICT,
+                        f"Cannot delete refund because returned stock for {product.name} has already been sold",
+                        "REFUND_STOCK_CONFLICT",
+                    )
+                consumed = allocate_fifo(db, product_id, qty, consume=True)
+                if not consumed:
+                    return error_response(
+                        status.HTTP_409_CONFLICT,
+                        f"Cannot delete refund because returned FIFO stock for {product.name} is not available",
+                        "REFUND_STOCK_CONFLICT",
+                    )
+                product.in_stock = max(0, int(product.in_stock or 0) - qty)
+                product.sold = int(product.sold or 0) + qty
+        db.delete(row)
+
+    record_history(db, current_user.id, "Delete", f"Deleted refunds for invoice {keyword}")
+    db.commit()
+    invalidate_after_checkout()
+    return {"message": "Refunds deleted", "deleted": len(rows)}
 
 
 @router.delete("/{refund_id}")

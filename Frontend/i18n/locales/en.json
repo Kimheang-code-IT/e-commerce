@@ -413,6 +413,12 @@
         "refund": {
             "title": "Refund",
             "recordsTitle": "Refund Records",
+            "previewSelected": "Preview Selected",
+            "deleteSuccess": "Refund records for this invoice were removed.",
+            "columns": {
+                "refundedAt": "Refunded At",
+                "reason": "Reason"
+            },
             "pending": {
                 "title": "Refund invoice"
             }

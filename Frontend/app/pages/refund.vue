@@ -2,6 +2,26 @@
 import { useRefund } from '~/composables/table/useRefund'
 import { formatCurrency } from '~/utils/format/currency'
 import { formatDate } from '~/utils/format/date'
+import type { RefundRecord } from '~/types'
+
+const router = useRouter()
+const { t } = useI18n()
+
+function goToPreview(row: RefundRecord) {
+  router.push({
+    path: '/pos',
+    query: { invoiceNo: row.invoiceNo },
+  })
+}
+
+function goToSelectedInvoices() {
+  if (!selectedRefundRows.value.length) return
+  const invoiceNos = [...new Set(selectedRefundRows.value.map((r) => r.invoiceNo))]
+  router.push({
+    path: '/pos',
+    query: { invoiceNo: invoiceNos.join(',') },
+  })
+}
 
 const {
   rowSelection,
@@ -18,12 +38,19 @@ const {
   productItems,
   sourceItems,
   addressItems,
-  refundRecords,
+  filteredRefundRows,
+  selectedRefundRows,
+  allFilteredSelected,
+  someFilteredSelected,
+  toggleSelectAllFiltered,
   refundColumns,
-  removeRefundRecord,
+  getDropdownActions,
+  removeRefundInvoice,
   canDelete,
-  canView
-} = useRefund()
+  canView,
+} = useRefund({ onPreview: goToPreview })
+
+const { canView: canViewPos, canCheckout: canCheckoutPos } = useModulePermissions('pos')
 
 const isExportOpen = ref(false)
 </script>
@@ -32,6 +59,17 @@ const isExportOpen = ref(false)
   <div class="flex flex-col h-full bg-background overflow-hidden text-foreground tracking-tight">
     <LayoutAppHeader :title="$t('pages.refund.title')" show-datepicker>
       <template #right>
+        <UButton
+          v-if="canViewPos || canCheckoutPos"
+          icon="i-lucide-receipt-text"
+          color="primary"
+          variant="solid"
+          class="font-normal shadow-sm shrink-0"
+          :disabled="selectedRefundRows.length === 0"
+          @click="goToSelectedInvoices"
+        >
+          <span class="hidden sm:inline">{{ $t('pages.refund.previewSelected') }}</span>
+        </UButton>
         <UButton
           v-if="canView"
           icon="i-lucide-download"
@@ -61,19 +99,69 @@ const isExportOpen = ref(false)
           :filter-items="productItems"
           :filter-items-secondary="sourceItems"
           :filter-items-third="addressItems"
-          filter-placeholder="Product"
-          filter-placeholder-secondary="Source"
-          filter-placeholder-third="Province"
-          :data="refundRecords"
+          :filter-placeholder="$t('product.name')"
+          :filter-placeholder-secondary="$t('pages.report.filterSource')"
+          :filter-placeholder-third="$t('pages.report.filterProvince')"
+          :data="filteredRefundRows"
           :columns="refundColumns"
           :loading="isLoading"
           :total-rows="totalRows"
-          :selectable="false"
+          :selectable="true"
+          :get-row-actions="getDropdownActions"
         >
+          <template #no-header>
+            <div class="flex items-center gap-2">
+              <UCheckbox
+                :model-value="allFilteredSelected"
+                :indeterminate="someFilteredSelected"
+                @update:model-value="toggleSelectAllFiltered(!!$event)"
+              />
+              <UButton
+                v-if="selectedRefundRows.length > 0 && (canViewPos || canCheckoutPos)"
+                icon="i-lucide-receipt-text"
+                color="primary"
+                variant="ghost"
+                size="xs"
+                @click="goToSelectedInvoices"
+              />
+            </div>
+          </template>
+          <template #no-cell="{ row }">
+            <div class="flex items-center gap-2">
+              <UCheckbox
+                :model-value="row.getIsSelected()"
+                @update:model-value="row.toggleSelected(!!$event)"
+              />
+            </div>
+          </template>
+
           <template #amount-cell="{ row }">
             <span class="font-medium text-primary">
               {{ formatCurrency(row.original.amount, 'USD') }}
             </span>
+          </template>
+          <template #seller-cell="{ row }">
+            <UBadge color="primary" variant="soft" class="font-normal">
+              {{ row.original.seller }}
+            </UBadge>
+          </template>
+          <template #product-cell="{ row }">
+            <UBadge color="neutral" variant="soft" class="font-normal">
+              {{ row.original.product }}
+            </UBadge>
+          </template>
+          <template #source-cell="{ row }">
+            <UBadge color="primary" variant="soft" class="font-normal">
+              {{ row.original.source }}
+            </UBadge>
+          </template>
+          <template #address-cell="{ row }">
+            <UBadge color="primary" variant="soft" class="font-normal">
+              {{ row.original.address }}
+            </UBadge>
+          </template>
+          <template #invoiceNo-cell="{ row }">
+            <span class="text-sm font-medium">{{ row.original.invoiceNo }}</span>
           </template>
           <template #refundedAt-cell="{ row }">
             {{ formatDate(row.original.refundedAt) }}
@@ -88,7 +176,7 @@ const isExportOpen = ref(false)
               color="error"
               variant="ghost"
               size="xs"
-              @click="removeRefundRecord(row.original.id)"
+              @click="removeRefundInvoice(row.original)"
             />
           </template>
         </TableApptable>
@@ -97,7 +185,7 @@ const isExportOpen = ref(false)
 
     <CommonAppExport
       v-model:open="isExportOpen"
-      :data="refundRecords"
+      :data="filteredRefundRows"
       filename="refunds"
       date-field="refundedAt"
     />
