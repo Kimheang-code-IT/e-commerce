@@ -94,30 +94,29 @@ function onSubmit() {
             {{ resolvedTitle }}
           </h3>
         </div>
-        <UButton v-if="!loading" icon="i-lucide-x" color="neutral" variant="ghost" size="md" sm:size="lg"
-          @click="onCancel" />
+        <UButton v-if="!loading" icon="i-lucide-x" color="neutral" variant="ghost" size="md" sm:size="lg" @click="onCancel" />
       </div>
     </template>
 
+    <template #body>
+      <div class="px-3 -mt-4">
+        <!-- Message -->
+        <p class="text-sm text-muted-foreground font-medium leading-relaxed ">
+          {{ resolvedDescription }}
+        </p>
 
-    <div class="px-3 py-2">
-      <!-- Message -->
-      <p class="text-sm text-muted-foreground font-medium leading-relaxed ">
-        {{ resolvedDescription }}
-      </p>
-
-      <div v-if="$slots.default" class="w-full">
-        <slot />
+        <div v-if="$slots.default" class="w-full">
+          <slot />
+        </div>
       </div>
-    </div>
-
+    </template>
 
     <template #footer>
       <div class="flex items-center justify-end gap-3 w-full">
         <UButton :label="resolvedCancelLabel" color="neutral" variant="soft" size="lg" class="font-semibold"
           :disabled="loading" @click="onCancel" />
-        <UButton :label="resolvedSubmitLabel" :color="typeConfig.color" variant="solid" size="lg" class="font-semibold"
-          :loading="loading" @click="onSubmit" />
+        <UButton :label="resolvedSubmitLabel" :color="typeConfig.color" variant="solid" size="lg"
+          class="font-semibold" :loading="loading" @click="onSubmit" />
       </div>
     </template>
   </UModal>
