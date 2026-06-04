@@ -369,6 +369,7 @@
         "finance": {
             "title": "ហិរញ្ញវត្ថុ",
             "tableTitle": "ហិរញ្ញវត្ថុ",
+            "editTitle": "កែប្រែហិរញ្ញវត្ថុ",
             "columns": {
                 "productName": "ឈ្មោះផលិតផល",
                 "printPrice": "តម្លៃបោះពុម្ព",

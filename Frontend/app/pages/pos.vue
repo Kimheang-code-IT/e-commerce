@@ -228,8 +228,8 @@ const previewCart = computed(() => {
                                     color="neutral"
                                     variant="ghost"
                                     size="sm"
-                                    icon="i-lucide-panel-left-close"
-                                    aria-label="Collapse search"
+                                    icon="i-lucide-search"
+                                    :aria-label="t('common.search')"
                                     class="shrink-0"
                                     @click="posSearchExpanded = false"
                                 />

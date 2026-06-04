@@ -368,6 +368,7 @@
         "finance": {
             "title": "Finance",
             "tableTitle": "Finance",
+            "editTitle": "Edit Finance",
             "columns": {
                 "productName": "Product Name",
                 "printPrice": "Print Price",

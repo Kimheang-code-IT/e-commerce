@@ -105,7 +105,8 @@ async function fetchFinanceExportData(args: { startDate?: string; endDate?: stri
 
     <CommonAppSlideoverForm
       v-model:open="isSlideoverOpen"
-      :title="t('pages.finance.editTitle')"
+      title-key="pages.finance.editTitle"
+      submit-label-key="actions.save"
       :data="editingRow || undefined"
       :fields="editFields"
       @submit="handleUpdate"
