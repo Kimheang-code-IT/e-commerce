@@ -142,7 +142,6 @@ async function fetchReportExportData(args: { startDate?: string; endDate?: strin
         <template #no-cell="{ row }">
           <div class="flex items-center gap-2">
             <UCheckbox :model-value="row.getIsSelected()" @update:model-value="row.toggleSelected(!!$event)" />
-            <span class="text-sm text-muted-foreground">{{ row.index + 1 }}</span>
           </div>
         </template>
 

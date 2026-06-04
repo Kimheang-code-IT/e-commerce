@@ -279,6 +279,37 @@ def return_fifo_stock(
     return returned
 
 
+def restore_refund_stock(
+    db: Session,
+    *,
+    product: Product,
+    qty: int,
+    sale_price: float | None = None,
+) -> int:
+    """Return sellable qty to FIFO lots and ensure product.in_stock increases by qty."""
+    need = int(qty)
+    if need <= 0:
+        return 0
+
+    returned = return_fifo_stock(db, product=product, qty=need, sale_price=sale_price)
+    if returned < need:
+        returned += return_fifo_stock(db, product=product, qty=need - returned, sale_price=None)
+    if returned < need:
+        create_stock_lot(
+            db,
+            product=product,
+            qty=need - returned,
+            in_price=float(product.in_price or 0),
+            out_price=float(sale_price if sale_price is not None else product.out_price or 0),
+            note="refund-return-fallback",
+        )
+        returned = need
+
+    product.in_stock = int(product.in_stock or 0) + need
+    product.sold = max(0, int(product.sold or 0) - need)
+    return need
+
+
 def batch_fifo_head_out_prices(db: Session, product_ids: list[int]) -> dict[int, float]:
     if not product_ids:
         return {}

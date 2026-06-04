@@ -189,8 +189,10 @@ export function useRefund() {
 
 
   function buildRefundPayload(row: ReportRow, reason: string) {
+    const invoiceKey = row.invoiceId ?? row.id
     return {
-      id: row.id,
+      id: invoiceKey,
+      invoiceId: invoiceKey,
       invoiceNo: row.invoiceNo,
       date: row.date,
       product: row.product,

@@ -225,6 +225,7 @@ class PosCheckoutPayload(BaseModel):
 class RefundRecordCreatePayload(BaseModel):
     model_config = ConfigDict(extra="forbid")
     id: int | None = Field(default=None, ge=1)
+    invoiceId: int | None = Field(default=None, ge=1)
     invoiceNo: str = Field(min_length=1, max_length=120)
     date: str = Field(default="", max_length=50)
     product: str = Field(min_length=1, max_length=180)

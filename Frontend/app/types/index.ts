@@ -96,6 +96,7 @@ export interface FinanceEntry {
 
 export interface ReportRow {
   id?: number
+  invoiceId?: number
   invoiceNo: string
   date: string
   product: string

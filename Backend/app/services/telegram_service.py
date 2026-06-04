@@ -92,4 +92,52 @@ class TelegramService:
         except Exception as e:
             logger.error(f"Error preparing Telegram notification: {e}")
 
+    async def notify_refund(
+        self,
+        *,
+        invoice_no: str,
+        customer: str = "",
+        phone: str = "",
+        source: str = "",
+        seller: str = "",
+        reason: str = "",
+        refunded_by: str = "",
+        lines: list[dict],
+    ):
+        if not settings.telegram_notify_enabled or not settings.telegram_chat_id:
+            return
+
+        try:
+            msg = "↩️ <b>Refund Completed</b>\n\n"
+            msg += f"Invoice: {invoice_no}\n"
+            msg += f"Customer: {customer or 'N/A'}\n"
+            if phone:
+                msg += f"Phone: {phone}\n"
+            if source:
+                msg += f"Source: {str(source).capitalize()}\n"
+            if seller:
+                msg += f"Seller: {seller}\n"
+            if refunded_by:
+                msg += f"Refunded by: {refunded_by}\n"
+            if reason:
+                msg += f"Reason: {reason}\n"
+            msg += "\n<b>Products returned to stock:</b>\n"
+            total = 0.0
+            for i, line in enumerate(lines, 1):
+                name = line.get("product") or "—"
+                qty = int(line.get("qty") or 0)
+                amount = float(line.get("amount") or 0)
+                unit = float(line.get("price") or 0)
+                if qty > 0 and unit <= 0 and amount > 0:
+                    unit = amount / qty
+                total += amount
+                if qty > 0:
+                    msg += f"{i}. {name} x {qty} @ ${unit:.2f} = ${amount:.2f}\n"
+                else:
+                    msg += f"{i}. {name} = ${amount:.2f}\n"
+            msg += f"\n<b>Refund total: ${total:.2f}</b>"
+            await self.send_message(settings.telegram_chat_id, msg)
+        except Exception as e:
+            logger.error("Error preparing Telegram refund notification: %s", e)
+
 telegram_service = TelegramService()

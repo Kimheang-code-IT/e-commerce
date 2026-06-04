@@ -82,6 +82,34 @@ def send_checkout_notification_task(self, invoice_id: int) -> dict:
 
 
 @celery_app.task(
+    name="app.tasks.send_refund_notification_task",
+    base=IdempotentTask,
+    bind=True,
+)
+def send_refund_notification_task(self, payload: dict) -> dict:
+    if not settings.telegram_notify_enabled or not settings.telegram_chat_id:
+        return {"status": "skipped", "reason": "telegram_disabled"}
+
+    try:
+        asyncio.run(
+            telegram_service.notify_refund(
+                invoice_no=str(payload.get("invoiceNo") or ""),
+                customer=str(payload.get("customer") or ""),
+                phone=str(payload.get("phone") or ""),
+                source=str(payload.get("source") or ""),
+                seller=str(payload.get("seller") or ""),
+                reason=str(payload.get("reason") or ""),
+                refunded_by=str(payload.get("refundedBy") or ""),
+                lines=list(payload.get("lines") or []),
+            )
+        )
+        return {"status": "ok", "invoice_no": payload.get("invoiceNo")}
+    except Exception as exc:
+        logger.exception("Refund Telegram notification failed: %s", exc)
+        return {"status": "error", "error": str(exc)}
+
+
+@celery_app.task(
     name="app.tasks.refresh_checkout_caches_task",
     base=IdempotentTask,
     bind=True,

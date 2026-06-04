@@ -59,3 +59,38 @@ def enqueue_checkout_followups(invoice_id: int) -> dict[str, str | None]:
             "notificationTaskId": None,
             "cacheTaskId": None,
         }
+
+
+def enqueue_refund_notification(
+    *,
+    invoice_no: str,
+    customer: str = "",
+    phone: str = "",
+    source: str = "",
+    seller: str = "",
+    reason: str = "",
+    refunded_by: str = "",
+    lines: list[dict],
+    refund_ids: list[int] | None = None,
+) -> str | None:
+    from app.tasks import send_refund_notification_task
+
+    safe_no = "".join(ch if ch.isalnum() or ch in "-_" else "_" for ch in invoice_no)[:60]
+    id_suffix = "-".join(str(i) for i in (refund_ids or [])[:5]) or "0"
+    task_id = f"refund-notify-{safe_no}-{id_suffix}"
+    payload = {
+        "invoiceNo": invoice_no,
+        "customer": customer,
+        "phone": phone,
+        "source": source,
+        "seller": seller,
+        "reason": reason,
+        "refundedBy": refunded_by,
+        "lines": lines,
+    }
+    try:
+        _apply_task(send_refund_notification_task, task_id=task_id, args=(payload,))
+        return task_id
+    except Exception as exc:
+        logger.warning("Refund Telegram enqueue failed for %s: %s", invoice_no, exc)
+        return None

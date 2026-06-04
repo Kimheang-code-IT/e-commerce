@@ -8,6 +8,7 @@ from app.tasks.checkout_tasks import (
     refresh_checkout_caches_task,
     scheduled_google_backup_task,
     send_checkout_notification_task,
+    send_refund_notification_task,
     send_daily_product_report,
 )
 
@@ -19,5 +20,6 @@ __all__ = [
     "refresh_checkout_caches_task",
     "scheduled_google_backup_task",
     "send_checkout_notification_task",
+    "send_refund_notification_task",
     "send_daily_product_report",
 ]

@@ -17,7 +17,10 @@ from app.services.data_service import (
     record_history,
     serialize_report_row,
 )
-from app.services.stock_fifo_service import allocate_fifo, return_fifo_stock
+from app.services.checkout_enqueue import enqueue_refund_notification
+from app.services.stock_fifo_service import allocate_fifo, restore_refund_stock
+from app.services.telegram_service import telegram_service
+from app.utils.async_run import run_coro
 from app.shared.api_response import error_response
 
 router = APIRouter(prefix="/refunds", tags=["refunds"], dependencies=[Depends(get_current_user)])
@@ -144,17 +147,20 @@ def _resolve_checkout_items(db: Session, item) -> list[CheckoutItem]:
         return []
 
     refunded_ids = _refunded_checkout_item_ids_subquery()
-    if int(item.id or 0) == int(invoice.id):
-        return list(
-            db.scalars(
-                select(CheckoutItem)
-                .where(
-                    CheckoutItem.invoice_id == invoice.id,
-                    ~CheckoutItem.id.in_(refunded_ids),
-                )
-                .order_by(CheckoutItem.id.asc())
-            ).all()
+    lookup_id = int(item.id or 0) or int(item.invoiceId or 0)
+    if lookup_id == int(invoice.id):
+        q = (
+            select(CheckoutItem)
+            .where(
+                CheckoutItem.invoice_id == invoice.id,
+                ~CheckoutItem.id.in_(refunded_ids),
+            )
+            .order_by(CheckoutItem.id.asc())
         )
+        product_id = int(item.productId or 0)
+        if product_id > 0:
+            q = q.where(CheckoutItem.product_id == product_id)
+        return list(db.scalars(q).all())
 
     checkout_item_id = int(item.id or 0)
     if checkout_item_id > 0:
@@ -199,7 +205,7 @@ def _return_refund_stock(db: Session, *, checkout_item: CheckoutItem | None, ite
     product_id = int(item.productId or 0)
     qty = int(item.qty or 0)
     sale_price = float(item.price or 0)
-    checkout_item_id = int(item.id or 0) or None
+    checkout_item_id = None
 
     if checkout_item:
         product_id = int(checkout_item.product_id or product_id or 0)
@@ -208,15 +214,15 @@ def _return_refund_stock(db: Session, *, checkout_item: CheckoutItem | None, ite
         checkout_item_id = checkout_item.id
 
     if product_id <= 0 or qty <= 0:
-        return None, 0, checkout_item_id
+        return product_id or None, 0, checkout_item_id
 
     product = db.execute(select(Product).where(Product.id == product_id).with_for_update()).scalar_one_or_none()
     if not product:
         return product_id, 0, checkout_item_id
 
-    returned_qty = return_fifo_stock(db, product=product, qty=qty, sale_price=sale_price)
-    product.in_stock = int(product.in_stock or 0) + returned_qty
-    product.sold = max(0, int(product.sold or 0) - returned_qty)
+    returned_qty = restore_refund_stock(
+        db, product=product, qty=qty, sale_price=sale_price if sale_price > 0 else None
+    )
     return product_id, returned_qty, checkout_item_id
 
 
@@ -228,6 +234,7 @@ def create_refunds(
     db: Session = Depends(get_db),
 ):
     created: list[RefundRecord] = []
+    notify_groups: dict[str, dict] = {}
     skipped = 0
     for item in payload.records:
         checkout_items = _resolve_checkout_items(db, item)
@@ -243,21 +250,21 @@ def create_refunds(
                 skipped += 1
                 continue
 
+            unit_price = float(checkout_item.price or 0)
+            line_qty = int(checkout_item.quantity or 0)
+            line_total = float(checkout_item.total or 0)
             line_item = item.model_copy(
                 update={
                     "product": checkout_item.product_name,
                     "productId": checkout_item.product_id,
-                    "qty": int(checkout_item.quantity or 0),
-                    "price": float(checkout_item.price or 0),
-                    "amount": float(checkout_item.total or 0),
+                    "qty": line_qty,
+                    "price": unit_price,
+                    "amount": line_total,
                 }
             )
             product_id, returned_qty, checkout_item_id = _return_refund_stock(
                 db, checkout_item=checkout_item, item=line_item
             )
-            if returned_qty <= 0 and int(checkout_item.product_id or 0) > 0:
-                skipped += 1
-                continue
 
             row = RefundRecord(
                 invoice_no=item.invoiceNo,
@@ -276,6 +283,25 @@ def create_refunds(
             )
             db.add(row)
             created.append(row)
+            key = item.invoiceNo
+            if key not in notify_groups:
+                notify_groups[key] = {
+                    "invoiceNo": item.invoiceNo,
+                    "customer": item.customer or "",
+                    "phone": (item.phoneCustomer or "").strip(),
+                    "source": item.source or "",
+                    "seller": item.seller or "",
+                    "reason": (item.refundReason or "").strip(),
+                    "lines": [],
+                }
+            notify_groups[key]["lines"].append(
+                {
+                    "product": checkout_item.product_name,
+                    "qty": line_qty,
+                    "amount": line_total,
+                    "price": unit_price,
+                }
+            )
 
     if not created:
         if skipped >= len(payload.records):
@@ -293,9 +319,38 @@ def create_refunds(
     db.commit()
     for row in created:
         db.refresh(row)
+
     record_history(db, current_user.id, "Create", f"Created {len(created)} refund record(s)")
     db.commit()
     invalidate_after_checkout()
+
+    for group in notify_groups.values():
+        refund_ids = [r.id for r in created if r.invoice_no == group["invoiceNo"]]
+        task_id = enqueue_refund_notification(
+            invoice_no=group["invoiceNo"],
+            customer=group["customer"],
+            phone=group["phone"],
+            source=group["source"],
+            seller=group["seller"],
+            reason=group["reason"],
+            refunded_by=current_user.name or "",
+            lines=group["lines"],
+            refund_ids=refund_ids,
+        )
+        if not task_id:
+            run_coro(
+                telegram_service.notify_refund(
+                    invoice_no=group["invoiceNo"],
+                    customer=group["customer"],
+                    phone=group["phone"],
+                    source=group["source"],
+                    seller=group["seller"],
+                    reason=group["reason"],
+                    refunded_by=current_user.name or "",
+                    lines=group["lines"],
+                )
+            )
+
     return {"data": [serialize_refund(row) for row in created], "skipped": skipped}
 
 
