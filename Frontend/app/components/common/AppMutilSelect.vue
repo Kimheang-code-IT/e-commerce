@@ -7,10 +7,16 @@ const isMobile = useBreakpoints(breakpointsTailwind).smaller('sm')
 
 const modelValue = defineModel<SelectItem[] | undefined>({ default: undefined })
 
-const props = defineProps<{
-  items: SelectItem[]
-  placeholder?: string
-}>()
+const props = withDefaults(
+  defineProps<{
+    items: SelectItem[]
+    placeholder?: string
+    iconOnlyOnMobile?: boolean
+  }>(),
+  { iconOnlyOnMobile: true },
+)
+
+const isIconOnly = computed(() => props.iconOnlyOnMobile && isMobile.value)
 
 function itemLabel(item: SelectItem) {
   if (typeof item === 'string' || typeof item === 'number') return String(item)
@@ -46,10 +52,11 @@ const triggerLabel = computed(() => {
       color="neutral"
       variant="subtle"
       icon="i-lucide-filter"
-      :trailing-icon="isMobile ? 'i-lucide-chevrons-up-down' : 'i-lucide-chevron-down'"
-      :square="isMobile"
+      :trailing-icon="isIconOnly ? undefined : 'i-lucide-chevron-down'"
+      :square="isIconOnly"
       class="shrink-0 font-normal max-sm:w-9 max-sm:px-0 sm:w-40 sm:justify-between sm:px-3"
-      :size="isMobile ? 'sm' : 'md'"
+      :size="isIconOnly ? 'sm' : 'md'"
+      :aria-label="placeholder || $t('components.search')"
       v-bind="$attrs"
     >
       <span class="hidden sm:inline truncate">{{ triggerLabel }}</span>

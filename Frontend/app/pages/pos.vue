@@ -193,7 +193,7 @@ const isPosSearchExpanded = ref(false)
                 </div>
             </template>
         </LayoutAppHeader>
-        <div v-if="!isInvoicePreviewMode" class="lg:hidden px-2 pt-2">
+        <div v-if="!isInvoicePreviewMode" class="lg:hidden px-1.5 pt-1">
             <UTabs v-model="mobilePanel" :items="mobilePanelItems" :content="false" color="primary" class="w-full" />
         </div>
 
@@ -211,7 +211,7 @@ const isPosSearchExpanded = ref(false)
 
                     <!-- Toolbar -->
                     <div
-                        class="flex flex-nowrap items-center gap-1.5 px-2 py-2 sm:px-3 sm:py-3 border-b border-default shrink-0 bg-background/80 backdrop-blur-sm overflow-hidden">
+                        class="flex flex-nowrap items-center gap-1 px-1.5 py-1.5 sm:px-3 sm:py-3 border-b border-default shrink-0 bg-background/80 backdrop-blur-sm overflow-hidden">
                         <div class="min-w-0 flex-1 overflow-x-auto overscroll-x-contain">
                             <UTabs v-model="selectedCategoryId" :items="categoryTabs" size="xs" color="primary"
                                 :content="false" class="w-max min-w-full" />
@@ -226,7 +226,7 @@ const isPosSearchExpanded = ref(false)
                     </div>
 
                     <!-- Product Area — scrollable -->
-                    <div class="flex-1 overflow-y-auto p-3 max-sm:pb-10 relative">
+                    <div class="flex-1 overflow-y-auto p-1.5 sm:p-3 max-sm:pb-8 relative">
 
                         <!-- Empty State -->
                         <div v-if="!isLoadingProducts && filteredProducts.length === 0"
@@ -238,7 +238,7 @@ const isPosSearchExpanded = ref(false)
                         <!-- ── GRID View ── -->
                         <div
                             v-else-if="viewMode === 'grid'"
-                            class="grid grid-cols-2 gap-2 sm:gap-3 sm:grid-cols-[repeat(auto-fill,minmax(200px,1fr))]"
+                            class="grid grid-cols-2 gap-1.5 sm:gap-3 sm:grid-cols-[repeat(auto-fill,minmax(200px,1fr))]"
                         >
 
                             <CommonAppPosProductCard v-for="product in filteredProducts" :key="product.id"
@@ -263,7 +263,7 @@ const isPosSearchExpanded = ref(false)
                     v-model:seller-id="sellerId" />
 
                 <!-- ══ LEFT: Invoice/Checkout Panel ══ -->
-                <div v-else class="w-full min-h-0 flex flex-col bg-muted/30 px-6 py-1 overflow-y-auto">
+                <div v-else class="w-full min-h-0 flex flex-col bg-muted/30 px-2 py-1 sm:px-6 overflow-y-auto">
                     <div ref="invoicePrintRef" class="invoice-print-target">
                         <!-- Bulk Preview (Multiple separate invoices) -->
                         <template v-if="groupedReportInvoices.length > 0 && selectedReportInvoiceLines.length === 0">

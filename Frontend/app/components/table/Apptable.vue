@@ -3,7 +3,7 @@
     <!-- Header Toolbar -->
     <div
       v-if="title || $slots.header || globalFilter !== undefined || columnVisibility !== undefined || filterValue !== undefined || filterValueSecondary !== undefined"
-      class="flex flex-nowrap items-center gap-1.5 px-2 py-2 sm:px-3 sm:py-2.5 border-b border-accented shrink-0 overflow-hidden">
+      class="flex flex-nowrap items-center gap-1 max-sm:px-1.5 max-sm:py-1 px-2 py-2 sm:px-3 sm:py-2.5 border-b border-accented shrink-0 overflow-hidden">
       <div class="hidden md:flex flex-1 items-center gap-2 min-w-0">
         <ClientOnly>
           <div v-if="title" class="min-w-0">
@@ -14,8 +14,8 @@
         <slot name="header" />
       </div>
 
-      <div class="flex flex-1 justify-end items-center gap-1.5 min-w-0 overflow-hidden ml-auto">
-        <div class="flex flex-nowrap items-center gap-1.5 min-w-0 overflow-x-auto overscroll-x-contain">
+      <div class="flex flex-1 justify-end items-center gap-1 min-w-0 overflow-hidden ml-auto">
+        <div class="flex flex-nowrap items-center gap-1 min-w-0 overflow-x-auto overscroll-x-contain">
           <CommonAppMutilSelect
             v-if="filterValue !== undefined && filterItems"
             v-model="filterValue"
@@ -152,14 +152,14 @@ const isMobileToolbar = useBreakpoints(breakpointsTailwind).smaller('sm')
 const tableUi = computed(() => {
   if (isMobileToolbar.value) {
     const mobileCell =
-      'py-0.5 px-1 text-[9px] leading-tight font-normal whitespace-nowrap'
+      'py-0.5 px-0.5 text-[8px] leading-none font-normal whitespace-nowrap'
     const mobileHead =
-      'py-0.5 px-1 text-[9px] leading-tight font-medium text-muted-foreground bg-neutral-100 dark:bg-slate-800 whitespace-nowrap'
+      'py-0.5 px-0.5 text-[8px] leading-none font-medium text-muted-foreground bg-neutral-100 dark:bg-slate-800 whitespace-nowrap'
     return {
-      thead: 'sticky top-0 inset-x-0 z-20 bg-neutral-100 dark:bg-slate-800',
+      thead: 'sticky top-0 inset-x-0 z-20 bg-neutral-100 dark:bg-slate-800 text-[8px]',
       th: mobileHead,
       tfoot:
-        'sticky bottom-0 inset-x-0 z-20 bg-neutral-100 dark:bg-slate-800 border-t border-default text-[9px] py-0.5 px-1',
+        'sticky bottom-0 inset-x-0 z-20 bg-neutral-100 dark:bg-slate-800 border-t border-default text-[8px] leading-none py-0.5 px-0.5',
       tr: 'border-b border-accented/50 last:border-b-0',
       td: mobileCell,
     }
@@ -183,7 +183,7 @@ const tableUi = computed(() => {
 
 const virtualizeOptions = computed(() => {
   if (!props.virtualize) return false
-  const size = isMobileToolbar.value ? 30 : props.density === 'compact' ? 36 : 44
+  const size = isMobileToolbar.value ? 26 : props.density === 'compact' ? 36 : 44
   return { estimateSize: size, overscan: 10 }
 })
 

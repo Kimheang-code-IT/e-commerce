@@ -67,7 +67,7 @@ function onProductImageError(event: Event) {
             </template>
         </LayoutAppHeader>
 
-        <div class="flex-1 p-2 overflow-hidden">
+        <div class="flex-1 p-1 sm:p-2 overflow-hidden">
             <TableApptable :title="$t('pages.dataEntry.tableTitle')" v-model:row-selection="rowSelection"
                 v-model:sorting="sorting"
                 v-model:column-visibility="columnVisibility" v-model:pagination="pagination"

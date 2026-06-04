@@ -81,7 +81,7 @@ const isExportOpen = ref(false)
       </template>
     </LayoutAppHeader>
 
-    <div class="flex-1 p-2 overflow-hidden flex flex-col gap-2">
+    <div class="flex-1 p-1 sm:p-2 overflow-hidden flex flex-col gap-2">
       <div class="flex-1 min-h-0">
         <TableApptable
           :title="$t('pages.refund.recordsTitle')"

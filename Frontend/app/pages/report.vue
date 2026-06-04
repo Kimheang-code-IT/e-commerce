@@ -111,7 +111,7 @@ async function fetchReportExportData(args: { startDate?: string; endDate?: strin
         </UButton>
       </template>
     </LayoutAppHeader>
-    <div class="flex-1 p-2 overflow-hidden">
+    <div class="flex-1 p-1 sm:p-2 overflow-hidden">
       <TableApptable :title="t('pages.report.tableTitle')" v-model:row-selection="rowSelection"
         v-model:sorting="sorting" v-model:column-visibility="columnVisibility" v-model:pagination="pagination"
         v-model:column-filters="columnFilters"

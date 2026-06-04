@@ -83,7 +83,7 @@ function onSubmitSupplierProduct(data: Record<string, any>) {
       </template>
     </LayoutAppHeader>
 
-    <div class="flex-1 p-2 overflow-hidden">
+    <div class="flex-1 p-1 sm:p-2 overflow-hidden">
       <TableApptable
         title="Supplier Table"
         v-model:row-selection="rowSelection"

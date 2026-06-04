@@ -43,7 +43,7 @@ function goToInvoice(row: any) {
   <div class="flex flex-col h-full bg-background overflow-hidden text-foreground tracking-tight">
     <LayoutAppHeader :title="t('pages.delivery.title')" show-datepicker />
 
-    <div class="flex-1 p-2 overflow-hidden">
+    <div class="flex-1 p-1 sm:p-2 overflow-hidden">
       <TableApptable
         :title="t('pages.delivery.tableTitle')"
         v-model:row-selection="rowSelection"

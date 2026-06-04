@@ -131,7 +131,7 @@ function catalogPrice(product: Product) {
 
 <template>
   <div class="w-full h-full min-h-0 flex flex-col bg-card overflow-hidden">
-    <div class="flex items-center justify-between px-4 py-3.5 border-b border-default shrink-0">
+    <div class="flex items-center justify-between max-sm:px-2 max-sm:py-2 px-4 py-3.5 border-b border-default shrink-0">
       <div class="flex items-center gap-2">
         <UIcon name="i-lucide-shopping-cart" class="size-4 text-primary" />
         <span class="font-semibold text-base text-foreground">{{ $t('pages.pos.cart.title') }}</span>
@@ -292,7 +292,7 @@ function catalogPrice(product: Product) {
     <!-- Step 0: Next only -->
     <div
       v-if="isCartStep"
-      class="border-t border-default px-4 py-3 max-sm:pb-10 bg-card shrink-0"
+      class="border-t border-default max-sm:px-2 max-sm:py-2 max-sm:pb-8 px-4 py-3 bg-card shrink-0"
     >
       <UButton
         block
@@ -311,7 +311,7 @@ function catalogPrice(product: Product) {
     <!-- Steps 1–2: full summary + Next / Finish -->
     <div
       v-else-if="isSummaryStep"
-      class="border-t border-default px-4 py-3 max-sm:pb-10 flex flex-col gap-2.5 bg-card shrink-0"
+      class="border-t border-default max-sm:px-2 max-sm:py-2 max-sm:pb-8 px-4 py-3 flex flex-col gap-2.5 bg-card shrink-0"
     >
       <div class="flex justify-between text-sm text-muted-foreground">
         <span>{{ $t('pages.pos.cart.items') }}</span>

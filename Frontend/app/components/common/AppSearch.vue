@@ -62,7 +62,7 @@ watch(isMobile, (mobile) => {
     ref="rootRef"
     class="flex items-center shrink-0 min-w-0"
     :class="[
-      useExpandableMobile && expanded ? 'flex-1 min-w-0 max-w-[min(11rem,48vw)]' : '',
+      useExpandableMobile && expanded ? 'flex-1 min-w-0 max-w-[min(8.5rem,36vw)]' : '',
       useExpandableMobile && !expanded ? 'shrink-0' : '',
       !useExpandableMobile ? desktopWidthClass : '',
     ]"
@@ -95,8 +95,9 @@ watch(isMobile, (mobile) => {
           icon="i-lucide-search"
           color="neutral"
           variant="soft"
-          size="md"
+          size="sm"
           square
+          class="w-9 px-0"
           :aria-label="placeholder || $t('common.search')"
           @click="openSearch"
         />
@@ -107,8 +108,8 @@ watch(isMobile, (mobile) => {
             v-model="modelValue"
             :placeholder="placeholder || $t('common.search')"
             icon="i-lucide-search"
-            class="flex-1 min-w-0 font-medium text-highlighted"
-            size="md"
+            class="flex-1 min-w-0 font-medium text-highlighted text-xs"
+            size="sm"
             v-bind="$attrs"
             :ui="{ trailing: 'pe-1' }"
           >
