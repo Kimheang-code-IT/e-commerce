@@ -459,7 +459,7 @@ function onSave() {
     :dismissible="false"
     :title="isMobile ? undefined : resolvedTitle"
     :ui="isMobile ? modalUiSm : undefined"
-    :class="isMobile ? undefined : 'max-w-md'"
+    :class="isMobile ? 'max-sm:rounded-none' : 'max-w-md'"
   >
     <template #header>
       <div class="flex items-center justify-between w-full px-1 sm:px-2">
@@ -479,7 +479,7 @@ function onSave() {
     <template #body>
       <div
         ref="formBodyRef"
-        class="flex flex-col space-y-3 px-1 sm:px-2 w-full overflow-auto flex-1 min-h-0 max-h-[min(70dvh,560px)] sm:max-h-none"
+        class="flex flex-col space-y-3 px-2 sm:px-2 w-full overflow-auto flex-1 min-h-0 max-sm:max-h-none sm:max-h-none"
       >
         <template v-for="field in activeFields" :key="field.key">
             <UFormField

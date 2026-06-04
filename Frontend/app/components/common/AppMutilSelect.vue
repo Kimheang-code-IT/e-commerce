@@ -1,5 +1,9 @@
 <script setup lang="ts">
+import { breakpointsTailwind, useBreakpoints } from '@vueuse/core'
+
 type SelectItem = string | number | Record<string, any>
+
+const isMobile = useBreakpoints(breakpointsTailwind).smaller('sm')
 
 const modelValue = defineModel<SelectItem[] | undefined>({ default: undefined })
 
@@ -42,9 +46,10 @@ const triggerLabel = computed(() => {
       color="neutral"
       variant="subtle"
       icon="i-lucide-filter"
-      trailing-icon="i-lucide-chevron-down"
-      class="w-20 sm:w-40 justify-center sm:justify-between font-normal px-3"
-      size="md"
+      :trailing-icon="isMobile ? undefined : 'i-lucide-chevron-down'"
+      :square="isMobile"
+      class="shrink-0 font-normal max-sm:w-9 max-sm:px-0 sm:w-40 sm:justify-between sm:px-3"
+      :size="isMobile ? 'sm' : 'md'"
       v-bind="$attrs"
     >
       <span class="hidden sm:inline truncate">{{ triggerLabel }}</span>

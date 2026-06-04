@@ -62,7 +62,8 @@ watch(isMobile, (mobile) => {
     ref="rootRef"
     class="flex items-center shrink-0 min-w-0"
     :class="[
-      useExpandableMobile && expanded ? 'w-full' : '',
+      useExpandableMobile && expanded ? 'flex-1 min-w-0 max-w-[min(11rem,48vw)]' : '',
+      useExpandableMobile && !expanded ? 'shrink-0' : '',
       !useExpandableMobile ? desktopWidthClass : '',
     ]"
   >
@@ -101,7 +102,7 @@ watch(isMobile, (mobile) => {
         />
       </template>
       <template v-else>
-        <div class="flex items-center gap-1.5 w-full min-w-0">
+        <div class="flex items-center gap-1 min-w-0 w-full">
           <UInput
             v-model="modelValue"
             :placeholder="placeholder || $t('common.search')"

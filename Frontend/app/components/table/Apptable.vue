@@ -3,50 +3,42 @@
     <!-- Header Toolbar -->
     <div
       v-if="title || $slots.header || globalFilter !== undefined || columnVisibility !== undefined || filterValue !== undefined || filterValueSecondary !== undefined"
-      class="flex flex-wrap items-center gap-2 px-3 py-2.5 border-b border-accented shrink-0 overflow-hidden">
-      <div
-        v-show="!isMobileSearchExpanded"
-        class="flex flex-1 items-center gap-2 min-w-0 basis-full sm:basis-auto"
-      >
+      class="flex flex-nowrap items-center gap-1.5 px-2 py-2 sm:px-3 sm:py-2.5 border-b border-accented shrink-0 overflow-hidden">
+      <div class="hidden md:flex flex-1 items-center gap-2 min-w-0">
         <ClientOnly>
-          <div v-if="title" class="min-w-0 hidden md:block">
+          <div v-if="title" class="min-w-0">
             <h2 v-if="title" class="font-medium text-foreground tracking-tight leading-none truncate">{{ title }}
             </h2>
           </div>
         </ClientOnly>
-
-        <!-- Custom Header Content Slot -->
         <slot name="header" />
       </div>
 
-      <div
-        v-show="!isMobileSearchExpanded"
-        class="flex flex-nowrap items-center gap-2 max-w-full overflow-hidden shrink-0 basis-full sm:basis-auto sm:ml-auto"
-      >
-        <!-- Multi-Select Filters -->
-        <CommonAppMutilSelect v-if="filterValue !== undefined && filterItems" v-model="filterValue" :items="filterItems"
-          :placeholder="filterPlaceholder || $t('components.search')" />
-        <CommonAppMutilSelect
-          v-if="filterValueSecondary !== undefined && filterItemsSecondary"
-          v-model="filterValueSecondary"
-          :items="filterItemsSecondary"
-          :placeholder="filterPlaceholderSecondary || $t('components.search')"
-        />
-        <CommonAppMutilSelect
-          v-if="filterValueThird !== undefined && filterItemsThird"
-          v-model="filterValueThird"
-          :items="filterItemsThird"
-          :placeholder="filterPlaceholderThird || $t('components.search')"
-        />
-      </div>
+      <div class="flex flex-1 sm:flex-none sm:ml-auto items-center gap-1.5 min-w-0 overflow-hidden">
+        <div class="flex flex-nowrap items-center gap-1.5 min-w-0 overflow-x-auto overscroll-x-contain">
+          <CommonAppMutilSelect
+            v-if="filterValue !== undefined && filterItems"
+            v-model="filterValue"
+            :items="filterItems"
+            :placeholder="filterPlaceholder || $t('components.search')"
+          />
+          <CommonAppMutilSelect
+            v-if="filterValueSecondary !== undefined && filterItemsSecondary"
+            v-model="filterValueSecondary"
+            :items="filterItemsSecondary"
+            :placeholder="filterPlaceholderSecondary || $t('components.search')"
+          />
+          <CommonAppMutilSelect
+            v-if="filterValueThird !== undefined && filterItemsThird"
+            v-model="filterValueThird"
+            :items="filterItemsThird"
+            :placeholder="filterPlaceholderThird || $t('components.search')"
+          />
+        </div>
 
-      <!-- Global Filter Input -->
-      <div
-        v-if="globalFilter !== undefined"
-        class="shrink-0"
-        :class="isMobileSearchExpanded ? 'w-full basis-full' : 'w-auto sm:w-52 ml-auto sm:ml-0'"
-      >
-        <CommonAppSearch v-model="globalFilter" v-model:expanded="tableSearchExpanded" />
+        <div v-if="globalFilter !== undefined" class="shrink-0 flex items-center">
+          <CommonAppSearch v-model="globalFilter" v-model:expanded="tableSearchExpanded" />
+        </div>
       </div>
     </div>
 
@@ -154,7 +146,24 @@ const props = withDefaults(defineProps<{
   density: 'default',
 })
 
+const tableSearchExpanded = ref(false)
+const isMobileToolbar = useBreakpoints(breakpointsTailwind).smaller('sm')
+
 const tableUi = computed(() => {
+  if (isMobileToolbar.value) {
+    const mobileCell =
+      'py-1 px-1.5 text-[10px] leading-tight font-normal whitespace-nowrap'
+    const mobileHead =
+      'py-1 px-1.5 text-[10px] leading-tight font-medium text-muted-foreground bg-neutral-100 dark:bg-slate-800 whitespace-nowrap'
+    return {
+      thead: 'sticky top-0 inset-x-0 z-20 bg-neutral-100 dark:bg-slate-800',
+      th: mobileHead,
+      tfoot:
+        'sticky bottom-0 inset-x-0 z-20 bg-neutral-100 dark:bg-slate-800 border-t border-default text-[10px]',
+      tr: 'border-b border-accented/50 last:border-b-0',
+      td: mobileCell,
+    }
+  }
   const compact = props.density === 'compact'
   const cell = compact
     ? 'py-1.5 px-2 text-xs sm:text-sm font-normal whitespace-nowrap'
@@ -172,11 +181,11 @@ const tableUi = computed(() => {
   }
 })
 
-const virtualizeOptions = computed(() =>
-  props.virtualize
-    ? { estimateSize: props.density === 'compact' ? 36 : 44, overscan: 10 }
-    : false,
-)
+const virtualizeOptions = computed(() => {
+  if (!props.virtualize) return false
+  const size = isMobileToolbar.value ? 30 : props.density === 'compact' ? 36 : 44
+  return { estimateSize: size, overscan: 10 }
+})
 
 // V-Models for TanStack Table state
 const filterValue = defineModel<any[]>('filterValue')
@@ -199,12 +208,6 @@ const emit = defineEmits<{
 
 const table = useTemplateRef<any>('table')
 const attrs = useAttrs()
-
-const tableSearchExpanded = ref(false)
-const isMobileToolbar = useBreakpoints(breakpointsTailwind).smaller('sm')
-const isMobileSearchExpanded = computed(
-  () => isMobileToolbar.value && tableSearchExpanded.value,
-)
 
 function columnsHaveFooter(cols: any[]): boolean {
   for (const col of cols) {

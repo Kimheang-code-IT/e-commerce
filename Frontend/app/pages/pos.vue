@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { breakpointsTailwind, useBreakpoints } from '@vueuse/core'
 import { usePos } from '~/composables/table/usePos'
 import { useInvoicePrinter } from '~/composables/useInvoicePrinter'
 import { formatDate } from '~/utils/format/date'
@@ -153,8 +152,6 @@ const previewCart = computed(() => {
 })
 
 const isPosSearchExpanded = ref(false)
-const isMobileToolbar = useBreakpoints(breakpointsTailwind).smaller('sm')
-const showCategoryTabs = computed(() => !isMobileToolbar.value || !isPosSearchExpanded.value)
 </script>
 
 <template>
@@ -214,17 +211,12 @@ const showCategoryTabs = computed(() => !isMobileToolbar.value || !isPosSearchEx
 
                     <!-- Toolbar -->
                     <div
-                        class="flex flex-wrap items-center gap-2 px-3 py-3 border-b border-default shrink-0 bg-background/80 backdrop-blur-sm">
-                        <!-- Category Pills -->
-                        <div v-show="showCategoryTabs" class="min-w-0 flex-1 overflow-x-auto">
+                        class="flex flex-nowrap items-center gap-1.5 px-2 py-2 sm:px-3 sm:py-3 border-b border-default shrink-0 bg-background/80 backdrop-blur-sm overflow-hidden">
+                        <div class="min-w-0 flex-1 overflow-x-auto overscroll-x-contain">
                             <UTabs v-model="selectedCategoryId" :items="categoryTabs" size="xs" color="primary"
                                 :content="false" class="w-max min-w-full" />
                         </div>
-
-                        <div
-                            class="flex items-center gap-2 shrink-0"
-                            :class="isPosSearchExpanded ? 'w-full sm:w-auto sm:ml-auto' : 'ml-auto'"
-                        >
+                        <div class="shrink-0 flex items-center">
                             <CommonAppSearch
                                 v-model="searchQuery"
                                 v-model:expanded="isPosSearchExpanded"
