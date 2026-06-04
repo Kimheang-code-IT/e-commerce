@@ -51,7 +51,7 @@ const typeConfig = computed(() => {
 
 const modalUi = {
   content: 'max-w-md w-[95vw] sm:w-full',
-  header: 'border-none p-0'
+  description: 'whitespace-pre-line'
 } as const
 
 const resolvedTitle = computed(() => {
@@ -86,37 +86,49 @@ function onSubmit() {
 </script>
 
 <template>
-  <UModal v-model:open="open" :dismissible="false" :ui="modalUi">
-    <template #header>
-      <div class="flex items-center justify-between w-full px-3 py-2">
-        <div class="flex items-center gap-2">
-          <h3 class="text-xl font-bold text-highlighted tracking-tight leading-tight">
-            {{ resolvedTitle }}
-          </h3>
-        </div>
-        <UButton v-if="!loading" icon="i-lucide-x" color="neutral" variant="ghost" size="md" sm:size="lg" @click="onCancel" />
-      </div>
+  <UModal
+    v-model:open="open"
+    :title="resolvedTitle"
+    :description="resolvedDescription"
+    :dismissible="false"
+    :ui="modalUi"
+    @close:prevent="onCancel"
+  >
+    <template #close>
+      <UButton
+        icon="i-lucide-x"
+        color="neutral"
+        variant="ghost"
+        size="md"
+        :disabled="loading"
+        @click="onCancel"
+      />
     </template>
 
-    <template #body>
-      <div class="px-3 -pt-4">
-        <!-- Message -->
-        <p class="text-sm text-muted-foreground font-medium leading-relaxed ">
-          {{ resolvedDescription }}
-        </p>
-
-        <div v-if="$slots.default" class="w-full">
-          <slot />
-        </div>
-      </div>
+    <template v-if="$slots.default" #body>
+      <slot />
     </template>
 
     <template #footer>
       <div class="flex items-center justify-end gap-3 w-full">
-        <UButton :label="resolvedCancelLabel" color="neutral" variant="soft" size="lg" class="font-semibold"
-          :disabled="loading" @click="onCancel" />
-        <UButton :label="resolvedSubmitLabel" :color="typeConfig.color" variant="solid" size="lg"
-          class="font-semibold" :loading="loading" @click="onSubmit" />
+        <UButton
+          :label="resolvedCancelLabel"
+          color="neutral"
+          variant="soft"
+          size="lg"
+          class="font-semibold"
+          :disabled="loading"
+          @click="onCancel"
+        />
+        <UButton
+          :label="resolvedSubmitLabel"
+          :color="typeConfig.color"
+          variant="solid"
+          size="lg"
+          class="font-semibold"
+          :loading="loading"
+          @click="onSubmit"
+        />
       </div>
     </template>
   </UModal>
