@@ -40,23 +40,12 @@ const stockColor = computed<'primary' | 'warning' | 'error'>(() => {
       <div
         class="absolute inset-x-0 bottom-0 z-10 bg-linear-to-t from-black/80 via-black/50 to-transparent pt-10 pb-2 px-2.5 pointer-events-none"
       >
-        <p class="text-sm font-semibold text-white leading-snug line-clamp-2 drop-shadow-sm">
+        <p class="text-md font-semibold text-white leading-snug line-clamp-2 drop-shadow-sm">
           {{ product.name }}
         </p>
       </div>
     </div>
-
     <div class="flex flex-col gap-1.5 px-3 pt-2.5 pb-1 shrink-0">
-      <p class="text-sm text-muted-foreground flex items-center gap-1.5 flex-wrap">
-        <span class="font-medium text-foreground/80">{{ $t('product.category') }}:</span>
-        <button
-          type="button"
-          class="text-base font-semibold text-foreground hover:text-primary hover:underline transition-colors text-left"
-          @click.stop="emit('filter-category', product.categoryId)"
-        >
-          {{ product.category }}
-        </button>
-      </p>
       <p class="text-base font-bold text-primary">
         {{ formatCurrency(product.outPrice, 'USD') }}
       </p>
@@ -65,7 +54,7 @@ const stockColor = computed<'primary' | 'warning' | 'error'>(() => {
     <div class="px-3 pb-3 pt-1 shrink-0">
       <UButton
         block
-        size="sm"
+        size="md"
         icon="i-lucide-plus"
         color="primary"
         :variant="inCart ? 'outline' : 'solid'"
