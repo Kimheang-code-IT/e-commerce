@@ -1,0 +1,37 @@
+{
+  "name": "website-business",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "lint": "eslint .",
+    "typecheck": "nuxt typecheck"
+  },
+  "dependencies": {
+    "@fontsource/kantumruy-pro": "^5.2.8",
+    "@fontsource/noto-sans-khmer": "^5.2.8",
+    "@fontsource/public-sans": "^5.2.7",
+    "@iconify-json/lucide": "^1.2.108",
+    "@iconify-json/simple-icons": "^1.2.83",
+    "@iconify-json/vscode-icons": "^1.2.50",
+    "@nuxt/image": "^2.0.0",
+    "@nuxt/ui": "^4.7.1",
+    "@nuxtjs/i18n": "^10.4.0",
+    "@vueuse/core": "^14.3.0",
+    "nuxt": "^4.4.6",
+    "nuxt-og-image": "^6.5.1",
+    "tailwindcss": "^4.3.0",
+    "ufo": "^1.6.4",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@nuxt/eslint": "^1.15.2",
+    "eslint": "^10.4.0",
+    "typescript": "^6.0.3",
+    "vue-tsc": "^3.3.0"
+  },
+  "packageManager": "pnpm@11.1.3"
+}

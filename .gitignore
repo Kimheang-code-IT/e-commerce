@@ -44,6 +44,7 @@ exports/
 # --- Node / Nuxt ---
 node_modules/
 Frontend/node_modules/
+website_business/node_modules/
 .nuxt/
 .output/
 Frontend/.output/
@@ -51,8 +52,14 @@ Frontend/.nuxt/
 Frontend/.nitro/
 Frontend/.cache/
 Frontend/.data/
+website_business/.output/
+website_business/.nuxt/
+website_business/.nitro/
+website_business/.cache/
+website_business/.data/
 dist/
 Frontend/dist/
+website_business/dist/
 .pnpm-store/
 coverage/
 Frontend/coverage/

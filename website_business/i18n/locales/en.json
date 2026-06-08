@@ -1,0 +1,73 @@
+{
+  "seo": {
+    "siteName": "Anya Music School",
+    "keywords": "Anya Music School, music school, guitars, musical instruments, product catalog, Cambodia, anyamusicschool"
+  },
+  "home": {
+    "seoDescription": "Browse our product catalog with specs, prices, and categories."
+  },
+  "hero": {
+    "productCountSuffix": "products",
+    "title": "Browse our products",
+    "subtitle": "Explore quality products with detailed specs, models, and pricing.",
+    "cta": "View Products",
+    "imageAlt": "Product showcase with Cambodian landmarks in the background"
+  },
+  "header": {
+    "searchPlaceholder": "Search ..."
+  },
+  "product": {
+    "tabAll": "All",
+    "loading": "Loading products...",
+    "loadFailed": "Could not load products. Check that the backend API is running.",
+    "emptyCategory": "No products found in this category yet.",
+    "browseAll": "Browse all products",
+    "spec": {
+      "size": "Size",
+      "top": "Top",
+      "backSide": "Back & Side",
+      "fretboard": "Fretboard",
+      "string": "String",
+      "finishing": "Finishing",
+      "color": "Color"
+    }
+  },
+  "search": {
+    "noResults": "No products found for \"{query}\""
+  },
+  "banner": {
+    "notifications": {
+      "newArrivals": "New products added — browse the latest items today!",
+      "browseCatalog": "Find the right product with specs, models, and prices.",
+      "qualityProducts": "Quality products with official warranty and support."
+    }
+  },
+  "footer": {
+    "description": "Anya Music School — browse our product catalog with detailed specifications and pricing.",
+    "copyright": "© Copyright {year}. All Rights Reserved.",
+    "nav": {
+      "about": "About Us",
+      "team": "Our Team",
+      "careers": "Careers",
+      "jobs": "Jobs",
+      "contact": "Contact Us",
+      "terms": "Terms of Use",
+      "privacy": "Privacy Policy",
+      "refund": "Refund Policy",
+      "cookies": "Cookies Policy",
+      "faq": "FAQ's"
+    }
+  },
+  "a11y": {
+    "siteBanner": "Site banner",
+    "changeLanguage": "Change language",
+    "localeEn": "EN",
+    "localeKm": "ខ្មែរ",
+    "footerNav": "Footer navigation",
+    "contactTelegram": "Contact us on Telegram"
+  },
+  "error": {
+    "title": "Page not found",
+    "description": "We are sorry but this page could not be found."
+  }
+}

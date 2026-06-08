@@ -1,0 +1,96 @@
+@import "@fontsource/public-sans/400.css";
+@import "@fontsource/public-sans/500.css";
+@import "@fontsource/public-sans/600.css";
+@import "@fontsource/public-sans/700.css";
+@import "@fontsource/kantumruy-pro/300.css";
+@import "@fontsource/kantumruy-pro/400.css";
+@import "@fontsource/kantumruy-pro/500.css";
+@import "@fontsource/kantumruy-pro/600.css";
+@import "@fontsource/kantumruy-pro/700.css";
+@import "@fontsource/noto-sans-khmer/300.css";
+@import "@fontsource/noto-sans-khmer/400.css";
+@import "@fontsource/noto-sans-khmer/500.css";
+@import "@fontsource/noto-sans-khmer/600.css";
+@import "@fontsource/noto-sans-khmer/700.css";
+@import "tailwindcss";
+@import "@nuxt/ui";
+
+@theme static {
+  --container-8xl: 90rem;
+  --font-sans: 'Public Sans', 'Kantumruy Pro', 'Noto Sans Khmer', sans-serif;
+  --font-khmer: 'Kantumruy Pro', 'Noto Sans Khmer', sans-serif;
+
+  /* Angkor Hub blue (primary) */
+  --color-primary-50: #eff6ff;
+  --color-primary-100: #dbeafe;
+  --color-primary-200: #bfdbfe;
+  --color-primary-300: #93c5fd;
+  --color-primary-400: #5b8fd4;
+  --color-primary-500: #3472c4;
+  --color-primary-600: #1b4f9c;
+  --color-primary-700: #163f7d;
+  --color-primary-800: #123566;
+  --color-primary-900: #0f2d54;
+  --color-primary-950: #0a1d38;
+
+  /* Angkor Hub gold (accent / success) */
+  --color-gold-50: #fffbeb;
+  --color-gold-100: #fef3c7;
+  --color-gold-200: #fde68a;
+  --color-gold-300: #fcd34d;
+  --color-gold-400: #e8c547;
+  --color-gold-500: #d4af37;
+  --color-gold-600: #c9a227;
+  --color-gold-700: #a8841f;
+  --color-gold-800: #8a6c1a;
+  --color-gold-900: #6f5615;
+  --color-gold-950: #42320c;
+}
+
+:root {
+  --ui-container: var(--container-8xl);
+  --brand-blue: var(--color-primary-600);
+  --brand-gold: var(--color-gold-500);
+}
+
+@layer base {
+  html {
+    max-width: 100%;
+    overflow-x: clip;
+    scrollbar-gutter: stable;
+  }
+
+  body {
+    max-width: 100%;
+    overflow-x: clip;
+  }
+
+  img,
+  video,
+  iframe {
+    max-width: 100%;
+  }
+
+  pre {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+}
+
+html:lang(km) {
+  --font-sans: var(--font-khmer);
+}
+
+.book-bg-grid {
+  background-image:
+    linear-gradient(rgba(15, 23, 42, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(15, 23, 42, 0.08) 1px, transparent 1px);
+  background-size: 64px 64px;
+  opacity: 0.75;
+}
+
+.dark .book-bg-grid {
+  background-image:
+    linear-gradient(rgba(148, 163, 184, 0.22) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.22) 1px, transparent 1px);
+}
