@@ -1,9 +1,18 @@
 import { useRoutePermissionMap } from '~/utils/auth/routes'
 import { fetchNeedsSetup } from '~/utils/auth/setup'
 
-export default defineNuxtRouteMiddleware(async (to) => {
-  const toast = useToast()
+function showForbiddenToast() {
+  // useToast() must run on client only — calling it during SSR causes a 500 error.
+  if (!import.meta.client) return
   const { t } = useI18n()
+  useToast().add({
+    title: t('pages.error.forbiddenTitle'),
+    description: t('pages.error.forbiddenMessage'),
+    color: 'error',
+  })
+}
+
+export default defineNuxtRouteMiddleware(async (to) => {
   const auth = useAuthStore()
   const path = to.path
   const routePermissionMap = useRoutePermissionMap()
@@ -55,11 +64,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
     // This prevents spamming toasts during navigation/back-forward.
     if (forbiddenToastState.value.lastPath !== path) {
       forbiddenToastState.value.lastPath = path
-      toast.add({
-        title: t('pages.error.forbiddenTitle'),
-        description: t('pages.error.forbiddenMessage'),
-        color: 'error',
-      })
+      showForbiddenToast()
     }
 
     if (first && first.home !== path) {
