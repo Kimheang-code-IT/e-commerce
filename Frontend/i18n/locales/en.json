@@ -611,7 +611,7 @@
             "notFoundTitle": "Page not found",
             "notFoundMessage": "We are sorry but this page could not be found.",
             "forbiddenTitle": "Access denied",
-            "forbiddenMessage": "You do not have permission to view this page.",
+            "forbiddenMessage": "You do not have permission for this action.",
             "serverErrorTitle": "Server error",
             "serverErrorMessage": "Something went wrong on our side. Please try again later.",
             "genericTitle": "Something went wrong",

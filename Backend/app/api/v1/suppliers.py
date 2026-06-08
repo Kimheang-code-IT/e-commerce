@@ -148,6 +148,14 @@ def delete_supplier(
     row = db.get(Supplier, supplier_id)
     if not row:
         return error_response(status.HTTP_404_NOT_FOUND, "Supplier not found", "NOT_FOUND")
+    # Prevent deleting suppliers that still have linked products.
+    in_use = db.scalar(select(func.count(SupplierProduct.id)).where(SupplierProduct.supplier_id == supplier_id)) or 0
+    if in_use > 0:
+        return error_response(
+            status.HTTP_400_BAD_REQUEST,
+            "Supplier is in use and cannot be deleted.",
+            "SUPPLIER_IN_USE",
+        )
     name = row.name
     db.delete(row)
     record_history(db, current_user.id, "Delete", f"Deleted supplier '{name}'")

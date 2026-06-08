@@ -2,9 +2,12 @@ import { useRoutePermissionMap } from '~/utils/auth/routes'
 import { fetchNeedsSetup } from '~/utils/auth/setup'
 
 export default defineNuxtRouteMiddleware(async (to) => {
+  const toast = useToast()
+  const { t } = useI18n()
   const auth = useAuthStore()
   const path = to.path
   const routePermissionMap = useRoutePermissionMap()
+  const forbiddenToastState = useState<{ lastPath?: string }>('forbidden-toast', () => ({}))
   
   const isAllowed = (entry: any) => {
     const hasPerm = auth.hasPermission(entry.permission)
@@ -47,6 +50,18 @@ export default defineNuxtRouteMiddleware(async (to) => {
   if (!matched) return
   if (!isAllowed(matched)) {
     const first = firstAllowed()
+
+    // Show a one-time toast when user hits an unauthorized page.
+    // This prevents spamming toasts during navigation/back-forward.
+    if (forbiddenToastState.value.lastPath !== path) {
+      forbiddenToastState.value.lastPath = path
+      toast.add({
+        title: t('pages.error.forbiddenTitle'),
+        description: t('pages.error.forbiddenMessage'),
+        color: 'error',
+      })
+    }
+
     if (first && first.home !== path) {
       return navigateTo(first.home)
     }

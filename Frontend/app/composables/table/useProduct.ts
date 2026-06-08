@@ -338,7 +338,7 @@ export function useProduct() {
       type: "input",
       placeholder: "ឧ. កុំព្យូទ័រយួរដៃ, គ្រឿងបន្លាស់",
       required: true,
-      textRule: "english",
+      textRule: "text",
     },
     {
       key: "categoryId",
