@@ -121,7 +121,7 @@ export function useSupplierTable() {
   ]);
 
   const supplierFormFields = computed<FormField[]>(() => [
-    { key: 'name', label: t('pages.supplier.form.name'), type: 'input', required: true, textRule: 'text' },
+    { key: 'name', label: t('pages.supplier.form.name'), type: 'input', required: true, textRule: 'english' },
     {
       key: 'gender',
       label: t('pages.supplier.form.gender'),
@@ -137,7 +137,7 @@ export function useSupplierTable() {
     { key: 'phoneNumber', label: t('pages.supplier.form.phoneNumber'), type: 'input', required: true, textRule: 'numeric' },
   ])
   const productFormFields = computed<FormField[]>(() => [
-    { key: 'productName', label: t('pages.supplier.form.productName'), type: 'input', required: true, textRule: 'text' },
+    { key: 'productName', label: t('pages.supplier.form.productName'), type: 'input', required: true, textRule: 'english' },
     { key: 'qty', label: t('pages.supplier.form.qty'), type: 'number', required: true, min: 1 },
     { key: 'unitPrice', label: t('pages.supplier.form.unitPrice'), type: 'currency', required: true, min: 0, currencyPrefix: 'USD' },
   ])

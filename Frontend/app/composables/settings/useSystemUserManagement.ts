@@ -140,7 +140,7 @@ export function useSystemUserManagement() {
       type: "input",
       icon: "i-lucide-user",
       required: true,
-      textRule: "text",
+      textRule: "english",
     },
     {
       key: "role",
@@ -156,7 +156,7 @@ export function useSystemUserManagement() {
       type: "input",
       icon: "i-lucide-mail",
       required: true,
-      textRule: "text",
+      textRule: "english",
     },
     {
       key: "password",

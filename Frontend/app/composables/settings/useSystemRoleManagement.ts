@@ -141,7 +141,7 @@ export function useSystemRoleManagement() {
 
     // --- Form Fields ---
     const roleFormFields = computed<FormField[]>(() => [
-        { key: 'name', label: t('pages.roleManagement.columns.name'), type: 'input', icon: 'i-lucide-shield', required: true, textRule: 'text' },
+        { key: 'name', label: t('pages.roleManagement.columns.name'), type: 'input', icon: 'i-lucide-shield', required: true, textRule: 'english' },
         {
             key: 'pageAccess',
             label: t('pages.roleManagement.columns.pageAccess'),
