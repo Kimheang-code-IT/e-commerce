@@ -3,6 +3,8 @@ venv/
 .venv/
 env/
 ENV/
+!deploy/env/
+!deploy/env/**
 __pycache__/
 *.py[cod]
 *$py.class
