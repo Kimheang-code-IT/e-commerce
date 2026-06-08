@@ -144,6 +144,7 @@ def serialize_product(
 def serialize_report_row(ci: CheckoutItem | None, inv: Invoice, u: User | None = None) -> dict[str, Any]:
     return {
         "id": ci.id if ci else inv.id,
+        "invoiceId": inv.id,
         "invoiceNo": inv.invoice_no,
         "date": to_iso(inv.created_at),
         "product": ci.product_name if ci else (inv.product_name or ""),

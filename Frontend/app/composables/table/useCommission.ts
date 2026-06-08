@@ -6,10 +6,13 @@ import type { CommissionEntry } from "~/types";
 import { useCommissionApi } from "~/utils/api";
 import { useServerListTable } from "~/features/shared/useServerListTable";
 import { useViewFilterOptions } from "~/composables/useViewFilterOptions";
+import { useAuthStore } from "~/stores/auth";
 
 export function useCommission() {
   const { t } = useI18n();
+  const auth = useAuthStore();
   const perms = useModulePermissions('commission');
+  const isAdmin = computed(() => auth.hasRole(['admin']));
   const commissionApi = useCommissionApi();
   const localRows = ref<CommissionEntry[]>([]);
   const selectedProducts = ref<string[]>([]);
@@ -52,7 +55,7 @@ export function useCommission() {
     groupedColumnMode: "remove",
     getGroupedRowModel: getGroupedRowModel(),
   });
-  const grouping = ref<string[]>(["seller_key"]);
+  const grouping = ref<string[]>(isAdmin.value ? ["seller_key"] : []);
   return {
     data: resource.rows,
     isLoading: resource.isLoading,
@@ -66,6 +69,7 @@ export function useCommission() {
     selectedProducts,
     groupingOptions,
     grouping,
+    isAdmin,
     canExport: perms.canExport,
   };
 }

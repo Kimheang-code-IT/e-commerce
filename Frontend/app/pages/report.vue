@@ -129,7 +129,7 @@ async function fetchReportExportData(args: { startDate?: string; endDate?: strin
         </template>
 
         <template #amount-cell="{ row }">
-          <span class="text-sm font-medium">{{ formatCurrency(row.original.amount, 'USD') }}</span>
+          <span class="font-medium">{{ formatCurrency(Number(row.getValue('amount')), 'USD') }}</span>
         </template>
         <template #seller-cell="{ row }">
           <UBadge color="primary" variant="soft" class="font-normal">

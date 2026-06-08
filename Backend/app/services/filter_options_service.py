@@ -95,12 +95,15 @@ def commission_filter_options(
     *,
     date_from: str | None = None,
     date_to: str | None = None,
+    seller_user_id: int | None = None,
 ) -> dict[str, list[str]]:
     q = (
         select(distinct(CheckoutItem.product_name))
         .join(Invoice, CheckoutItem.invoice_id == Invoice.id)
         .where(Invoice.status == "paid")
     )
+    if seller_user_id is not None:
+        q = q.where(Invoice.user_id == seller_user_id)
     q = apply_created_at_range(q, date_from, date_to, Invoice.created_at)
     product_rows = db.execute(q.order_by(CheckoutItem.product_name)).all()
     return {

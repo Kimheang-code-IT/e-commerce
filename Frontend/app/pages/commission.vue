@@ -4,7 +4,7 @@ import { formatCurrency } from '~/utils/format/currency'
 import { formatDate } from '~/utils/format/date'
 import { useCommissionApi } from '~/utils/api'
 
-const { data, columns, groupingOptions, grouping, isLoading, sorting, searchQuery, columnFilters, pagination, totalRows, productItems, selectedProducts, canExport } = useCommission()
+const { data, columns, groupingOptions, grouping, isAdmin, isLoading, sorting, searchQuery, columnFilters, pagination, totalRows, productItems, selectedProducts, canExport } = useCommission()
 const { t } = useI18n()
 const isExportOpen = ref(false)
 const commissionApi = useCommissionApi()
@@ -45,7 +45,7 @@ async function fetchCommissionExportData(args: { startDate?: string; endDate?: s
         :filter-items="productItems"
         :filter-placeholder="t('pages.commission.columns.product')"
         v-model:grouping="grouping"
-        :grouping-options="groupingOptions"
+        :grouping-options="isAdmin ? groupingOptions : undefined"
         :selectable="false"
         :virtualize="true"
         :ui="{

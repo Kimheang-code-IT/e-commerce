@@ -3,7 +3,8 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.models import CheckoutItem, Invoice, Product, Role, User
+from app.models import CheckoutItem, Invoice, Product, User
+from app.security import user_has_role
 from app.services.auth_service import get_current_user, require_permission
 from app.services.data_service import (
     apply_created_at_range,
@@ -19,14 +20,24 @@ from app.services.filter_options_service import commission_filter_options
 router = APIRouter(prefix="/commission-view", tags=["commission-view"], dependencies=[Depends(get_current_user)])
 
 
-def _base_query():
-    return (
+def _base_query(*, seller_user_id: int | None = None):
+    q = (
         select(CheckoutItem, Invoice, User, Product)
         .join(Invoice, CheckoutItem.invoice_id == Invoice.id)
         .join(User, Invoice.user_id == User.id)
         .outerjoin(Product, CheckoutItem.product_id == Product.id)
         .where(Invoice.status == "paid")
     )
+    if seller_user_id is not None:
+        q = q.where(Invoice.user_id == seller_user_id)
+    return q
+
+
+def _commission_scope_user_id(user: User) -> int | None:
+    """Admins see all sellers; everyone else sees only their own sales."""
+    if user_has_role(user, "admin"):
+        return None
+    return user.id
 
 
 @router.get("")
@@ -39,10 +50,10 @@ def list_commission_view(
     dateTo: str | None = None,
     sortBy: str | None = None,
     sortOrder: str | None = Query(None, pattern="^(asc|desc)$"),
-    _=Depends(require_permission("commission:view")),
+    current_user=Depends(require_permission("commission:view")),
     db: Session = Depends(get_db),
 ):
-    q = _base_query()
+    q = _base_query(seller_user_id=_commission_scope_user_id(current_user))
     if search:
         keyword = search.strip()
         q = q.where(User.name.ilike(f"%{keyword}%") | Invoice.invoice_no.ilike(f"%{keyword}%"))
@@ -73,10 +84,10 @@ def export_commission_view(
     dateFrom: str | None = None,
     dateTo: str | None = None,
     format: str = Query("json", pattern="^(json|csv)$"),
-    _=Depends(require_permission("commission:view")),
+    current_user=Depends(require_permission("commission:view")),
     db: Session = Depends(get_db),
 ):
-    q = _base_query()
+    q = _base_query(seller_user_id=_commission_scope_user_id(current_user))
     if search:
         keyword = search.strip()
         q = q.where(User.name.ilike(f"%{keyword}%") | Invoice.invoice_no.ilike(f"%{keyword}%"))
@@ -93,7 +104,15 @@ def export_commission_view(
 def commission_filter_options_view(
     dateFrom: str | None = None,
     dateTo: str | None = None,
-    _=Depends(require_permission("commission:view")),
+    current_user=Depends(require_permission("commission:view")),
     db: Session = Depends(get_db),
 ):
-    return {"data": commission_filter_options(db, date_from=dateFrom, date_to=dateTo)}
+    scope_user_id = _commission_scope_user_id(current_user)
+    return {
+        "data": commission_filter_options(
+            db,
+            date_from=dateFrom,
+            date_to=dateTo,
+            seller_user_id=scope_user_id,
+        )
+    }
