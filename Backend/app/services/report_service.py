@@ -1,8 +1,8 @@
-"""Reports list: one row per non-refunded checkout line (sale total per product line)."""
+"""Reports list: one row per paid invoice with products grouped together."""
 
 from __future__ import annotations
 
-from sqlalchemy import or_, select
+from sqlalchemy import exists, or_, select
 from sqlalchemy.orm import Session
 
 from app.models import CheckoutItem, Invoice, RefundRecord, User
@@ -11,7 +11,7 @@ from app.services.data_service import (
     apply_sort,
     paginate_query,
     parse_csv,
-    serialize_report_row,
+    to_iso,
 )
 
 
@@ -19,7 +19,21 @@ def _refunded_checkout_item_ids_subquery():
     return select(RefundRecord.checkout_item_id).where(RefundRecord.checkout_item_id.isnot(None))
 
 
-def build_report_items_query(
+def _active_line_exists(product_filter: list[str] | None = None):
+    """Invoice has at least one checkout line that is not fully refunded."""
+    refunded_ids = _refunded_checkout_item_ids_subquery()
+    predicates = [
+        CheckoutItem.invoice_id == Invoice.id,
+        ~CheckoutItem.id.in_(refunded_ids),
+    ]
+    if product_filter:
+        predicates.append(
+            or_(*[CheckoutItem.product_name.ilike(f"%{p}%") for p in product_filter])
+        )
+    return exists(select(CheckoutItem.id).where(*predicates))
+
+
+def build_report_invoices_query(
     *,
     search: str | None = None,
     products: list[str] | None = None,
@@ -27,13 +41,11 @@ def build_report_items_query(
     date_from: str | None = None,
     date_to: str | None = None,
 ):
-    refunded_ids = _refunded_checkout_item_ids_subquery()
     q = (
-        select(CheckoutItem, Invoice, User)
-        .join(Invoice, CheckoutItem.invoice_id == Invoice.id)
+        select(Invoice, User)
         .outerjoin(User, Invoice.user_id == User.id)
         .where(Invoice.status == "paid")
-        .where(~CheckoutItem.id.in_(refunded_ids))
+        .where(_active_line_exists(products if products else None))
     )
 
     if search:
@@ -41,18 +53,44 @@ def build_report_items_query(
         q = q.where(
             Invoice.invoice_no.ilike(f"%{keyword}%")
             | Invoice.customer_name.ilike(f"%{keyword}%")
-            | CheckoutItem.product_name.ilike(f"%{keyword}%")
+            | Invoice.product_name.ilike(f"%{keyword}%")
             | User.name.ilike(f"%{keyword}%")
+            | exists(
+                select(CheckoutItem.id).where(
+                    CheckoutItem.invoice_id == Invoice.id,
+                    CheckoutItem.product_name.ilike(f"%{keyword}%"),
+                )
+            )
         )
-
-    if products:
-        q = q.where(CheckoutItem.product_name.in_(products))
 
     if provinces:
         q = q.where(or_(*[Invoice.customer_address == p for p in provinces]))
 
     q = apply_created_at_range(q, date_from, date_to, Invoice.created_at)
     return q
+
+
+def serialize_report_invoice(inv: Invoice, seller: User | None = None) -> dict:
+    """One report row per checkout with all products grouped in the product column."""
+    return {
+        "id": inv.id,
+        "invoiceId": inv.id,
+        "invoiceNo": inv.invoice_no,
+        "date": to_iso(inv.created_at),
+        "product": (inv.product_name or "").strip(),
+        "productId": 0,
+        "qty": 0,
+        "price": 0,
+        "customer": inv.customer_name or "",
+        "phoneCustomer": inv.customer_phone or "",
+        "seller": seller.name if seller else "",
+        "phoneSaler": "",
+        "address": inv.customer_address or "",
+        "deliveryType": inv.delivery_type or "",
+        "deliveryPrice": float(inv.delivery_price or 0),
+        "discount": float(inv.discount or 0),
+        "amount": float(inv.subtotal or 0),
+    }
 
 
 def list_report_invoices(
@@ -71,7 +109,7 @@ def list_report_invoices(
     products = parse_csv(product)
     provinces = parse_csv(province)
 
-    q = build_report_items_query(
+    q = build_report_invoices_query(
         search=search,
         products=products,
         provinces=provinces,
@@ -80,19 +118,19 @@ def list_report_invoices(
     )
 
     sort_map = {
-        "id": CheckoutItem.id,
+        "id": Invoice.id,
         "invoiceNo": Invoice.invoice_no,
         "date": Invoice.created_at,
-        "product": CheckoutItem.product_name,
+        "product": Invoice.product_name,
         "seller": User.name,
-        "amount": CheckoutItem.total,
+        "amount": Invoice.subtotal,
     }
     q = apply_sort(q, sort_by, sort_order, sort_map)
     if not sort_by:
-        q = q.order_by(Invoice.created_at.desc(), CheckoutItem.id.desc())
+        q = q.order_by(Invoice.created_at.desc(), Invoice.id.desc())
 
     rows, total = paginate_query(q, db, page, limit)
-    result = [serialize_report_row(ci, inv, seller) for ci, inv, seller in rows]
+    result = [serialize_report_invoice(inv, seller) for inv, seller in rows]
     return result, total
 
 
@@ -108,16 +146,16 @@ def export_report_invoices(
     products = parse_csv(product)
     provinces = parse_csv(province)
 
-    q = build_report_items_query(
+    q = build_report_invoices_query(
         search=search,
         products=products,
         provinces=provinces,
         date_from=date_from,
         date_to=date_to,
     )
-    q = q.order_by(Invoice.created_at.desc(), CheckoutItem.id.desc())
+    q = q.order_by(Invoice.created_at.desc(), Invoice.id.desc())
     rows = db.execute(q).all()
-    return [serialize_report_row(ci, inv, seller) for ci, inv, seller in rows]
+    return [serialize_report_invoice(inv, seller) for inv, seller in rows]
 
 
 # Telegram / scheduled product reports (unchanged; uses report_repository).

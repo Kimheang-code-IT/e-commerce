@@ -56,6 +56,28 @@ def _requested_qty_by_product(payload: PosCheckoutPayload) -> dict[int, int]:
     return requested
 
 
+def _merge_line_totals(line_totals: list[dict]) -> list[dict]:
+    """One checkout row per product (combine duplicate product lines / FIFO batches)."""
+    merged: dict[int, dict] = {}
+    for row in line_totals:
+        pid = int(row["product"].id)
+        if pid not in merged:
+            merged[pid] = {
+                "product": row["product"],
+                "qty": 0,
+                "slices": [],
+                "unit_price": row.get("unit_price"),
+                "line_total": 0.0,
+            }
+        acc = merged[pid]
+        acc["qty"] += int(row["qty"])
+        acc["line_total"] += float(row["line_total"])
+        acc["slices"].extend(row.get("slices") or [])
+        if row.get("unit_price") != acc.get("unit_price"):
+            acc["unit_price"] = None
+    return list(merged.values())
+
+
 def encode_preview(payload: PosPreviewSessionCreatePayload) -> dict:
     raw = json.dumps(payload.invoices, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
     if len(raw) > 64 * 1024:
@@ -165,6 +187,9 @@ def _build_checkout_lines(db: Session, payload: PosCheckoutPayload):
                 }
             )
         subtotal += line_total
+
+    line_totals = _merge_line_totals(line_totals)
+    subtotal = sum(float(row["line_total"]) for row in line_totals)
 
     discount_amount = _clamp_discount_usd(subtotal, float(payload.discountAmount))
     delivery_price = float(payload.deliveryPrice or 0)
@@ -312,30 +337,20 @@ def complete_checkout_service(*, db: Session, payload: PosCheckoutPayload, curre
                     f"Stock conflict for {product.name} — please retry",
                     "CHECKOUT_CONFLICT",
                 )
-            if unit_price is not None:
-                sale_price = float(unit_price)
-                db.add(
-                    CheckoutItem(
-                        invoice_id=invoice.id,
-                        product_id=product.id,
-                        product_name=product.name,
-                        quantity=total_qty,
-                        price=sale_price,
-                        total=sale_price * total_qty,
-                    )
+            line_total = float(row["line_total"])
+            unit_price = float(unit_price) if unit_price is not None else (
+                line_total / total_qty if total_qty else 0.0
+            )
+            db.add(
+                CheckoutItem(
+                    invoice_id=invoice.id,
+                    product_id=product.id,
+                    product_name=product.name,
+                    quantity=total_qty,
+                    price=unit_price,
+                    total=line_total,
                 )
-            else:
-                for sl in consumed:
-                    db.add(
-                        CheckoutItem(
-                            invoice_id=invoice.id,
-                            product_id=product.id,
-                            product_name=product.name,
-                            quantity=sl.qty,
-                            price=float(sl.out_price),
-                            total=float(sl.out_price) * int(sl.qty),
-                        )
-                    )
+            )
             product.sold = int(product.sold or 0) + total_qty
             product.in_stock = max(0, int(product.in_stock or 0) - total_qty)
 

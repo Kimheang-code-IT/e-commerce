@@ -119,10 +119,39 @@ export function buildInvoiceDisplayRows(cart: PosCartItem[]) {
 }
 
 export function mapCartToApiLines(cart: PosCartItem[]) {
-  return cart.map((item) => ({
-    productId: item.product.id,
-    qty: item.qty,
-    unitPrice: getLineUnitPrice(item),
+  const merged = new Map<
+    number,
+    { productId: number; qty: number; lineTotal: number; unitPrice?: number }
+  >()
+
+  for (const item of cart) {
+    const productId = item.product.id
+    const qty = Number(item.qty || 0)
+    const unitPrice = getLineUnitPrice(item)
+    const lineTotal = unitPrice * qty
+    const existing = merged.get(productId)
+
+    if (!existing) {
+      merged.set(productId, {
+        productId,
+        qty,
+        lineTotal,
+        unitPrice: item.manualPrice ? unitPrice : undefined,
+      })
+      continue
+    }
+
+    existing.qty += qty
+    existing.lineTotal += lineTotal
+    if (item.manualPrice || existing.unitPrice != null) {
+      existing.unitPrice = existing.qty > 0 ? existing.lineTotal / existing.qty : unitPrice
+    }
+  }
+
+  return Array.from(merged.values()).map((row) => ({
+    productId: row.productId,
+    qty: row.qty,
+    unitPrice: row.unitPrice,
   }))
 }
 

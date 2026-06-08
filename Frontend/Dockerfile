@@ -17,7 +17,7 @@ COPY tsconfig.json ./
 COPY eslint.config.mjs ./
 COPY vitest.config.ts ./
 
-ARG NUXT_PUBLIC_SITE_URL=
+ARG NUXT_PUBLIC_SITE_URL=https://admin.anyamusicschool.com
 ARG NUXT_PUBLIC_API_BASE=/api/v1
 ARG NUXT_PUBLIC_USE_BACKEND_API=true
 ENV NUXT_PUBLIC_SITE_URL=$NUXT_PUBLIC_SITE_URL

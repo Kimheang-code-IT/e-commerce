@@ -2,6 +2,7 @@ from fastapi import APIRouter
 from app.api.v1 import (
     auth,
     backup,
+    catalog,
     categories,
     commission,
     dashboard,
@@ -21,6 +22,7 @@ from app.api.v1 import (
 
 router = APIRouter()
 router.include_router(auth.router)
+router.include_router(catalog.router)
 router.include_router(backup.router)
 router.include_router(telegram.router)
 router.include_router(categories.router)

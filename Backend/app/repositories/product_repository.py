@@ -27,7 +27,20 @@ def list_products_query(db: Session, *, search: str | None, category: str | None
     query = select(Product).options(joinedload(Product.category_rel)).join(Category, Product.category_id == Category.id, isouter=True)
     if search:
         keyword = search.strip()
-        query = query.where(or_(Product.name.ilike(f"%{keyword}%"), Category.name.ilike(f"%{keyword}%")))
+        query = query.where(
+            or_(
+                Product.name.ilike(f"%{keyword}%"),
+                Product.model.ilike(f"%{keyword}%"),
+                Category.name.ilike(f"%{keyword}%"),
+                Product.size.ilike(f"%{keyword}%"),
+                Product.top.ilike(f"%{keyword}%"),
+                Product.back_side.ilike(f"%{keyword}%"),
+                Product.fretboard.ilike(f"%{keyword}%"),
+                Product.string_brand.ilike(f"%{keyword}%"),
+                Product.finishing.ilike(f"%{keyword}%"),
+                Product.color.ilike(f"%{keyword}%"),
+            )
+        )
     if category:
         category_ids: list[int] = []
         for value in [item.strip() for item in category.split(",") if item.strip()]:

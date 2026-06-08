@@ -2,7 +2,7 @@
 import { ref, watch, computed, onBeforeUnmount, nextTick } from 'vue'
 import { parseDate } from '@internationalized/date'
 import type { FormField } from '~/types'
-import { sanitizeByTextRule, textRuleErrorMessage, resolveCurrencyPrefix } from '~/utils/validation/textRules'
+import { sanitizeByTextRule, textRuleErrorMessage, resolveCurrencyPrefix, resolveTextRule } from '~/utils/validation/textRules'
 const open = defineModel<boolean>('open')
 type FormRecord = Record<string, any>
 
@@ -284,7 +284,7 @@ function numberFieldError(field: FormField): string {
 }
 
 function languageFieldError(field: FormField): string {
-    if ((field.type !== 'input' && field.type !== 'textarea') || !field.textRule) return ''
+    if (!resolveTextRule(field)) return ''
     const raw = String(formData.value[field.key] ?? '')
     return textRuleErrorMessage(field, raw)
 }
@@ -363,11 +363,12 @@ function getFieldError(field: FormField): string {
 }
 
 function onTextInput(field: FormField, event: Event) {
-    if (!field.textRule) return
+    const rule = resolveTextRule(field)
+    if (!rule) return
     const target = event.target as HTMLInputElement | HTMLTextAreaElement | null
     if (!target) return
     const raw = target.value ?? ''
-    const sanitized = sanitizeByTextRule(field.textRule, raw)
+    const sanitized = sanitizeByTextRule(rule, raw)
     if (sanitized !== raw) {
         target.value = sanitized
     }

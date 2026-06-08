@@ -8,6 +8,14 @@ export default defineNuxtConfig({
     preset: 'static'
   },
 
+  app: {
+    head: {
+      meta: [
+        { name: 'robots', content: 'noindex, nofollow, noarchive, nosnippet' }
+      ]
+    }
+  },
+
   typescript: {
     tsConfig: {
       compilerOptions: {

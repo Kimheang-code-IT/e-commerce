@@ -58,6 +58,16 @@ export interface Product {
   id: number
   image: string
   name: string
+  model?: string
+  discountPrice?: number
+  totalPrice?: number
+  size?: string
+  top?: string
+  backSide?: string
+  fretboard?: string
+  string?: string
+  finishing?: string
+  color?: string
   /** Display name of the category (from joined category row). */
   category: string
   /** Public category id from the API (`Cat_00001`). */

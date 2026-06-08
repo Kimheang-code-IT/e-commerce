@@ -93,6 +93,14 @@ def serialize_category(row: Category) -> dict[str, Any]:
     }
 
 
+def serialize_catalog_category(row: Category, *, product_count: int = 0) -> dict[str, Any]:
+    return {
+        "id": row.public_id,
+        "name": row.name,
+        "productCount": int(product_count or 0),
+    }
+
+
 def batch_stock_totals(db: Session, product_ids: list[int]) -> tuple[dict[int, int], dict[int, int]]:
     if not product_ids:
         return {}, {}
@@ -111,6 +119,28 @@ def batch_stock_totals(db: Session, product_ids: list[int]) -> tuple[dict[int, i
     return added, damaged
 
 
+def serialize_catalog_product(row: Product) -> dict[str, Any]:
+    category_public = Category.to_public_id(row.category_id) if row.category_id else ""
+    total_price = float(getattr(row, "total_price", 0) or row.out_price or 0)
+    discount_price = float(getattr(row, "discount_price", 0) or 0)
+    return {
+        "id": str(row.id),
+        "category": category_public,
+        "image": public_image_url(getattr(row, "image", None) or ""),
+        "model": getattr(row, "model", None) or "",
+        "name": row.name,
+        "discountPrice": discount_price,
+        "totalPrice": total_price,
+        "size": getattr(row, "size", None) or "",
+        "top": getattr(row, "top", None) or "",
+        "backSide": getattr(row, "back_side", None) or "",
+        "fretboard": getattr(row, "fretboard", None) or "",
+        "string": getattr(row, "string_brand", None) or "",
+        "finishing": getattr(row, "finishing", None) or "",
+        "color": getattr(row, "color", None) or "",
+    }
+
+
 def serialize_product(
     row: Product,
     *,
@@ -124,6 +154,16 @@ def serialize_product(
         "id": row.id,
         "image": public_image_url(getattr(row, "image", None) or ""),
         "name": row.name,
+        "model": getattr(row, "model", None) or "",
+        "discountPrice": float(getattr(row, "discount_price", 0) or 0),
+        "totalPrice": float(getattr(row, "total_price", 0) or row.out_price or 0),
+        "size": getattr(row, "size", None) or "",
+        "top": getattr(row, "top", None) or "",
+        "backSide": getattr(row, "back_side", None) or "",
+        "fretboard": getattr(row, "fretboard", None) or "",
+        "string": getattr(row, "string_brand", None) or "",
+        "finishing": getattr(row, "finishing", None) or "",
+        "color": getattr(row, "color", None) or "",
         "category": category_name,
         "categoryId": category_public,
         "inPrice": row.in_price,

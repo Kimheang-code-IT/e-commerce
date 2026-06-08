@@ -80,8 +80,10 @@ export function useUserMenu() {
 
   const router = useRouter()
 
+  const isAdmin = computed(() => auth.hasRole(['admin']))
+
   const historyItem = computed<DropdownMenuItem | null>(() => {
-    if (!auth.hasPermission('history:view')) return null
+    if (!isAdmin.value || !auth.hasPermission('history:view')) return null
     return {
       label: t('settings.history'),
       icon: 'i-lucide-scroll-text',
@@ -191,13 +193,19 @@ export function useUserMenu() {
             icon: 'i-lucide-moon',
             type: 'checkbox',
             checked: colorMode.value === 'dark',
-            onUpdateChecked(checked: boolean) {
-              if (checked) {
-                colorMode.preference = 'dark'
-              }
-            },
             onSelect(e: Event) {
               e.preventDefault()
+              colorMode.preference = 'dark'
+            },
+          },
+          {
+            label: t('settings.system'),
+            icon: 'i-lucide-monitor',
+            type: 'checkbox',
+            checked: colorMode.preference === 'system',
+            onSelect(e: Event) {
+              e.preventDefault()
+              colorMode.preference = 'system'
             },
           },
         ],

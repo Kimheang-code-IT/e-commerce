@@ -5,6 +5,7 @@ import { localStore } from '~/utils/storage/local'
 import { useAuthSession } from '~/utils/auth/session'
 import { useAuthApi } from '~/utils/api'
 import { authSchemas } from '~/utils/validation/rules'
+import { getFirstAllowedHome } from '~/utils/auth/access'
 
 definePageMeta({
   layout: 'auth'
@@ -14,6 +15,7 @@ const { t } = useI18n()
 const router = useRouter()
 const toast = useToast()
 const authSession = useAuthSession()
+const authStore = useAuthStore()
 const authApi = useAuthApi()
 const useBackendApi = useBackendMode()
 
@@ -50,6 +52,20 @@ type Schema = {
   remember?: boolean
 }
 
+async function redirectAfterLogin() {
+  await nextTick()
+  const home = getFirstAllowedHome(authStore)
+  if (home) {
+    await router.push(home)
+    return
+  }
+  toast.add({
+    title: t('pages.error.forbiddenTitle'),
+    description: t('pages.error.forbiddenMessage'),
+    color: 'error',
+  })
+}
+
 async function onSubmit(payload: FormSubmitEvent<Schema>) {
   const { email, password, remember } = payload.data
 
@@ -57,7 +73,7 @@ async function onSubmit(payload: FormSubmitEvent<Schema>) {
     try {
       const res = await authApi.login({ email, password })
       authSession.login(res.tokens, { ...res.user })
-      await router.push('/')
+      await redirectAfterLogin()
       return
     } catch {
       toast.add({
@@ -87,7 +103,7 @@ async function onSubmit(payload: FormSubmitEvent<Schema>) {
       role: 'admin',
       pageAccess: ['admin:*']
     })
-    await router.push('/')
+    await redirectAfterLogin()
   } else {
     toast.add({
       title: t('pages.auth.loginFailedTitle'),

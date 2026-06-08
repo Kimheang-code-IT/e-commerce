@@ -57,6 +57,16 @@ class CategoryUpdatePayload(BaseModel):
 class ProductCreatePayload(BaseModel):
     model_config = ConfigDict(extra="forbid")
     name: str = Field(min_length=1, max_length=180)
+    model: str = Field(default="", max_length=120)
+    discountPrice: float = Field(default=0, ge=0)
+    totalPrice: float = Field(default=0, ge=0)
+    size: str = Field(default="", max_length=120)
+    top: str = Field(default="", max_length=120)
+    backSide: str = Field(default="", max_length=120)
+    fretboard: str = Field(default="", max_length=180)
+    string: str = Field(default="", max_length=120)
+    finishing: str = Field(default="", max_length=120)
+    color: str = Field(default="", max_length=120)
     categoryId: str = Field(min_length=1, max_length=40)
     supplierId: int | None = Field(default=None, ge=1)
     inPrice: float = Field(default=0, ge=0)
@@ -71,7 +81,7 @@ class ProductCreatePayload(BaseModel):
     image: str | None = Field(default=None, max_length=2_500_000)
     stockNote: str | None = Field(default=None, max_length=1000)
 
-    @field_validator("name", "status")
+    @field_validator("name", "status", "model", "size", "top", "backSide", "fretboard", "string", "finishing", "color")
     @classmethod
     def normalize_product_text(cls, value: str) -> str:
         return clean_text(value)
@@ -124,6 +134,16 @@ class ProductStockAdjustPayload(BaseModel):
 class ProductUpdatePayload(BaseModel):
     model_config = ConfigDict(extra="forbid")
     name: str | None = Field(default=None, min_length=1, max_length=180)
+    model: str | None = Field(default=None, max_length=120)
+    discountPrice: float | None = Field(default=None, ge=0)
+    totalPrice: float | None = Field(default=None, ge=0)
+    size: str | None = Field(default=None, max_length=120)
+    top: str | None = Field(default=None, max_length=120)
+    backSide: str | None = Field(default=None, max_length=120)
+    fretboard: str | None = Field(default=None, max_length=180)
+    string: str | None = Field(default=None, max_length=120)
+    finishing: str | None = Field(default=None, max_length=120)
+    color: str | None = Field(default=None, max_length=120)
     categoryId: str | None = Field(default=None, min_length=1, max_length=40)
     supplierId: int | None = Field(default=None, ge=1)
     inPrice: float | None = Field(default=None, ge=0)
@@ -138,7 +158,7 @@ class ProductUpdatePayload(BaseModel):
     image: str | None = Field(default=None, max_length=2_500_000)
     stockNote: str | None = Field(default=None, max_length=1000)
 
-    @field_validator("name", "status")
+    @field_validator("name", "status", "model", "size", "top", "backSide", "fretboard", "string", "finishing", "color")
     @classmethod
     def normalize_optional_product_text(cls, value: str | None) -> str | None:
         if value is None:

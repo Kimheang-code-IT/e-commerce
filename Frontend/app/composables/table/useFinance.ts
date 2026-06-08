@@ -50,7 +50,7 @@ export function useFinance() {
   const editingRow = ref<FinanceEntry | null>(null)
 
   const editFields = computed<FormField[]>(() => [
-    { key: 'productName', label: t('pages.finance.columns.productName'), type: 'input', readonly: true, textRule: 'english' },
+    { key: 'productName', label: t('pages.finance.columns.productName'), type: 'input', readonly: true, textRule: 'text' },
     { key: 'facebook', label: t('pages.finance.columns.facebook'), type: 'currency', min: 0, currencyPrefix: 'USD' },
     { key: 'other', label: t('pages.finance.columns.other'), type: 'currency', min: 0, currencyPrefix: 'USD' },
     { key: 'totalCommission', label: t('pages.finance.columns.totalCommission'), type: 'number', readonly: true },

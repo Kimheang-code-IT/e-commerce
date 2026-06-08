@@ -10,6 +10,10 @@ withDefaults(defineProps<Props>(), {
   showDatepicker: false,
   hideSidebarToggle: false,
 })
+
+const { collapsed, isPosRoute } = useLayoutSidebar()
+
+const showHeaderUserMenu = computed(() => collapsed.value || isPosRoute.value)
 </script>
 
 <template>
@@ -27,6 +31,7 @@ withDefaults(defineProps<Props>(), {
         <div class="flex flex-nowrap items-center justify-end gap-2 px-2">
           <slot name="right" />
           <CommonAppDatepicker v-if="showDatepicker" class="shrink-0" />
+          <LayoutUserMenu v-if="showHeaderUserMenu" collapsed />
         </div>
       </template>
     </UDashboardNavbar>

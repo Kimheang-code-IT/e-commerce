@@ -1,4 +1,5 @@
-import { useRoutePermissionMap } from '~/utils/auth/routes'
+import { canAccessPath, getFirstAllowedHome } from '~/utils/auth/access'
+import { routePermissionMap } from '~/utils/auth/routes'
 import { fetchNeedsSetup } from '~/utils/auth/setup'
 
 function showForbiddenToast() {
@@ -15,16 +16,9 @@ function showForbiddenToast() {
 export default defineNuxtRouteMiddleware(async (to) => {
   const auth = useAuthStore()
   const path = to.path
-  const routePermissionMap = useRoutePermissionMap()
   const forbiddenToastState = useState<{ lastPath?: string }>('forbidden-toast', () => ({}))
-  
-  const isAllowed = (entry: any) => {
-    const hasPerm = auth.hasPermission(entry.permission)
-    const hasRole = !entry.roles || auth.hasRole(entry.roles)
-    return hasPerm && hasRole
-  }
 
-  const firstAllowed = () => routePermissionMap.find(isAllowed)
+  const firstAllowedHome = () => getFirstAllowedHome(auth)
 
   // Define public pages
   const isPublicPage = ['/login', '/otp', '/setup'].includes(to.path)
@@ -47,18 +41,16 @@ export default defineNuxtRouteMiddleware(async (to) => {
 
   // Redirect if logged in and trying to access login page
   if (auth.isLoggedIn && isPublicPage) {
-    const first = firstAllowed()
-    if (first) return navigateTo(first.home)
+    const home = firstAllowedHome()
+    if (home) return navigateTo(home)
     // Logged-in user has no permissions payload yet; allow staying on login.
     return
   }
 
   if (!auth.isLoggedIn || isPublicPage) return
 
-  const matched = routePermissionMap.find((entry) => entry.match(path))
-  if (!matched) return
-  if (!isAllowed(matched)) {
-    const first = firstAllowed()
+  if (!canAccessPath(path, auth)) {
+    const home = firstAllowedHome()
 
     // Show a one-time toast when user hits an unauthorized page.
     // This prevents spamming toasts during navigation/back-forward.
@@ -67,8 +59,8 @@ export default defineNuxtRouteMiddleware(async (to) => {
       showForbiddenToast()
     }
 
-    if (first && first.home !== path) {
-      return navigateTo(first.home)
+    if (home && home !== path) {
+      return navigateTo(home)
     }
     // No permitted app route at all; send to login to avoid redirect loops.
     return navigateTo('/login')

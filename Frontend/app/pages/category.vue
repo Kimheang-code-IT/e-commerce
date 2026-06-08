@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useTotalRevenue } from '~/composables/table/useCategory'
 import { formatDate } from '~/utils/format/date'
-import { sanitizeEnglish } from '~/utils/validation/textRules'
+import { sanitizeByTextRule } from '~/utils/validation/textRules'
 
 const {
     rowSelection, sorting, searchQuery, columnVisibility, columnFilters,
@@ -39,13 +39,15 @@ function getInitial(name: string) {
 }
 
 watch(newName, (value) => {
-    const sanitized = sanitizeEnglish(String(value || ''))
+    const sanitized = sanitizeByTextRule('text', String(value || ''))
     if (sanitized !== value) newName.value = sanitized
     nameError.value = sanitized.trim() ? '' : ''
 })
 
 watch(newDescription, (value) => {
-    descriptionError.value = String(value || '').trim() ? '' : ''
+    const sanitized = sanitizeByTextRule('text', String(value || ''))
+    if (sanitized !== value) newDescription.value = sanitized
+    descriptionError.value = sanitized.trim() ? '' : ''
 })
 </script>
 

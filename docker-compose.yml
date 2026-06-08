@@ -135,6 +135,25 @@ services:
       - app-network
     restart: unless-stopped
 
+  website:
+    build:
+      context: ./website_business
+      dockerfile: Dockerfile
+      args:
+        NUXT_PUBLIC_SITE_URL: ${NUXT_PUBLIC_SITE_URL:-https://anyamusicschool.com}
+        NUXT_PUBLIC_API_BASE: ${NUXT_PUBLIC_API_BASE:-https://anyamusicschool.com/api/v1}
+    environment:
+      NUXT_PUBLIC_SITE_URL: ${NUXT_PUBLIC_SITE_URL:-https://anyamusicschool.com}
+      NUXT_PUBLIC_API_BASE: ${NUXT_PUBLIC_API_BASE:-https://anyamusicschool.com/api/v1}
+    ports:
+      - "127.0.0.1:3001:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - app-network
+    restart: unless-stopped
+
   celery-beat:
     build:
       context: ./Backend

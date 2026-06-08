@@ -191,6 +191,16 @@ def create_product_service(*, db: Session, body: ProductCreatePayload, user_id: 
     row = create_product_record(
         db,
         name=body.name,
+        model=body.model,
+        discount_price=body.discountPrice,
+        total_price=body.totalPrice or body.outPrice,
+        size=body.size,
+        top=body.top,
+        back_side=body.backSide,
+        fretboard=body.fretboard,
+        string_brand=body.string,
+        finishing=body.finishing,
+        color=body.color,
         category_id=category_row.id,
         in_price=body.inPrice,
         out_price=body.outPrice,
@@ -285,6 +295,26 @@ def update_product_service(*, db: Session, item_id: int, body: ProductUpdatePayl
 
     row.name = next_name
     row.category_id = next_category_id
+    if body.model is not None:
+        row.model = body.model
+    if body.discountPrice is not None:
+        row.discount_price = body.discountPrice
+    if body.totalPrice is not None:
+        row.total_price = body.totalPrice
+    if body.size is not None:
+        row.size = body.size
+    if body.top is not None:
+        row.top = body.top
+    if body.backSide is not None:
+        row.back_side = body.backSide
+    if body.fretboard is not None:
+        row.fretboard = body.fretboard
+    if body.string is not None:
+        row.string_brand = body.string
+    if body.finishing is not None:
+        row.finishing = body.finishing
+    if body.color is not None:
+        row.color = body.color
     if body.status is not None:
         row.status = body.status
     if body.inPrice is not None:

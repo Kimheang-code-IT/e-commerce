@@ -20,6 +20,16 @@ type ProductFormPayload = Omit<Product, "image"> & {
 };
 type ProductApiPayload = {
   name: string;
+  model?: string;
+  discountPrice?: number;
+  totalPrice?: number;
+  size?: string;
+  top?: string;
+  backSide?: string;
+  fretboard?: string;
+  string?: string;
+  finishing?: string;
+  color?: string;
   categoryId: string;
   supplierId?: number;
   inPrice: number;
@@ -338,7 +348,89 @@ export function useProduct() {
       type: "input",
       placeholder: "ឧ. កុំព្យូទ័រយួរដៃ, គ្រឿងបន្លាស់",
       required: true,
-      textRule: "english",
+      textRule: "text",
+    },
+    {
+      key: "model",
+      label: t("product.model"),
+      type: "input",
+      placeholder: t("product.modelPlaceholder"),
+      required: false,
+      textRule: "text",
+    },
+    {
+      key: "discountPrice",
+      label: t("product.discountPrice"),
+      type: "currency",
+      placeholder: "0.00",
+      required: false,
+      min: 0,
+      currencyPrefix: "USD",
+    },
+    {
+      key: "totalPrice",
+      label: t("product.totalPrice"),
+      type: "currency",
+      placeholder: "0.00",
+      required: false,
+      min: 0,
+      currencyPrefix: "USD",
+    },
+    {
+      key: "size",
+      label: t("product.size"),
+      type: "input",
+      placeholder: t("product.sizePlaceholder"),
+      required: false,
+      textRule: "text",
+    },
+    {
+      key: "top",
+      label: t("product.top"),
+      type: "input",
+      placeholder: t("product.topPlaceholder"),
+      required: false,
+      textRule: "text",
+    },
+    {
+      key: "backSide",
+      label: t("product.backSide"),
+      type: "input",
+      placeholder: t("product.backSidePlaceholder"),
+      required: false,
+      textRule: "text",
+    },
+    {
+      key: "fretboard",
+      label: t("product.fretboard"),
+      type: "input",
+      placeholder: t("product.fretboardPlaceholder"),
+      required: false,
+      textRule: "text",
+    },
+    {
+      key: "string",
+      label: t("product.string"),
+      type: "input",
+      placeholder: t("product.stringPlaceholder"),
+      required: false,
+      textRule: "text",
+    },
+    {
+      key: "finishing",
+      label: t("product.finishing"),
+      type: "input",
+      placeholder: t("product.finishingPlaceholder"),
+      required: false,
+      textRule: "text",
+    },
+    {
+      key: "color",
+      label: t("product.color"),
+      type: "input",
+      placeholder: t("product.colorPlaceholder"),
+      required: false,
+      textRule: "text",
     },
     {
       key: "categoryId",
@@ -395,6 +487,7 @@ export function useProduct() {
       type: "textarea",
       placeholder: "Note...",
       required: false,
+      textRule: "text",
     },
   ]);
 
@@ -509,6 +602,16 @@ export function useProduct() {
   ): ProductApiPayload {
     return {
       name: String(data?.name || "").trim(),
+      model: String(data?.model || "").trim(),
+      discountPrice: Number(data?.discountPrice ?? 0),
+      totalPrice: Number(data?.totalPrice ?? data?.outPrice ?? 0),
+      size: String(data?.size || "").trim(),
+      top: String(data?.top || "").trim(),
+      backSide: String(data?.backSide || "").trim(),
+      fretboard: String(data?.fretboard || "").trim(),
+      string: String(data?.string || "").trim(),
+      finishing: String(data?.finishing || "").trim(),
+      color: String(data?.color || "").trim(),
       categoryId: String(data?.categoryId ?? "").trim(),
       supplierId:
         data?.supplierId !== undefined && data?.supplierId !== null && String(data.supplierId).trim()

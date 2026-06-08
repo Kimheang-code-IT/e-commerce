@@ -5,6 +5,7 @@ import {
   POS_WALK_IN_DELIVERY_TYPE,
   usePosFormOptions
 } from '~/composables/pos/usePosFormOptions'
+import { sanitizeByTextRule } from '~/utils/validation/textRules'
 
 const customerType = defineModel<string>('customerType', { required: true })
 const customerName = defineModel<string>('customerName', { required: true })
@@ -28,6 +29,16 @@ watch(
   },
   { immediate: true, deep: true }
 )
+
+watch(customerName, (value) => {
+  const sanitized = sanitizeByTextRule('text', String(value || ''))
+  if (sanitized !== value) customerName.value = sanitized
+})
+
+watch(customerPhone, (value) => {
+  const sanitized = sanitizeByTextRule('numeric', String(value || ''))
+  if (sanitized !== value) customerPhone.value = sanitized
+})
 const deliveryDatePart = ref('')
 const deliveryTimePart = ref('')
 

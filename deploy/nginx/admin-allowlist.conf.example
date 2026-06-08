@@ -1,0 +1,11 @@
+# Copy to /etc/nginx/snippets/admin-allowlist.conf and add your real IPs.
+# Everyone not listed is blocked from admin.anyamusicschool.com.
+
+# allow 203.0.113.50;        # office public IP
+# allow 198.51.100.0/24;     # VPN range
+# allow 10.0.0.0/8;          # private VPN
+
+# Temporary: allow only localhost for first deploy test (remove in production)
+# allow 127.0.0.1;
+
+deny all;

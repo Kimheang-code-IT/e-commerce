@@ -1,6 +1,7 @@
 import type { NavigationMenuItem } from '@nuxt/ui'
 import { useLayoutSidebar } from '~/composables/layout/useLayoutSidebar'
-import { useRoutePermissionMap } from '~/utils/auth/routes'
+import { getAllowedRouteHomeSet } from '~/utils/auth/access'
+
 export const useMenu = () => {
   const { open, collapseForPos, closeSidebar } = useLayoutSidebar()
   const { t } = useI18n()
@@ -13,14 +14,14 @@ export const useMenu = () => {
   const rawLinks = computed(() => [[
     {
       label: t('navigation.dashboard'),
-      icon: 'i-lucide-home', // updated icon name
+      icon: 'i-lucide-home',
       to: '/',
       class: 'text-md gap-2',
       onSelect: closeNav
     },
     {
       label: t('pages.category.title'),
-      icon: 'i-lucide-swatch-book', // updated icon name
+      icon: 'i-lucide-swatch-book',
       to: '/category',
       class: 'my-2 text-md gap-2',
       onSelect: closeNav
@@ -41,7 +42,7 @@ export const useMenu = () => {
     },
     {
       label: t('pages.pos.title'),
-      icon: 'i-lucide-store', // updated icon name
+      icon: 'i-lucide-store',
       to: '/pos',
       class: 'my-2 text-md gap-2',
       onSelect: () => {
@@ -51,7 +52,7 @@ export const useMenu = () => {
     },
     {
       label: t('pages.report.title'),
-      icon: 'i-lucide-file-bar-chart', // updated icon name
+      icon: 'i-lucide-file-bar-chart',
       to: '/report',
       class: 'my-2 text-md gap-2',
       onSelect: closeNav
@@ -65,14 +66,14 @@ export const useMenu = () => {
     },
     {
       label: t('pages.commission.title'),
-      icon: 'i-lucide-badge-percent', // updated icon name
+      icon: 'i-lucide-badge-percent',
       to: '/commission',
       class: 'my-2 text-md gap-2',
       onSelect: closeNav
     },
     {
       label: t('pages.finance.title'),
-      icon: 'i-lucide-landmark', // updated icon name
+      icon: 'i-lucide-landmark',
       to: '/finance',
       class: 'my-2 text-md gap-2',
       onSelect: closeNav
@@ -109,17 +110,10 @@ export const useMenu = () => {
     }
   ], []] as NavigationMenuItem[][])
 
+  const allowedHomes = computed(() => getAllowedRouteHomeSet(auth))
+
   const links = computed(() => {
-    const routePermissionMap = useRoutePermissionMap()
-    const allowed = new Set(
-      routePermissionMap
-        .filter((entry) => {
-          const hasPerm = auth.hasPermission(entry.permission)
-          const hasRole = !entry.roles || auth.hasRole(entry.roles)
-          return hasPerm && hasRole
-        })
-        .map((entry) => entry.home)
-    )
+    const allowed = allowedHomes.value
 
     return rawLinks.value.map((group) =>
       group
@@ -129,23 +123,18 @@ export const useMenu = () => {
           return { ...item, children: filteredChildren }
         })
         .filter((item) => {
-          if (!item.to) return true
+          if (!item.to) return false
           if (item.children) {
-            if (item.children.length === 0) return false
-            const settingsPath = String(item.to)
-            if (settingsPath.startsWith('/settings')) {
-              return auth.hasPermission('user:view') || auth.hasPermission('role:view')
-            }
-            return true
+            return item.children.length > 0
           }
-          const isHome = allowed.has(String(item.to))
-          return isHome
+          return allowed.has(String(item.to))
         })
     )
   })
 
   return {
     open,
-    links
+    links,
+    allowedHomes,
   }
 }

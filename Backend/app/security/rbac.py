@@ -78,7 +78,7 @@ def role_permission_tokens(role: Role | None) -> set[str]:
 
 def user_has_permission(user: User, permission: str) -> bool:
     tokens = role_permission_tokens(getattr(user, "role_rel", None))
-    if "admin:*" in tokens or permission in tokens:
+    if "admin:*" in tokens or "ALL_PAGES" in tokens or permission in tokens:
         return True
     return any(alias in tokens for alias in ALIASES.get(permission, ()))
 
