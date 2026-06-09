@@ -1,16 +1,16 @@
 # E-Commerce (POS + reports + Telegram)
 
-**Docker** runs the API on `http://127.0.0.1:8000` (not exposed to LAN directly).
+**Docker** runs the API on `http://127.0.0.1:8000` (localhost only).
 
-**Ubuntu nginx** serves the public site: static SPA + proxy `/api` to that backend. No static LAN IP is configured in the app — only your domain in `CORS_ORIGINS` and `FILE_BASE_URL`.
-
-See [docs/NGINX-UBUNTU.md](docs/NGINX-UBUNTU.md).
+**nginx** on the host serves:
+- `anyamusicschool.com` → public catalog (`website_business` via Docker)
+- `admin.anyamusicschool.com` → admin SPA (`Frontend` static build)
 
 ## Requirements
 
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+- Docker + Docker Compose
 - Python 3.11+ (env check script)
-- Node 20+ and pnpm (frontend build)
+- Node 22+ and pnpm (optional — admin build can use Docker via `build-admin.sh`)
 
 ## Quick start
 
@@ -18,6 +18,7 @@ See [docs/NGINX-UBUNTU.md](docs/NGINX-UBUNTU.md).
 git clone https://github.com/Kimheang-code-IT/e-commerce.git
 cd e-commerce
 copy Backend\.env.example Backend\.env
+copy .env.example .env
 ```
 
 Edit `Backend\.env` (database password, `JWT_SECRET_KEY`, Telegram, Google backup).
@@ -28,57 +29,61 @@ python Backend\app\scripts\check_env_docker.py
 curl http://127.0.0.1:8000/health
 ```
 
-Build the static frontend:
+First run with no users: open admin `/setup` in the browser.
 
-```bash
-cd Frontend
-pnpm install
-pnpm exec nuxi generate
+## Scripts
+
+| Script | Purpose |
+|--------|---------|
+| `docker-update.ps1` / `docker-update.cmd` | Build + start Docker stack |
+| `build-admin.sh` | Build admin SPA on Linux server (Docker) → `/var/www/anyamusicschool-admin` |
+| `build-admin.ps1` | Build admin SPA on Windows |
+
+```powershell
+.\docker-update.ps1              # build + start
+.\docker-update.ps1 -NoBuild     # restart only
+.\docker-update.ps1 -Prod        # with docker-compose.prod.yml
 ```
 
-First run with no users: use `/setup` in the browser.
+On the server:
+
+```bash
+docker compose up -d --build
+./build-admin.sh
+```
 
 ## Environment files (safe to commit)
 
 | File | Purpose |
 |------|---------|
-| `Backend/.env.example` | All API settings + Postgres vars for Docker |
+| `Backend/.env.example` | API settings + Postgres vars for Docker |
 | `Frontend/.env.example` | Nuxt public config for local dev |
-| `.env.example` | Optional Compose overrides (`COMPOSE_PROJECT_NAME`, replicas) |
-
-Copy examples to `.env` locally. Verify before Docker:
-
-```powershell
-python Backend\app\scripts\check_env_docker.py
-```
+| `website_business/.env.example` | Public site URL + API base |
+| `.env.example` | Compose overrides (`COMPOSE_PROJECT_NAME`, `NUXT_PUBLIC_*`) |
 
 ## Secrets (never commit)
 
 - `Backend/.env`
 - `Backend/credentials/*.json`
-- Root `.env` (optional overrides only)
+- Root `.env` (optional overrides)
 
-## Telegram
+## Production domains
 
-Use the **same** `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` on each machine, but run **only one** `telegram-bot` container at a time (same token).
+| URL | App |
+|-----|-----|
+| https://anyamusicschool.com | Public catalog |
+| https://admin.anyamusicschool.com | Admin (login required) |
 
-```powershell
-docker compose logs telegram-bot -f
+Set in root `.env`:
+
+```env
+NUXT_PUBLIC_SITE_URL=https://anyamusicschool.com
+NUXT_PUBLIC_API_BASE=https://anyamusicschool.com/api/v1
 ```
 
-## Commands
+Set in `Backend/.env`:
 
-```powershell
-.\docker-update.ps1              # build + start
-.\docker-update.ps1 -NoBuild      # restart only
-.\docker-update.ps1 -Prod         # with docker-compose.prod.yml
-.\docker-update.ps1 -BackendReplicas 2
-docker compose ps
-docker compose logs celery-worker --tail 30
+```env
+CORS_ORIGINS=https://anyamusicschool.com,https://admin.anyamusicschool.com
+FILE_BASE_URL=https://anyamusicschool.com
 ```
-
-## Docs
-
-- [docs/DEPLOY-FROM-GITHUB.md](docs/DEPLOY-FROM-GITHUB.md) — clone on another PC (what is / is not in Git)
-- [docs/NGINX-UBUNTU.md](docs/NGINX-UBUNTU.md) — nginx on Ubuntu (HTTPS, `/api` proxy)
-- [Backend/README.md](Backend/README.md) — API and Docker details

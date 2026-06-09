@@ -1,6 +1,6 @@
-# Build Frontend static admin locally (Windows) — copy .output/public to server manually
+# Build Frontend static admin (Windows)
 $ErrorActionPreference = "Stop"
-$Root = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
+$Root = $PSScriptRoot
 $Frontend = Join-Path $Root "Frontend"
 
 Set-Location $Frontend
@@ -13,4 +13,4 @@ pnpm install --frozen-lockfile
 pnpm exec nuxi generate
 
 Write-Host "Built admin at: $Frontend\.output\public"
-Write-Host "Upload that folder to the server: /var/www/anyamusicschool-admin"
+Write-Host "Upload to server: /var/www/anyamusicschool-admin"

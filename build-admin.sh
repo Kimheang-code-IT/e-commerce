@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# Build Frontend static admin for admin.anyamusicschool.com (Docker — no host pnpm required)
+# Build Frontend static admin (Docker — no host pnpm required)
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+ROOT="$(cd "$(dirname "$0")" && pwd)"
 OUT_DIR="${1:-/var/www/anyamusicschool-admin}"
 IMAGE_TAG="ecom-admin-build:latest"
 
 if ! command -v docker >/dev/null 2>&1; then
-  echo "docker is required. Install Docker or build locally and upload .output/public." >&2
+  echo "docker is required." >&2
   exit 1
 fi
 
