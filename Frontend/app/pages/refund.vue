@@ -70,7 +70,7 @@ const isExportOpen = ref(false)
       </UButton>
     </template>
 
-    <div class="flex-1 p-2 overflow-hidden flex flex-col gap-2">
+    <div class="flex-1 min-h-0 overflow-hidden flex flex-col">
       <div class="flex-1 min-h-0">
         <TableApptable :title="$t('pages.refund.recordsTitle')" v-model:row-selection="rowSelection"
           v-model:sorting="sorting" v-model:column-visibility="columnVisibility" v-model:pagination="pagination"

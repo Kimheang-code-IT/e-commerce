@@ -19,7 +19,11 @@ const panelId = computed(() => {
 </script>
 
 <template>
-  <UDashboardPanel :id="panelId" class="flex flex-1 flex-col min-w-0 h-full">
+  <UDashboardPanel
+    :id="panelId"
+    class="flex flex-1 flex-col min-w-0 h-full"
+    :ui="{ body: 'flex flex-1 flex-col min-h-0 p-0 m-0 overflow-hidden' }"
+  >
     <template #header>
       <UDashboardNavbar :title="title" :toggle="!hideSidebarToggle">
         <template #left>
@@ -29,10 +33,9 @@ const panelId = computed(() => {
         </template>
 
         <template #right>
-          <div class="flex flex-nowrap items-center justify-end gap-2 px-2">
+          <div class="flex flex-nowrap items-center justify-end gap-2">
             <slot name="right" />
             <CommonAppDatepicker v-if="showDatepicker" class="shrink-0" />
-            <LayoutUserMenu collapsed class="shrink-0" />
           </div>
         </template>
       </UDashboardNavbar>

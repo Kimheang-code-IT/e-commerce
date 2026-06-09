@@ -43,7 +43,7 @@ async function fetchFinanceExportData(args: { startDate?: string; endDate?: stri
       </UButton>
     </template>
 
-    <div class="flex-1 p-2 overflow-hidden">
+    <div class="flex-1 min-h-0 overflow-hidden">
       <TableApptable
         :title="t('pages.finance.tableTitle')"
         :data="data"

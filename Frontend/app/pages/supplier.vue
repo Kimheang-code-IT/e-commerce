@@ -64,7 +64,7 @@ function onSubmitSupplierProduct(data: Record<string, any>) {
       </UButton>
     </template>
 
-    <div class="flex-1 p-2 overflow-hidden">
+    <div class="flex-1 min-h-0 overflow-hidden">
       <TableApptable :title="$t('pages.supplier.tableTitle')" v-model:row-selection="rowSelection" v-model:sorting="sorting"
         v-model:column-visibility="columnVisibility" v-model:pagination="pagination"
         v-model:column-filters="columnFilters" v-model:global-filter="searchQuery" :data="suppliers" :columns="columns"

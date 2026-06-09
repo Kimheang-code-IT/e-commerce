@@ -180,7 +180,7 @@ const previewCart = computed(() => {
                 </template>
             </div>
         </template>
-        <div v-if="!isInvoicePreviewMode" class="lg:hidden px-2 pt-2 pb-20 lg:pb-0">
+        <div v-if="!isInvoicePreviewMode" class="lg:hidden pb-20 lg:pb-0">
             <UTabs v-model="mobilePanel" :items="mobilePanelItems" :content="false" color="primary" class="w-full" />
         </div>
 

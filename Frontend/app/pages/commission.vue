@@ -28,7 +28,7 @@ async function fetchCommissionExportData(args: { startDate?: string; endDate?: s
       </UButton>
     </template>
 
-    <div class="flex-1 p-2 overflow-hidden">
+    <div class="flex-1 min-h-0 overflow-hidden">
       <TableApptable
         :title="t('pages.commission.tableTitle')"
         :data="data"

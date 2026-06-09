@@ -53,7 +53,7 @@ watch(newDescription, (value) => {
 
 <template>
     <LayoutAppHeader :title="$t('pages.category.title')" show-datepicker>
-        <div v-if="showCategoryForm" class="lg:hidden px-2 pt-2">
+        <div v-if="showCategoryForm" class="lg:hidden">
             <UTabs
                 v-model="mobileView"
                 :items="mobileViewItems"
@@ -63,7 +63,7 @@ watch(newDescription, (value) => {
             />
         </div>
         <!-- Split Layout -->
-        <div class="flex flex-col lg:flex-row flex-1 gap-3 p-2 overflow-hidden min-h-0">
+        <div class="flex flex-col lg:flex-row flex-1 min-h-0 overflow-hidden">
             <!-- Left: Add Form Panel -->
             <div
                 v-if="showCategoryForm"

@@ -103,7 +103,7 @@ async function fetchReportExportData(args: { startDate?: string; endDate?: strin
         <span class="hidden sm:inline">{{ $t('common.export') }}</span>
       </UButton>
     </template>
-    <div class="flex-1 p-2 overflow-hidden">
+    <div class="flex-1 min-h-0 overflow-hidden">
       <TableApptable :title="t('pages.report.tableTitle')" v-model:row-selection="rowSelection"
         v-model:sorting="sorting" v-model:column-visibility="columnVisibility" v-model:pagination="pagination"
         v-model:column-filters="columnFilters" v-model:filter-value="selectedProducts"

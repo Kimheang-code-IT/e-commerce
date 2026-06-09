@@ -33,7 +33,7 @@ function onSubmitRole(data: Record<string, any>) {
             </UButton>
         </template>
 
-        <div class="flex-1 p-2 overflow-hidden">
+        <div class="flex-1 min-h-0 overflow-hidden">
             <TableApptable :title="$t('pages.roleManagement.tableTitle')" v-model:row-selection="rowSelection"
                 v-model:sorting="sorting"
                 v-model:column-visibility="columnVisibility" v-model:pagination="pagination"
