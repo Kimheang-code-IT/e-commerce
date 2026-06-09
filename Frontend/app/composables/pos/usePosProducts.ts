@@ -8,7 +8,7 @@ export function usePosProducts() {
   const { items: categoryOptions } = useCategoryOptions()
   const isLoadingProducts = ref(false)
   const products = ref<Product[]>([])
-  const categories = computed(() => [{ label: 'All', value: 'All' }, ...categoryOptions.value]))
+  const categories = computed(() => [{ label: 'All', value: 'All' }, ...categoryOptions.value])
   const selectedCategoryId = ref('All')
   const searchQuery = ref('')
   const debouncedSearchQuery = ref('')
