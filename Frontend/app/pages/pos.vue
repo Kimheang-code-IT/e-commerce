@@ -158,7 +158,7 @@ const previewCart = computed(() => {
 </script>
 
 <template>
-    <LayoutAppHeader hide-sidebar-toggle :title="t('pages.pos.title')">
+    <LayoutAppHeader hide-sidebar-toggle flush :title="t('pages.pos.title')">
         <template #leading>
             <UButton to="/" color="primary" variant="solid" size="sm" icon="i-lucide-layout-dashboard"
                 :aria-label="t('navigation.dashboard')" class="shrink-0">

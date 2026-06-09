@@ -4,11 +4,14 @@ interface Props {
   showDatepicker?: boolean
   /** Hide menu toggle (e.g. POS fullscreen uses Dashboard link instead). */
   hideSidebarToggle?: boolean
+  /** Full-width body on mobile (no m-2 inset). Used by POS. */
+  flush?: boolean
 }
 
 withDefaults(defineProps<Props>(), {
   showDatepicker: false,
   hideSidebarToggle: false,
+  flush: false,
 })
 
 const route = useRoute()
@@ -42,7 +45,10 @@ const panelId = computed(() => {
     </template>
 
     <template #body>
-      <div class="flex flex-1 flex-col min-h-0 m-2 md:-m-4 overflow-hidden bg-background text-foreground tracking-tight">
+      <div
+        class="flex flex-1 flex-col min-h-0 overflow-hidden bg-background text-foreground tracking-tight"
+        :class="flush ? '-m-4' : 'm-2 md:-m-4'"
+      >
         <slot />
       </div>
     </template>
