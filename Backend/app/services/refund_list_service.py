@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from sqlalchemy import or_, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
 from app.models import Invoice, RefundRecord
@@ -44,8 +44,12 @@ def build_refunds_query(
     provinces: list[str] | None = None,
     date_from: str | None = None,
     date_to: str | None = None,
+    invoice_nos: list[str] | None = None,
 ):
-    q = select(RefundRecord)
+    q = select(RefundRecord).where(
+        RefundRecord.invoice_no.isnot(None),
+        RefundRecord.invoice_no != "",
+    )
     if search:
         keyword = search.strip()
         q = q.where(
@@ -58,8 +62,10 @@ def build_refunds_query(
         q = q.where(or_(*[RefundRecord.product.ilike(f"%{name}%") for name in products]))
     if provinces:
         q = q.where(RefundRecord.address.in_(provinces))
+    if invoice_nos:
+        q = q.where(RefundRecord.invoice_no.in_(invoice_nos))
     q = apply_created_at_range(q, date_from, date_to, RefundRecord.refunded_at)
-    return q.order_by(RefundRecord.refunded_at.desc(), RefundRecord.id.desc())
+    return q
 
 
 def group_refund_rows(rows: list[RefundRecord], db: Session) -> list[dict]:
@@ -137,8 +143,53 @@ def group_refund_rows(rows: list[RefundRecord], db: Session) -> list[dict]:
                 "refundIds": sorted(g["refund_ids"]),
             }
         )
-    out.sort(key=lambda r: r.get("refundedAt") or "", reverse=True)
     return out
+
+
+def _grouped_invoice_page_query(
+    db: Session,
+    *,
+    search: str | None = None,
+    products: list[str] | None = None,
+    provinces: list[str] | None = None,
+    date_from: str | None = None,
+    date_to: str | None = None,
+    sort_by: str | None = None,
+    sort_order: str | None = None,
+):
+    filtered = build_refunds_query(
+        db,
+        search=search,
+        products=products,
+        provinces=provinces,
+        date_from=date_from,
+        date_to=date_to,
+    ).order_by(None)
+    rr = filtered.subquery()
+
+    sort_key = sort_by or "refundedAt"
+    reverse = (sort_order or "desc").lower() != "asc"
+    sort_map = {
+        "refundedAt": func.max(rr.c.refunded_at),
+        "invoiceNo": rr.c.invoice_no,
+        "amount": func.sum(rr.c.amount),
+        "product": func.min(rr.c.product),
+        "seller": func.min(rr.c.seller),
+        "source": func.min(rr.c.source),
+        "customer": func.min(rr.c.customer),
+    }
+    order_expr = sort_map.get(sort_key, func.max(rr.c.refunded_at))
+
+    grouped = (
+        select(
+            rr.c.invoice_no,
+            func.max(rr.c.refunded_at).label("latest_refund"),
+            func.sum(rr.c.amount).label("total_amount"),
+        )
+        .group_by(rr.c.invoice_no)
+    )
+    grouped = grouped.order_by(order_expr.desc() if reverse else order_expr.asc(), rr.c.invoice_no.asc())
+    return grouped
 
 
 def list_grouped_refunds(
@@ -157,39 +208,35 @@ def list_grouped_refunds(
     products = parse_csv(product)
     provinces = parse_csv(province)
 
-    q = build_refunds_query(
+    grouped = _grouped_invoice_page_query(
         db,
         search=search,
         products=products,
         provinces=provinces,
         date_from=date_from,
         date_to=date_to,
+        sort_by=sort_by,
+        sort_order=sort_order,
     )
-    rows = db.scalars(q).all()
-    grouped = group_refund_rows(list(rows), db)
+    total = db.scalar(select(func.count()).select_from(grouped.order_by(None).subquery())) or 0
 
-    reverse = (sort_order or "desc").lower() != "asc"
-    sort_key = sort_by or "refundedAt"
-    key_map = {
-        "refundedAt": "refundedAt",
-        "invoiceNo": "invoiceNo",
-        "amount": "amount",
-        "product": "product",
-        "seller": "seller",
-        "source": "source",
-        "customer": "customer",
-    }
-    field = key_map.get(sort_key or "", "refundedAt")
+    page_rows = db.execute(grouped.offset(max(0, (page - 1) * limit)).limit(limit)).all()
+    invoice_nos = [str(row.invoice_no) for row in page_rows if row.invoice_no]
+    if not invoice_nos:
+        return [], total
 
-    def sort_val(item: dict):
-        val = item.get(field)
-        if field == "amount":
-            return float(val or 0)
-        return str(val or "")
+    detail_q = build_refunds_query(
+        db,
+        search=search,
+        products=products,
+        provinces=provinces,
+        date_from=date_from,
+        date_to=date_to,
+        invoice_nos=invoice_nos,
+    ).order_by(RefundRecord.refunded_at.desc(), RefundRecord.id.desc())
+    rows = db.scalars(detail_q).all()
+    grouped_data = group_refund_rows(list(rows), db)
 
-    grouped.sort(key=sort_val, reverse=reverse)
-
-    total = len(grouped)
-    start = max(0, (page - 1) * limit)
-    end = start + limit
-    return grouped[start:end], total
+    order_index = {invoice_no: index for index, invoice_no in enumerate(invoice_nos)}
+    grouped_data.sort(key=lambda item: order_index.get(str(item.get("invoiceNo") or ""), 10_000))
+    return grouped_data, total

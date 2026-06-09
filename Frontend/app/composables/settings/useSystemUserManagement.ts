@@ -1,19 +1,18 @@
-import { ref, computed, watch, onMounted } from "vue";
+import { ref, computed, watch } from "vue";
 import type { TableColumn, DropdownMenuItem } from "@nuxt/ui";
 import { useBaseTable } from "~/composables/table/useBaseTable";
 import { useTableQuery } from "~/composables/table/useTableQuery";
 import type { SystemUser, FormField } from "~/types";
 import { useSystemUserApi } from '~/utils/api'
-import { useSystemRoleApi } from '~/utils/api'
 import type { ApiQueryParams } from '~/utils/api'
 import { useServerTableResource } from "~/composables/table/useServerTableResource";
 import { useMutation } from "~/composables/data/useMutation";
+import { useRoleOptions } from "~/composables/data/useRoleOptions";
 
 export function useSystemUserManagement() {
   const useBackendApi = useBackendMode()
   const perms = useModulePermissions('user')
   const systemUserApi = useSystemUserApi()
-  const systemRoleApi = useSystemRoleApi()
   const { formattedRange } = useGlobalFilter()
   const {
     t, toast, rowSelection, columnVisibility,
@@ -35,13 +34,18 @@ export function useSystemUserManagement() {
   // --- Mock Data ---
   const users = ref<SystemUser[]>([]);
   const mutation = useMutation()
+  const selectedRoles = ref<string[]>([]);
   const mergedServerQuery = computed(() => ({
     ...serverQuery.value,
     search: searchQuery.value.trim() || undefined,
     dateFrom: formattedRange.value.start || undefined,
     dateTo: formattedRange.value.end || undefined,
+    role: selectedRoles.value.join(',') || undefined,
   }))
   watch(searchQuery, () => {
+    pagination.value.pageIndex = 0
+  })
+  watch(selectedRoles, () => {
     pagination.value.pageIndex = 0
   })
   const resource = useServerTableResource<SystemUser, ApiQueryParams>({
@@ -55,26 +59,10 @@ export function useSystemUserManagement() {
   const effectiveUsers = computed(() => resource.rows.value)
 
   // --- Filter States ---
-  const roleItems = ref<string[]>([])
-  const selectedRoles = ref<string[]>([]);
-  async function loadRoleItems() {
-    try {
-      const res = await systemRoleApi.list({ page: 1, limit: 200, sortBy: 'name', sortOrder: 'asc' })
-      roleItems.value = (res.data || []).map((r: any) => String(r?.name || '').trim()).filter(Boolean)
-    } catch {
-      roleItems.value = []
-    }
-  }
-  onMounted(loadRoleItems)
-
-  // --- Computed Logic ---
-  const filteredUsers = computed(() => {
-    if (selectedRoles.value.length === 0) return effectiveUsers.value;
-    return effectiveUsers.value.filter((u) => selectedRoles.value.includes(u.role));
-  });
+  const { roleNames: roleItems } = useRoleOptions()
 
   const userSummary = computed(() => ({
-    count: filteredUsers.value.length
+    count: resource.totalRows.value
   }));
 
   const confirmConfig = computed(() => {
@@ -203,9 +191,12 @@ export function useSystemUserManagement() {
   }
 
   async function finalizeAction() {
+    if (mutation.isMutating.value) return
+
+    try {
     if (confirmMode.value === "delete" && selectedUser.value) {
       await mutation.run(() => systemUserApi.remove(selectedUser.value!.id), 'users')
-      await resource.refresh()
+      await resource.load()
       toast.add({
         title: t("pages.userManagement.toastDeleted"),
         description: t("pages.userManagement.toastDeletedDesc", {
@@ -216,7 +207,7 @@ export function useSystemUserManagement() {
     } else if (pendingUser.value) {
       if (confirmMode.value === "add") {
         await mutation.run(() => systemUserApi.create(pendingUser.value!), 'users')
-        await resource.refresh()
+        await resource.load()
         toast.add({
           title: t("pages.userManagement.toastAdded"),
           description: t("pages.userManagement.toastAddedDesc"),
@@ -227,7 +218,7 @@ export function useSystemUserManagement() {
         if (!updatePayload.password) delete updatePayload.password
         
         await mutation.run(() => systemUserApi.update(id, updatePayload), 'users')
-        await resource.refresh()
+        await resource.load()
         toast.add({
           title: t("pages.userManagement.toastUpdated"),
           description: t("pages.userManagement.toastUpdatedDesc"),
@@ -239,6 +230,9 @@ export function useSystemUserManagement() {
     isFormOpen.value = false;
     selectedUser.value = null;
     pendingUser.value = null;
+    } catch {
+      // useApi already shows the API error toast; keep dialogs open for retry.
+    }
   }
 
   function handleAddNew() {
@@ -265,7 +259,6 @@ export function useSystemUserManagement() {
     roleItems,
     selectedRoles,
     // Computed
-    filteredUsers,
     confirmConfig,
     // Config
     columns,
@@ -276,6 +269,7 @@ export function useSystemUserManagement() {
     finalizeAction,
     handleAddNew,
     canCreate: perms.canCreate,
+    isMutating: mutation.isMutating,
   };
 }
 

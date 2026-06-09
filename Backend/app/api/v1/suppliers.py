@@ -14,6 +14,7 @@ from app.schemas.common import (
 from app.services.auth_service import get_current_user, require_permission
 from app.services.data_service import apply_created_at_range, apply_sort, list_response, paginate_query, record_history
 from app.shared.api_response import error_response
+from app.shared.pagination_constants import MAX_LIST_PAGE_SIZE
 
 router = APIRouter(prefix="/suppliers", tags=["suppliers"], dependencies=[Depends(get_current_user)])
 
@@ -159,7 +160,7 @@ def delete_supplier(
 def list_supplier_products(
     supplier_id: int,
     page: int = Query(1, ge=1),
-    limit: int = Query(20, ge=1, le=200),
+    limit: int = Query(20, ge=1, le=MAX_LIST_PAGE_SIZE),
     dateFrom: str | None = None,
     dateTo: str | None = None,
     _: User = Depends(require_permission("supplier:view")),

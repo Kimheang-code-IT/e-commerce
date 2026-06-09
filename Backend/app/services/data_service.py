@@ -14,14 +14,20 @@ from app.services.stock_fifo_service import batch_fifo_head_out_prices
 
 
 def record_history(db: Session, user_id: int, type_action: str, description: str):
+    import logging
+
+    logger = logging.getLogger(__name__)
     try:
         row = History(user_id=user_id, type_action=type_action, description=description)
         db.add(row)
-        # Flush to catch issues but let the parent commit
         db.flush()
     except Exception:
-        # Don't crash the main operation if history fails
-        pass
+        logger.warning(
+            "Failed to record history for user_id=%s action=%s",
+            user_id,
+            type_action,
+            exc_info=True,
+        )
 
 
 def list_response(rows: list[dict[str, Any]], total: int, aggregates: dict[str, Any] | None = None):
@@ -32,7 +38,11 @@ def list_response(rows: list[dict[str, Any]], total: int, aggregates: dict[str, 
 
 
 def paginate_query(query, db: Session, page: int, limit: int):
-    total = db.scalar(select(func.count()).select_from(query.order_by(None).subquery())) or 0
+    count_source = query.order_by(None)
+    try:
+        total = db.scalar(select(func.count()).select_from(count_source.subquery())) or 0
+    except Exception:
+        total = db.scalar(select(func.count()).select_from(query.subquery())) or 0
     rows = db.execute(query.offset((page - 1) * limit).limit(limit)).all()
     return rows, total
 

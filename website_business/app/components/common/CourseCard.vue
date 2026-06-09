@@ -69,10 +69,10 @@ const specRows = computed(() => [
 
     <div class="flex flex-1 flex-col bg-white px-2 py-3 text-black sm:px-3 sm:py-4">
       <div class="text-center">
-        <h3 class="text-[11px] font-bold uppercase leading-snug text-red-600 sm:text-xs md:text-sm">
+        <h3 class="text-sm font-bold uppercase leading-snug text-red-600 sm:text-xs md:text-sm">
           {{ course.model }}
         </h3>
-        <p class="mt-1 text-[10px] font-semibold uppercase leading-snug text-blue-800 sm:text-xs">
+        <p class="mt-1 text-sm font-semibold uppercase leading-snug text-blue-800 sm:text-xs">
           {{ course.name }}
         </p>
 

@@ -7,8 +7,9 @@ from app.core.security import get_password_hash
 from app.models import History, Invoice, Role, TokenSession, User
 from app.schemas.common import SystemUserCreatePayload, SystemUserUpdatePayload
 from app.services.auth_service import get_current_user, require_permission
-from app.services.data_service import apply_sort, list_response, paginate_query, serialize_user, record_history
+from app.services.data_service import apply_created_at_range, apply_sort, list_response, paginate_query, parse_csv, serialize_user, record_history
 from app.shared.api_response import error_response
+from app.shared.pagination_constants import MAX_LIST_PAGE_SIZE
 
 router = APIRouter(prefix="/users", tags=["users"], dependencies=[Depends(get_current_user)])
 
@@ -20,8 +21,9 @@ def _resolve_role(db: Session, role_name: str) -> Role | None:
 @router.get("")
 def list_users(
     page: int = Query(1, ge=1),
-    limit: int = Query(20, ge=1, le=200),
+    limit: int = Query(20, ge=1, le=MAX_LIST_PAGE_SIZE),
     search: str | None = None,
+    role: str | None = None,
     dateFrom: str | None = None,
     dateTo: str | None = None,
     sortBy: str | None = None,
@@ -33,6 +35,10 @@ def list_users(
     if search:
         keyword = search.strip()
         q = q.where(User.name.ilike(f"%{keyword}%") | User.email.ilike(f"%{keyword}%"))
+    role_names = parse_csv(role)
+    if role_names:
+        q = q.join(Role, User.role_id == Role.id).where(Role.name.in_(role_names))
+    q = apply_created_at_range(q, dateFrom, dateTo, User.created_at)
     q = apply_sort(q, sortBy, sortOrder, {"id": User.id, "name": User.name, "email": User.email})
     rows, total = paginate_query(q, db, page, limit)
     return list_response([serialize_user(row[0]) for row in rows], total)

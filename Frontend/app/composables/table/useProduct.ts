@@ -5,7 +5,6 @@ import { useTableQuery } from "~/composables/table/useTableQuery";
 import type { Product, FormField } from "~/types";
 import { formatCurrency } from "~/utils/format/currency";
 import {
-  useCategoryApi,
   useProductApi,
   useProductsViewApi,
   useSupplierApi,
@@ -13,6 +12,7 @@ import {
 import type { ApiQueryParams } from "~/utils/api";
 import { useServerTableResource } from "~/composables/table/useServerTableResource";
 import { useMutation } from "~/composables/data/useMutation";
+import { useCategoryOptions } from "~/composables/data/useCategoryOptions";
 
 type ProductFormPayload = Omit<Product, "image"> & {
   image?: unknown;
@@ -59,7 +59,6 @@ export function useProduct() {
   const useBackendApi = computed(() => true);
   const productApi = useProductApi();
   const productsViewApi = useProductsViewApi();
-  const categoryApi = useCategoryApi();
   const supplierApi = useSupplierApi();
   const { formattedRange } = useGlobalFilter();
   const {
@@ -107,7 +106,7 @@ export function useProduct() {
   });
 
   // --- Filter States ---
-  const categoryItems = ref<{ label: string; value: string }[]>([]);
+  const { items: categoryItems } = useCategoryOptions();
   const supplierItems = ref<{ label: string; value: string }[]>([]);
   const selectedCategories = ref<
     Array<string | { label: string; value: string }>
@@ -140,6 +139,9 @@ export function useProduct() {
   watch(searchQuery, () => {
     pagination.value.pageIndex = 0;
   });
+  watch(selectedCategories, () => {
+    pagination.value.pageIndex = 0;
+  });
   const resource = useServerTableResource<Product, ApiQueryParams>({
     resourceKey: "products-view",
     useBackendApi,
@@ -150,33 +152,7 @@ export function useProduct() {
   });
   const effectiveEntries = computed(() => resource.rows.value);
 
-  async function loadCategoryItems() {
-    try {
-      const res = await categoryApi.list({
-        page: 1,
-        limit: 200,
-        sortBy: "name",
-        sortOrder: "asc",
-      });
-      const items = (res.data || [])
-        .map((item: any) => ({
-          id: String(item?.id || "").trim(),
-          name: String(item?.name || "").trim(),
-        }))
-        .filter((item: { id: string; name: string }) =>
-          Boolean(item.id && item.name),
-        );
-      categoryItems.value = items.map((item) => ({
-        label: item.name,
-        value: item.id,
-      }));
-    } catch {
-      categoryItems.value = [];
-    }
-  }
-
   onMounted(() => {
-    loadCategoryItems();
     loadSupplierItems();
   });
 
@@ -227,17 +203,8 @@ export function useProduct() {
     return undefined;
   }
 
-  // --- Computed ---
-  const filteredEntries = computed(() => {
-    const ids = categoryFilterQueryValues(selectedCategories.value);
-    if (ids.length === 0) return effectiveEntries.value;
-    return effectiveEntries.value.filter((e) =>
-      ids.includes(String(e.categoryId || "")),
-    );
-  });
-
   const footerTotals = computed(() => {
-    const data = filteredEntries.value;
+    const data = effectiveEntries.value;
     const sum = (key: keyof Product) =>
       data.reduce((total, item) => total + Number(item[key] || 0), 0);
 
@@ -648,7 +615,7 @@ export function useProduct() {
         () => productApi.remove(selectedEntry.value!.id),
         "products-view",
       );
-      await resource.refresh();
+      await resource.load();
       toast.add({
         title: t("pages.product.toastDeleted"),
         description: t("pages.product.toastDeletedDesc", {
@@ -664,7 +631,7 @@ export function useProduct() {
       pendingImageFile.value = null;
       if (!pendingEntry.value.id || pendingEntry.value.id === 0) {
         await mutation.run(() => productApi.create(payload), "products-view");
-        await resource.refresh();
+        await resource.load();
         toast.add({
           title: t("pages.product.toastAdded"),
           description: t("pages.product.toastAddedDesc"),
@@ -675,7 +642,7 @@ export function useProduct() {
           () => productApi.update(pendingEntry.value!.id, payload),
           "products-view",
         );
-        await resource.refresh();
+        await resource.load();
         toast.add({
           title: t("pages.product.toastUpdated"),
           description: t("pages.product.toastUpdatedDesc", {
@@ -870,7 +837,7 @@ export function useProduct() {
     totalRows: resource.totalRows,
     isLoading: resource.isLoading,
     // Computed/Configs
-    filteredEntries,
+    filteredEntries: effectiveEntries,
     confirmConfig,
     columns,
     entryFormFields,

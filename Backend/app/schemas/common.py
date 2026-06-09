@@ -1,6 +1,7 @@
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator, model_validator
 
 from app.security.input_validation import clean_optional_text, clean_string_list, clean_text
+from app.shared.pagination_constants import MAX_LIST_PAGE_SIZE
 
 
 class ErrorResponse(BaseModel):
@@ -18,6 +19,11 @@ class ListQuery(BaseModel):
     search: str | None = Field(default=None, max_length=200)
     dateFrom: str | None = Field(default=None, max_length=40)
     dateTo: str | None = Field(default=None, max_length=40)
+
+    @field_validator("limit")
+    @classmethod
+    def clamp_limit(cls, value: int) -> int:
+        return max(1, min(int(value), MAX_LIST_PAGE_SIZE))
 
     @field_validator("sortBy", "sortOrder", "search", "dateFrom", "dateTo")
     @classmethod

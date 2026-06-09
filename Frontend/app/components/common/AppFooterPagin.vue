@@ -1,10 +1,12 @@
 <script setup lang="ts">
+import { MAX_TABLE_PAGE_SIZE } from '~/utils/table/pagination'
+
 type PaginationState = {
   pageIndex: number
   pageSize: number
 }
 type PageSizeOption = number | 'All'
-const PAGE_SIZE_OPTIONS: PageSizeOption[] = [10, 20, 50, 100, 200, 1000, 'All']
+const PAGE_SIZE_OPTIONS: PageSizeOption[] = [10, 20, 50, 100, 200, 1000, 5000, 10000, 'All']
 const pagination = defineModel<PaginationState>('pagination', {
   default: () => ({ pageIndex: 0, pageSize: 15 })
 })
@@ -21,7 +23,9 @@ defineEmits<{
 }>()
 
 function handlePageSizeChange(val: PageSizeOption) {
-  const pageSize = val === 'All' ? props.total : Number(val)
+  const pageSize = val === 'All'
+    ? Math.min(Math.max(props.total, 1), MAX_TABLE_PAGE_SIZE)
+    : Number(val)
   pagination.value = {
     ...pagination.value,
     pageSize: pageSize > 0 ? pageSize : 1,

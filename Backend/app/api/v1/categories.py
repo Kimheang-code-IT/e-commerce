@@ -20,13 +20,14 @@ from app.services.cache_service import (
     PREFIX_CATEGORIES,
 )
 from app.shared.api_response import error_response
+from app.shared.pagination_constants import MAX_LIST_PAGE_SIZE
 
 router = APIRouter()
 
 @router.get("/categories")
 def list_categories(
     page: int = Query(1, ge=1),
-    limit: int = Query(10, ge=1, le=200),
+    limit: int = Query(10, ge=1, le=MAX_LIST_PAGE_SIZE),
     search: str | None = None,
     dateFrom: str | None = None,
     dateTo: str | None = None,

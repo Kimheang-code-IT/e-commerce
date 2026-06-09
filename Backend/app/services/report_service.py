@@ -134,6 +134,9 @@ def list_report_invoices(
     return result, total
 
 
+EXPORT_MAX_ROWS = 10_000
+
+
 def export_report_invoices(
     db: Session,
     *,
@@ -153,7 +156,7 @@ def export_report_invoices(
         date_from=date_from,
         date_to=date_to,
     )
-    q = q.order_by(Invoice.created_at.desc(), Invoice.id.desc())
+    q = q.order_by(Invoice.created_at.desc(), Invoice.id.desc()).limit(EXPORT_MAX_ROWS)
     rows = db.execute(q).all()
     return [serialize_report_invoice(inv, seller) for inv, seller in rows]
 

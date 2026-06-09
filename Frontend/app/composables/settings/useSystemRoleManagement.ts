@@ -7,6 +7,7 @@ import { useSystemRoleApi } from '~/utils/api'
 import type { ApiQueryParams } from '~/utils/api'
 import { useServerTableResource } from '~/composables/table/useServerTableResource'
 import { useMutation } from '~/composables/data/useMutation'
+import { useRoleOptions } from '~/composables/data/useRoleOptions'
 import { PAGE_PERMISSION_MAP, ROLE_PAGE_KEYS } from '~/utils/auth/permissionRegistry'
 import { uniqueRolePageLabels } from '~/utils/auth/rolePages'
 
@@ -39,14 +40,18 @@ export function useSystemRoleManagement() {
     const roles = ref<SystemRole[]>([])
     const mutation = useMutation()
     const auth = useAuthStore()
+    const selectedRoles = ref<string[]>([])
     const mergedServerQuery = computed(() => ({
         ...serverQuery.value,
         search: searchQuery.value.trim() || undefined,
         dateFrom: formattedRange.value.start || undefined,
-        dateTo: formattedRange.value.end || undefined
-    })
-    )
+        dateTo: formattedRange.value.end || undefined,
+        name: selectedRoles.value.join(',') || undefined,
+    }))
     watch(searchQuery, () => {
+        pagination.value.pageIndex = 0
+    })
+    watch(selectedRoles, () => {
         pagination.value.pageIndex = 0
     })
     const resource = useServerTableResource<SystemRole, ApiQueryParams>({
@@ -60,11 +65,7 @@ export function useSystemRoleManagement() {
     const effectiveRoles = computed(() => resource.rows.value)
 
     // --- Filter States ---
-    const roleFilterItems = computed(() => {
-        const unique = new Set(effectiveRoles.value.map(r => r.name))
-        return [...unique]
-    })
-    const selectedRoles = ref<string[]>([])
+    const { roleNames: roleFilterItems } = useRoleOptions()
 
     const pagePermissionMap = PAGE_PERMISSION_MAP
     const pageItems = [...ROLE_PAGE_KEYS]
@@ -81,16 +82,8 @@ export function useSystemRoleManagement() {
         'view-add-damage',
     ] as const
 
-    // --- Computed Logic ---
-    const filteredRoles = computed(() => {
-        if (selectedRoles.value.length === 0) return effectiveRoles.value
-        return effectiveRoles.value.filter(r => {
-            return selectedRoles.value.includes(r.name)
-        })
-    })
-
     const roleSummary = computed(() => ({
-        count: filteredRoles.value.length
+        count: resource.totalRows.value
     }))
 
     const confirmConfig = computed(() => {
@@ -160,7 +153,7 @@ export function useSystemRoleManagement() {
             actions.push({
                 label: t('actions.edit'), icon: 'i-lucide-edit',
                 onSelect: () => {
-                    selectedRole.value = { ...role, pageAccess: [...role.pageAccess] }
+                    selectedRole.value = { ...role, pageAccess: [...(role.pageAccess ?? [])] }
                     isFormOpen.value = true
                 }
             })
@@ -180,6 +173,18 @@ export function useSystemRoleManagement() {
         return actions.length ? [actions] : []
     }
 
+    function normalizeRoleName(name: string) {
+        return String(name || '').trim().toLowerCase()
+    }
+
+    function isDuplicateRoleName(name: string, excludeId?: number | null) {
+        const normalized = normalizeRoleName(name)
+        if (!normalized) return false
+        return effectiveRoles.value.some(
+            (role) => normalizeRoleName(role.name) === normalized && role.id !== excludeId
+        )
+    }
+
     function handleSaveRequest(data: any) {
         if (Array.isArray(data.pageAccess)) {
             data.pageAccess = data.pageAccess
@@ -193,44 +198,62 @@ export function useSystemRoleManagement() {
             data.pageAccess = []
         }
 
-        pendingRole.value = { ...data }
-        confirmMode.value = (!data.id || data.id === 0) ? "add" : "edit";
+        const isAdd = !data.id || data.id === 0
+        const roleName = String(data.name || '').trim()
+        if (isDuplicateRoleName(roleName, isAdd ? undefined : data.id)) {
+            toast.add({
+                title: t('pages.roleManagement.toastDuplicateName'),
+                description: t('pages.roleManagement.toastDuplicateNameDesc'),
+                color: 'error',
+            })
+            return
+        }
+
+        pendingRole.value = { ...data, name: roleName }
+        confirmMode.value = isAdd ? 'add' : 'edit'
         isConfirmOpen.value = true
     }
 
     async function finalizeAction() {
-        if (confirmMode.value === 'delete' && selectedRole.value) {
-            await mutation.run(() => systemRoleApi.remove(selectedRole.value!.id), 'roles')
-            await resource.refresh()
-            toast.add({
-                title: t('pages.roleManagement.toastDeleted'),
-                description: t('pages.roleManagement.toastDeletedDesc'),
-                color: 'error',
-            })
-        } else if (pendingRole.value) {
-            if (confirmMode.value === 'add') {
-                await mutation.run(() => systemRoleApi.create(pendingRole.value!), 'roles')
-                await resource.refresh()
+        if (mutation.isMutating.value) return
+
+        try {
+            if (confirmMode.value === 'delete' && selectedRole.value) {
+                await mutation.run(() => systemRoleApi.remove(selectedRole.value!.id), 'roles')
+                await resource.load()
                 toast.add({
-                    title: t('pages.roleManagement.toastAdded'),
-                    description: t('pages.roleManagement.toastAddedDesc'),
-                    color: 'primary',
+                    title: t('pages.roleManagement.toastDeleted'),
+                    description: t('pages.roleManagement.toastDeletedDesc'),
+                    color: 'error',
                 })
-            } else if (confirmMode.value === 'edit') {
-                const { id, ...updatePayload } = pendingRole.value!
-                await mutation.run(() => systemRoleApi.update(id, updatePayload), 'roles')
-                await resource.refresh()
-                toast.add({
-                    title: t('pages.roleManagement.toastUpdated'),
-                    description: t('pages.roleManagement.toastUpdatedDesc'),
-                    color: 'primary',
-                })
+            } else if (pendingRole.value) {
+                if (confirmMode.value === 'add') {
+                    await mutation.run(() => systemRoleApi.create(pendingRole.value!), 'roles')
+                    await resource.load()
+                    toast.add({
+                        title: t('pages.roleManagement.toastAdded'),
+                        description: t('pages.roleManagement.toastAddedDesc'),
+                        color: 'primary',
+                    })
+                } else if (confirmMode.value === 'edit') {
+                    const { id, ...updatePayload } = pendingRole.value!
+                    await mutation.run(() => systemRoleApi.update(id, updatePayload), 'roles')
+                    await resource.load()
+                    toast.add({
+                        title: t('pages.roleManagement.toastUpdated'),
+                        description: t('pages.roleManagement.toastUpdatedDesc'),
+                        color: 'primary',
+                    })
+                }
             }
+
+            isConfirmOpen.value = false
+            isFormOpen.value = false
+            selectedRole.value = null
+            pendingRole.value = null
+        } catch {
+            // useApi already shows the API error toast; keep dialogs open for retry.
         }
-        isConfirmOpen.value = false
-        isFormOpen.value = false
-        selectedRole.value = null
-        pendingRole.value = null
     }
 
     function handleAddNew() {
@@ -251,11 +274,12 @@ export function useSystemRoleManagement() {
         selectedRole, roles: effectiveRoles, roleFilterItems, selectedRoles, isLoading: resource.isLoading,
         totalRows: resource.totalRows,
         // Computed
-        filteredRoles, confirmConfig,
+        confirmConfig,
         // Config
         columns, roleFormFields,
         // Actions
         getDropdownActions, handleSaveRequest, finalizeAction, handleAddNew,
         formatPageAccessForDisplay,
+        isMutating: mutation.isMutating,
     }
 }

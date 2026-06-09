@@ -8,8 +8,9 @@ from app.core.database import get_db
 from app.models import Role, User
 from app.schemas.common import SystemRoleCreatePayload, SystemRoleUpdatePayload
 from app.services.auth_service import get_current_user, require_permission
-from app.services.data_service import apply_sort, list_response, paginate_query, serialize_role, record_history
+from app.services.data_service import apply_created_at_range, apply_sort, list_response, paginate_query, parse_csv, serialize_role, record_history
 from app.shared.api_response import error_response
+from app.shared.pagination_constants import MAX_LIST_PAGE_SIZE
 
 router = APIRouter(prefix="/roles", tags=["roles"], dependencies=[Depends(get_current_user)])
 
@@ -22,8 +23,11 @@ def _page_access_json(items: list[str]) -> str:
 @router.get("")
 def list_roles(
     page: int = Query(1, ge=1),
-    limit: int = Query(20, ge=1, le=200),
+    limit: int = Query(20, ge=1, le=MAX_LIST_PAGE_SIZE),
     search: str | None = None,
+    name: str | None = None,
+    dateFrom: str | None = None,
+    dateTo: str | None = None,
     sortBy: str | None = None,
     sortOrder: str | None = Query(None, pattern="^(asc|desc)$"),
     _: User = Depends(require_permission("role:view")),
@@ -32,6 +36,10 @@ def list_roles(
     q = select(Role)
     if search:
         q = q.where(Role.name.ilike(f"%{search.strip()}%"))
+    names = parse_csv(name)
+    if names:
+        q = q.where(Role.name.in_(names))
+    q = apply_created_at_range(q, dateFrom, dateTo, Role.created_at)
     q = apply_sort(q, sortBy, sortOrder, {"id": Role.id, "name": Role.name})
     rows, total = paginate_query(q, db, page, limit)
     return list_response([serialize_role(row[0]) for row in rows], total)

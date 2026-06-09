@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Header, status
+from fastapi import APIRouter, Depends, Header, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -21,9 +21,6 @@ from app.services.setup_service import (
 )
 
 router = APIRouter(prefix="/auth", tags=["auth"])
-
-
-from app.utils.timezone import cambodia_now
 
 
 @router.get("/setup/status")
@@ -79,14 +76,16 @@ def setup_initial_admin(payload: SetupBootstrapPayload, db: Session = Depends(ge
 def login(payload: AuthLoginPayload, db: Session = Depends(get_db)):
     try:
         auth_data = login_user(db, email=payload.email, password=payload.password)
-        # Record login history and update last_login
-        user = db.query(User).filter(User.email == payload.email).first()
-        if user:
-            user.last_login = cambodia_now()
-            record_history(db, user.id, "Login", f"User logged in ({user.email})")
-            db.commit()
+    except HTTPException as exc:
+        if exc.status_code == status.HTTP_401_UNAUTHORIZED:
+            return error_response(status.HTTP_401_UNAUTHORIZED, "Invalid credentials", "UNAUTHORIZED")
+        raise
     except Exception:
-        return error_response(status.HTTP_401_UNAUTHORIZED, "Invalid credentials", "UNAUTHORIZED")
+        return error_response(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "Login failed",
+            "INTERNAL_ERROR",
+        )
     return {"success": True, "message": "Login successful", "data": auth_data}
 
 
@@ -96,8 +95,16 @@ def refresh(refreshToken: str | None = Header(default=None), db: Session = Depen
         return error_response(status.HTTP_400_BAD_REQUEST, "Missing refresh token", "BAD_REQUEST")
     try:
         tokens, _ = rotate_refresh_token(db, refreshToken)
+    except HTTPException as exc:
+        if exc.status_code == status.HTTP_401_UNAUTHORIZED:
+            return error_response(status.HTTP_401_UNAUTHORIZED, "Invalid refresh token", "UNAUTHORIZED")
+        raise
     except Exception:
-        return error_response(status.HTTP_401_UNAUTHORIZED, "Invalid refresh token", "UNAUTHORIZED")
+        return error_response(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "Token refresh failed",
+            "INTERNAL_ERROR",
+        )
     return {"data": {"token": tokens["accessToken"], "refreshToken": tokens["refreshToken"]}}
 
 

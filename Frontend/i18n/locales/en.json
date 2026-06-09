@@ -564,6 +564,8 @@
             "toastDeletedDesc": "Role removed successfully.",
             "toastAdded": "Role created",
             "toastAddedDesc": "New role policy is active.",
+            "toastDuplicateName": "Role name already exists",
+            "toastDuplicateNameDesc": "Choose a different name. Each role must have a unique name.",
             "toastUpdated": "Role updated",
             "toastUpdatedDesc": "Policy updates synchronized.",
             "allPages": "Full system access",

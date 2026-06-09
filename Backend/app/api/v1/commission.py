@@ -16,6 +16,7 @@ from app.services.data_service import (
     serialize_commission_row,
 )
 from app.services.filter_options_service import commission_filter_options
+from app.shared.pagination_constants import MAX_LIST_PAGE_SIZE
 
 router = APIRouter(prefix="/commission-view", tags=["commission-view"], dependencies=[Depends(get_current_user)])
 
@@ -43,7 +44,7 @@ def _commission_scope_user_id(user: User) -> int | None:
 @router.get("")
 def list_commission_view(
     page: int = Query(1, ge=1),
-    limit: int = Query(20, ge=1, le=200),
+    limit: int = Query(20, ge=1, le=MAX_LIST_PAGE_SIZE),
     search: str | None = None,
     product: str | None = None,
     dateFrom: str | None = None,

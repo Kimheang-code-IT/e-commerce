@@ -6,6 +6,7 @@ from app.services.auth_service import get_current_user, require_permission
 from app.services.data_service import export_payload, list_response
 from app.services.filter_options_service import report_filter_options
 from app.services.report_service import export_report_invoices, list_report_invoices
+from app.shared.pagination_constants import MAX_LIST_PAGE_SIZE
 
 router = APIRouter(prefix="/reports-view", tags=["reports-view"], dependencies=[Depends(get_current_user)])
 
@@ -13,7 +14,7 @@ router = APIRouter(prefix="/reports-view", tags=["reports-view"], dependencies=[
 @router.get("")
 def list_reports_view(
     page: int = Query(1, ge=1),
-    limit: int = Query(20, ge=1, le=200),
+    limit: int = Query(20, ge=1, le=MAX_LIST_PAGE_SIZE),
     search: str | None = None,
     product: str | None = None,
     province: str | None = None,

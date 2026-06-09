@@ -4,10 +4,10 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.models import History, User
-from app.dependencies.auth import require_role
-from app.services.auth_service import get_current_user
+from app.services.auth_service import get_current_user, require_permission
 from app.services.data_service import apply_created_at_range, apply_sort, list_response, paginate_query, parse_csv, to_iso
 from app.services.filter_options_service import history_action_options
+from app.shared.pagination_constants import MAX_LIST_PAGE_SIZE
 
 router = APIRouter(prefix="/histories", tags=["histories"], dependencies=[Depends(get_current_user)])
 
@@ -15,14 +15,14 @@ router = APIRouter(prefix="/histories", tags=["histories"], dependencies=[Depend
 @router.get("")
 def list_histories(
     page: int = Query(1, ge=1),
-    limit: int = Query(20, ge=1, le=200),
+    limit: int = Query(20, ge=1, le=MAX_LIST_PAGE_SIZE),
     search: str | None = None,
     action: str | None = None,
     dateFrom: str | None = None,
     dateTo: str | None = None,
     sortBy: str | None = None,
     sortOrder: str | None = Query(None, pattern="^(asc|desc)$"),
-    _=Depends(require_role("admin")),
+    _=Depends(require_permission("history:view")),
     db: Session = Depends(get_db),
 ):
     q = select(History, User).join(User, History.user_id == User.id)
@@ -67,7 +67,7 @@ def list_histories(
 def history_filter_options(
     dateFrom: str | None = None,
     dateTo: str | None = None,
-    _=Depends(require_role("admin")),
+    _=Depends(require_permission("history:view")),
     db: Session = Depends(get_db),
 ):
     return {"data": {"actions": history_action_options(db, date_from=dateFrom, date_to=dateTo)}}

@@ -1,92 +1,82 @@
-import { ref, computed, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import type { DropdownMenuItem } from '@nuxt/ui'
-import { useBaseTable } from "~/composables/table/useBaseTable";
-import { useTableQuery } from "~/composables/table/useTableQuery";
+import { useBaseTable } from '~/composables/table/useBaseTable'
 import type { AuditLog } from '~/types'
 import { useHistoryApi } from '~/utils/api'
-import { useServerTableResource } from '~/composables/table/useServerTableResource'
+import { useServerListTable } from '~/features/shared/useServerListTable'
 import { useViewFilterOptions } from '~/composables/useViewFilterOptions'
 
 export function useAuditHistory() {
-    const useBackendApi = useBackendMode()
-    const auth = useAuthStore()
-    const perms = useModulePermissions('history')
-    const isAdmin = computed(() => auth.hasRole(['admin']))
-    const historyApi = useHistoryApi()
-    const { formattedRange } = useGlobalFilter()
-    const {
-      rowSelection,
-      columnVisibility,
-      isDetailOpen,
-    } = useBaseTable({});
-  
-    const {
-      sorting,
-      columnFilters,
-      pagination,
-      serverQuery,
-    } = useTableQuery({ initialSorting: [{ id: 'id', desc: true }] });
-    const searchQuery = ref('')
+  const historyApi = useHistoryApi()
+  const perms = useModulePermissions('history')
+  const {
+    rowSelection,
+    columnVisibility,
+    isDetailOpen,
+  } = useBaseTable({})
 
-    const selectedLog = ref<AuditLog | null>(null)
-    const selectedActions = ref<string[]>([]);
+  const selectedLog = ref<AuditLog | null>(null)
+  const selectedActions = ref<string[]>([])
+  const logs = ref<AuditLog[]>([])
 
-    const { itemsFor: filterItemsFor } = useViewFilterOptions(
-      (query, signal) => historyApi.filterOptions(query, signal),
-      ['actions']
-    )
-    const actionItems = filterItemsFor('actions')
+  const extraQuery = computed(() => ({
+    action: selectedActions.value.join(',') || undefined,
+  }))
 
-    const logs = ref<AuditLog[]>([])
-    const mergedServerQuery = computed(() => ({
-        ...serverQuery.value,
-        search: searchQuery.value.trim() || undefined,
-        dateFrom: formattedRange.value.start || undefined,
-        dateTo: formattedRange.value.end || undefined
-    }))
-    watch(searchQuery, () => {
-        pagination.value.pageIndex = 0
-    })
-    watch(selectedActions, () => {
-        pagination.value.pageIndex = 0
-    })
-    const resource = useServerTableResource<AuditLog, Record<string, unknown>>({
-        resourceKey: 'histories',
-        useBackendApi,
-        serverQuery: mergedServerQuery,
-        localData: logs,
-        listFn: (query, signal) => historyApi.list({
-            ...query,
-            action: selectedActions.value.join(',') || undefined
-        }, signal),
-        debounceMs: 220
-    })
-    const effectiveLogs = computed(() => resource.rows.value)
+  const {
+    sorting,
+    columnFilters,
+    pagination,
+    searchQuery,
+    resource,
+  } = useServerListTable<AuditLog>({
+    resourceKey: 'histories',
+    initialSorting: [{ id: 'id', desc: true }],
+    localData: logs,
+    extraQuery,
+    listFn: (query, signal) => historyApi.list(query, signal),
+  })
 
-    const filteredLogs = computed(() => effectiveLogs.value)
+  watch(selectedActions, () => {
+    pagination.value.pageIndex = 0
+  })
 
-    function getDropdownActions(log: AuditLog): DropdownMenuItem[][] {
-        return [[
-            {
-                label: 'View Details', icon: 'i-lucide-eye',
-                onSelect: () => {
-                   selectedLog.value = log
-                   isDetailOpen.value = true
-                }
-            }
-        ]]
-    }
+  const { itemsFor: filterItemsFor } = useViewFilterOptions(
+    (query, signal) => historyApi.filterOptions(query, signal),
+    ['actions'],
+  )
+  const actionItems = filterItemsFor('actions')
 
-    return {
-        rowSelection, sorting, searchQuery, columnVisibility, columnFilters,
-        pagination, isDetailOpen,
-        isLoading: resource.isLoading,
-        totalRows: resource.totalRows,
-        selectedLog, logs: effectiveLogs,
-        actionItems, selectedActions,
-        filteredLogs,
-        getDropdownActions,
-        canExport: computed(() => isAdmin.value && perms.canExport.value),
-    }
+  const effectiveLogs = computed(() => resource.rows.value)
+
+  function getDropdownActions(log: AuditLog): DropdownMenuItem[][] {
+    return [[
+      {
+        label: 'View Details',
+        icon: 'i-lucide-eye',
+        onSelect: () => {
+          selectedLog.value = log
+          isDetailOpen.value = true
+        },
+      },
+    ]]
+  }
+
+  return {
+    rowSelection,
+    sorting,
+    searchQuery,
+    columnVisibility,
+    columnFilters,
+    pagination,
+    isDetailOpen,
+    isLoading: resource.isLoading,
+    totalRows: resource.totalRows,
+    selectedLog,
+    logs: effectiveLogs,
+    actionItems,
+    selectedActions,
+    getDropdownActions,
+    canExport: perms.canExport,
+  }
 }
-

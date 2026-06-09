@@ -4,10 +4,10 @@ const {
     rowSelection, sorting, searchQuery, columnVisibility, columnFilters,
     pagination, isFormOpen, isConfirmOpen,
     totalRows,
-    selectedRole, filteredRoles, confirmConfig,
+    selectedRole, roles, confirmConfig,
     roleFormFields, columns, roleFilterItems, selectedRoles,
     getDropdownActions, handleSaveRequest, finalizeAction, handleAddNew,
-    formatPageAccessForDisplay,
+    formatPageAccessForDisplay, isMutating, isLoading,
 } = useSystemRoleManagement()
 const auth = useAuthStore()
 /** Backend maps role:create/update/delete to the same stored token; any grants management UI. */
@@ -39,9 +39,9 @@ function onSubmitRole(data: Record<string, any>) {
                 v-model:column-visibility="columnVisibility" v-model:pagination="pagination"
                 v-model:column-filters="columnFilters" v-model:filter-value="selectedRoles"
                 v-model:global-filter="searchQuery"
-                :filter-items="roleFilterItems" :data="filteredRoles" :columns="columns" :selectable="true"
+                :filter-items="roleFilterItems" :data="roles" :columns="columns" :selectable="true"
                 :total-rows="totalRows"
-                :get-row-actions="getDropdownActions">
+                :loading="isLoading" :get-row-actions="getDropdownActions">
                 <template #name-cell="{ row }">
                     <div class="flex items-center gap-2">
                         <span>{{ row.original.name }}</span>
@@ -49,7 +49,7 @@ function onSubmitRole(data: Record<string, any>) {
                 </template>
                 <template #pageAccess-cell="{ row }">
                     <div class="flex flex-wrap gap-1 max-w-md">
-                        <template v-if="row.original.pageAccess.includes('ALL_PAGES') || row.original.pageAccess.includes('admin:*')">
+                        <template v-if="(row.original.pageAccess ?? []).includes('ALL_PAGES') || (row.original.pageAccess ?? []).includes('admin:*')">
                             <UBadge variant="solid" color="primary" size="md">
                                 {{ $t('pages.roleManagement.allPages') }}
                             </UBadge>
@@ -77,6 +77,11 @@ function onSubmitRole(data: Record<string, any>) {
             :submit-label-key="selectedRole ? 'actions.save' : 'actions.confirm'"
             @submit="onSubmitRole"
         />
-        <CommonAppModalCURD v-model:open="isConfirmOpen" v-bind="confirmConfig" @submit="finalizeAction" />
+        <CommonAppModalCURD
+            v-model:open="isConfirmOpen"
+            v-bind="confirmConfig"
+            :loading="isMutating"
+            @submit="finalizeAction"
+        />
     </LayoutAppHeader>
 </template>

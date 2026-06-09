@@ -51,7 +51,7 @@ ALIASES: dict[str, tuple[str, ...]] = {
     # dashboard permissions
     "dashboard:view": ("settings:dashboard-management:view",),
     "role:view": ("settings:role-management:view",),
-    "role:create": ("settings:role-management:update",),
+    "role:create": ("settings:role-management:create",),
     "role:update": ("settings:role-management:update",),
     "role:delete": ("settings:role-management:update",),
     # User permissions

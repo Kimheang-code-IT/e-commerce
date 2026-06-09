@@ -5,8 +5,8 @@ import { sanitizeByTextRule } from '~/utils/validation/textRules'
 
 const {
     rowSelection, sorting, searchQuery, columnVisibility, columnFilters,
-    pagination, selectedClassifications,
-    filteredEntries, columns, totalRows,
+    pagination,
+    filteredEntries, columns, totalRows, isLoading,
     newName, newDescription, handleAdd,
     isConfirmOpen, confirmConfig, finalizeAction,
     getDropdownActions,
@@ -134,12 +134,12 @@ watch(newDescription, (value) => {
                     v-model:column-visibility="columnVisibility"
                     v-model:pagination="pagination"
                     v-model:column-filters="columnFilters"
-                    v-model:filter-value="selectedClassifications"
                     v-model:global-filter="searchQuery"
                     :data="filteredEntries"
                     :total-rows="totalRows"
                     :columns="columns"
                     :selectable="false"
+                    :loading="isLoading"
                     :get-row-actions="getDropdownActions"
                 >
                     <!-- Auto row number (frontend only) -->

@@ -197,7 +197,7 @@ export function useSupplierTable() {
   async function finalizeAction() {
     if (confirmMode.value === 'delete' && selectedSupplier.value) {
       await mutation.run(() => supplierApi.remove(selectedSupplier.value!.id), 'suppliers')
-      await resource.refresh()
+      await resource.load()
       toast.add({ title: t('pages.supplier.toastDeleted'), color: 'error' })
     } else if (pendingSupplier.value) {
       if (confirmMode.value === 'add') {
@@ -211,7 +211,7 @@ export function useSupplierTable() {
             }),
           'suppliers'
         )
-        await resource.refresh()
+        await resource.load()
         toast.add({ title: t('pages.supplier.toastAdded'), color: 'primary' })
       } else {
         await mutation.run(
@@ -224,7 +224,7 @@ export function useSupplierTable() {
             }),
           'suppliers'
         )
-        await resource.refresh()
+        await resource.load()
         toast.add({ title: t('pages.supplier.toastUpdated'), color: 'primary' })
       }
     }
@@ -273,7 +273,7 @@ export function useSupplierTable() {
       'suppliers'
     )
     await loadSupplierProducts()
-    await resource.refresh()
+    await resource.load()
     isProductEditOpen.value = false
     selectedProduct.value = null
     toast.add({ title: t('pages.supplier.toastProductUpdated'), color: 'primary' })

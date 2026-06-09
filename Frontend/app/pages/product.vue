@@ -12,7 +12,7 @@ const {
     totalRows,
     selectedEntry,
     categoryItems, selectedCategories,
-    filteredEntries, confirmConfig,
+    filteredEntries, confirmConfig, isLoading,
     columns, entryFormFields,
     getDropdownActions, handleSaveRequest, finalizeAction, handleAddNew,
     canCreate, canExport, canAdjustStock, canViewAdjustStock, canAddDamage, canViewAddDamage,
@@ -73,7 +73,7 @@ function onProductImageError(event: Event) {
                 v-model:global-filter="searchQuery"
                 :filter-items="categoryItems" :filter-placeholder="$t('product.category')"
                 :data="filteredEntries" :columns="columns" :selectable="true"
-                :total-rows="totalRows"
+                :total-rows="totalRows" :loading="isLoading"
                 :get-row-actions="getDropdownActions">
                 <!-- Image -->
                 <template #image-cell="{ row }">

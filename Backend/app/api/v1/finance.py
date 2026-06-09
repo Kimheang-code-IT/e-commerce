@@ -8,6 +8,7 @@ from app.models import CheckoutItem, Finance, Invoice, Product
 from app.services.auth_service import get_current_user, require_permission
 from app.services.finance_service import sync_finance_from_sold_products
 from app.shared.api_response import error_response
+from app.shared.pagination_constants import MAX_LIST_PAGE_SIZE
 from app.services.data_service import (
     apply_created_at_range,
     apply_sort,
@@ -28,7 +29,7 @@ class FinanceUpdatePayload(BaseModel):
 @router.get("")
 def list_finance_view(
     page: int = Query(1, ge=1),
-    limit: int = Query(20, ge=1, le=200),
+    limit: int = Query(20, ge=1, le=MAX_LIST_PAGE_SIZE),
     search: str | None = None,
     dateFrom: str | None = None,
     dateTo: str | None = None,

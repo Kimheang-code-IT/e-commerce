@@ -32,8 +32,6 @@ export function useTotalRevenue() {
   const pendingDeleteId = ref<string | null>(null);
   const confirmMode = ref<"add" | "edit" | "delete">("add");
   const pendingPayload = ref<{ id?: string; name: string; description: string } | null>(null);
-  const selectedClassifications = ref<string[]>([]);
-
   // --- Computed ---
   const filteredEntries = computed(() => resource.rows.value);
   const categoryDateQuery = computed(() => ({
@@ -158,6 +156,7 @@ export function useTotalRevenue() {
       }
 
       await resource.refresh();
+      isConfirmOpen.value = false;
     } catch (err: any) {
       console.error('Action failed:', err)
       const msg = err.data?.message || err.message || t("common.toast.tryAgain")
@@ -167,8 +166,6 @@ export function useTotalRevenue() {
         color: "error",
       });
     }
-
-    isConfirmOpen.value = false;
   }
 
   const confirmConfig = computed(() => {
@@ -208,7 +205,6 @@ export function useTotalRevenue() {
     columnVisibility,
     columnFilters,
     pagination,
-    selectedClassifications,
     // Data
     entries,
     isLoading: resource.isLoading,

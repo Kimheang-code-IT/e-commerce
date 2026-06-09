@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.models import Category, Product
 from app.repositories.product_repository import list_products_query
+from app.shared.pagination_constants import MAX_LIST_PAGE_SIZE
 from app.services.data_service import (
     list_response,
     paginate_query,
@@ -18,7 +19,7 @@ router = APIRouter()
 @router.get("/catalog/categories")
 def list_public_categories(
     page: int = Query(1, ge=1),
-    limit: int = Query(100, ge=1, le=200),
+    limit: int = Query(100, ge=1, le=MAX_LIST_PAGE_SIZE),
     db: Session = Depends(get_db),
 ):
     """Categories that have at least one active catalog product."""
@@ -42,7 +43,7 @@ def list_public_categories(
 @router.get("/catalog/products")
 def list_public_products(
     page: int = Query(1, ge=1),
-    limit: int = Query(200, ge=1, le=500),
+    limit: int = Query(200, ge=1, le=MAX_LIST_PAGE_SIZE),
     search: str | None = None,
     category: str | None = None,
     db: Session = Depends(get_db),

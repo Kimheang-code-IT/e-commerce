@@ -37,7 +37,7 @@
     <UTable ref="table" v-bind="$attrs" v-model:sorting="sorting" v-model:column-filters="columnFilters"
       v-model:global-filter="globalFilter" v-model:row-selection="rowSelection"
       v-model:column-visibility="columnVisibility" v-model:grouping="grouping" v-model:column-pinning="columnPinning"
-      v-model:pagination="pagination" :pagination-options="{ getPaginationRowModel: getPaginationRowModel() }"
+      v-model:pagination="pagination" :pagination-options="paginationOptions"
       :data="data" :columns="processedColumns" :loading="loading" :loading-options="{
         color: 'primary',
         animation: 'carousel'
@@ -108,6 +108,7 @@ import { getPaginationRowModel } from '@tanstack/vue-table'
 import type { Column } from '@tanstack/vue-table'
 import AppHeaderCell from './AppHeaderCell.vue'
 
+const paginationOptions = { getPaginationRowModel: getPaginationRowModel() }
 
 // Forward other slots
 const props = withDefaults(defineProps<{
@@ -129,7 +130,7 @@ const props = withDefaults(defineProps<{
   selectable?: boolean
   totalRows?: number
 }>(), {
-  canLoadMore: true,
+  canLoadMore: false,
   virtualize: true,
   selectable: true // Default to true if rowSelection is provided 
 })

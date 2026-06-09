@@ -18,6 +18,7 @@ from app.services.data_service import (
     paginate_query,
 )
 from app.dependencies.common import list_query_dependency
+from app.shared.pagination_constants import MAX_LIST_PAGE_SIZE
 from app.services.product_service import (
     create_product_service,
     delete_product_service,
@@ -115,7 +116,7 @@ def delete_product(
 def list_product_stock_additions(
     item_id: int,
     page: int = Query(1, ge=1),
-    limit: int = Query(10, ge=1, le=200),
+    limit: int = Query(10, ge=1, le=MAX_LIST_PAGE_SIZE),
     dateFrom: str | None = None,
     dateTo: str | None = None,
     openOnly: bool = Query(False),
@@ -189,7 +190,7 @@ def update_product_damage(
 def list_product_damages(
     item_id: int,
     page: int = Query(1, ge=1),
-    limit: int = Query(10, ge=1, le=200),
+    limit: int = Query(10, ge=1, le=MAX_LIST_PAGE_SIZE),
     dateFrom: str | None = None,
     dateTo: str | None = None,
     _: User = Depends(require_permission("product:view")),

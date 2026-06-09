@@ -52,8 +52,10 @@ def init_db() -> None:
             Base.metadata.create_all(bind=conn)
             from app.core.stock_lot_migration import ensure_stock_lot_schema
             from app.core.product_catalog_migration import ensure_product_catalog_schema
+            from app.core.search_index_migration import ensure_search_indexes
             ensure_stock_lot_schema()
             ensure_product_catalog_schema()
+            ensure_search_indexes()
         finally:
             conn.execute(text("SELECT pg_advisory_unlock(572901, 1)"))
 

@@ -1,6 +1,9 @@
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onBeforeUnmount, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useCategoryApi, useDashboardApi, useProductApi } from '~/utils/api'
+import { useDashboardApi, useProductApi } from '~/utils/api'
+import { useCategoryOptions } from '~/composables/data/useCategoryOptions'
+import { useQueryClient } from '~/composables/data/useQueryClient'
+import { MAX_TABLE_PAGE_SIZE } from '~/utils/table/pagination'
 
 /** Home dashboard — fetches aggregated statistics from the optimized /dashboard/summary endpoint. */
 export function useAnalyticsDashboard() {
@@ -8,7 +11,6 @@ export function useAnalyticsDashboard() {
   const useBackendApi = useBackendMode()
   const auth = useAuthStore()
   const dashboardApi = useDashboardApi()
-  const categoryApi = useCategoryApi()
   const productApi = useProductApi()
   const { formattedRange } = useGlobalFilter()
   
@@ -90,33 +92,55 @@ export function useAnalyticsDashboard() {
     }
   }
 
-  // Refresh when date range changes
-  watch(formattedRange, refresh)
-  watch([selectedCategoryId, selectedProductId], refresh)
+  const { items: categoryOptions } = useCategoryOptions()
+  const queryClient = useQueryClient()
 
-  async function loadFilters() {
+  let refreshTimer: ReturnType<typeof setTimeout> | null = null
+  function scheduleRefresh() {
+    if (refreshTimer) clearTimeout(refreshTimer)
+    refreshTimer = setTimeout(() => {
+      refresh()
+    }, 300)
+  }
+
+  watch(formattedRange, scheduleRefresh)
+  watch([selectedCategoryId, selectedProductId], scheduleRefresh)
+  watch(categoryOptions, (items: { label: string; value: string }[]) => {
+    categories.value = items.map((item) => ({
+      label: item.label,
+      value: item.value,
+    }))
+  }, { immediate: true })
+
+  async function loadProducts() {
     if (!useBackendApi.value || !auth.hasPermission('dashboard:view')) return
-    const [categoryRes, productRes] = await Promise.all([
-      categoryApi.list({ page: 1, limit: 200 }),
-      productApi.list({ page: 1, limit: 200 })
-    ])
-    categories.value = (categoryRes.data || []).map((item: any) => ({
-      label: item.name,
-      value: item.id
-    }))
-    products.value = (productRes.data || []).map((item: any) => ({
-      label: item.name,
-      value: Number(item.id),
-      categoryId: item.categoryId
-    }))
+    try {
+      const productRes = await queryClient.getOrFetch(
+        'reference:dashboard-products',
+        () => productApi.list({ page: 1, limit: MAX_TABLE_PAGE_SIZE }),
+        60_000,
+      )
+      products.value = (productRes.data || []).map((item: any) => ({
+        label: item.name,
+        value: Number(item.id),
+        categoryId: item.categoryId,
+      }))
+    } catch {
+      products.value = []
+    }
   }
 
   const topProducts = computed(() => apiSummary.value?.topProducts || [])
   const userCommissions = computed(() => apiSummary.value?.userCommissions || [])
   onMounted(async () => {
-    await loadFilters()
+    await loadProducts()
     await refresh()
   })
+
+  onBeforeUnmount(() => {
+    if (refreshTimer) clearTimeout(refreshTimer)
+  })
+
   return {
     stats,
     currentAnalytics,

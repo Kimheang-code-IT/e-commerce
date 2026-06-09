@@ -1,13 +1,14 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import type { Product } from '~/types'
-import { useCategoryApi, useProductsViewApi } from '~/utils/api'
+import { useProductsViewApi } from '~/utils/api'
+import { useCategoryOptions } from '~/composables/data/useCategoryOptions'
 
 export function usePosProducts() {
   const productsViewApi = useProductsViewApi()
-  const categoryApi = useCategoryApi()
+  const { items: categoryOptions } = useCategoryOptions()
   const isLoadingProducts = ref(false)
   const products = ref<Product[]>([])
-  const categories = ref<{ label: string; value: string }[]>([{ label: 'All', value: 'All' }])
+  const categories = computed(() => [{ label: 'All', value: 'All' }, ...categoryOptions.value]))
   const selectedCategoryId = ref('All')
   const searchQuery = ref('')
   const debouncedSearchQuery = ref('')
@@ -15,15 +16,6 @@ export function usePosProducts() {
   const selectedCategory = computed(() => selectedCategoryId.value)
   const categoryTabs = computed(() => categories.value)
   let searchDebounceTimer: ReturnType<typeof setTimeout> | null = null
-
-  async function loadCategories() {
-    const res = await categoryApi.list({ limit: 100 })
-    const cats = (res.data || []).map((item: any) => ({
-      label: String(item.name || ''),
-      value: String(item.id || '')
-    }))
-    categories.value = [{ label: 'All', value: 'All' }, ...cats]
-  }
 
   async function loadProducts() {
     isLoadingProducts.value = true
@@ -57,16 +49,21 @@ export function usePosProducts() {
     }, 300)
   }, { immediate: true })
 
-  watch([debouncedSearchQuery, selectedCategoryId], async () => {
-    visibleCount.value = 60
-    await loadProducts()
+  watch([debouncedSearchQuery, selectedCategoryId], () => {
+    if (visibleCount.value !== 60) {
+      visibleCount.value = 60
+      return
+    }
+    loadProducts()
   })
 
-  watch(visibleCount, loadProducts)
+  watch(visibleCount, (count, previous) => {
+    if (count === previous) return
+    loadProducts()
+  })
 
-  onMounted(async () => {
-    await loadCategories()
-    await loadProducts()
+  onMounted(() => {
+    loadProducts()
   })
 
   onBeforeUnmount(() => {

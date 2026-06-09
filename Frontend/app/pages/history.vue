@@ -10,10 +10,10 @@ const {
     rowSelection, sorting, searchQuery, columnVisibility, columnFilters,
     pagination, isDetailOpen,
     totalRows,
-    selectedLog, filteredLogs,
+    selectedLog, logs,
     actionItems, selectedActions,
     getDropdownActions,
-    canExport,
+    canExport, isLoading,
 } = useAuditHistory()
 
 const isExportOpen = ref(false)
@@ -46,10 +46,11 @@ const localColumns = computed(() => [
                 v-model:filter-value="selectedActions" 
                 v-model:global-filter="searchQuery"
                 :filter-items="actionItems"
-                :data="filteredLogs" 
+                :data="logs"
                 :total-rows="totalRows"
-                :columns="localColumns" 
-                :selectable="true" 
+                :columns="localColumns"
+                :selectable="true"
+                :loading="isLoading"
                 :get-row-actions="getDropdownActions"
             >
                 <template #typeAction-cell="{ row }">
@@ -92,7 +93,7 @@ const localColumns = computed(() => [
             :submit-label="$t('pages.history.closeDetails')"
             @submit="isDetailOpen = false"
         />
-        <CommonAppExport v-model:open="isExportOpen" :data="filteredLogs" filename="audit-history" date-field="date" />
+        <CommonAppExport v-model:open="isExportOpen" :data="logs" filename="audit-history" date-field="date" />
     </LayoutAppHeader>
 </template>
 

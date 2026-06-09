@@ -17,6 +17,7 @@ from app.services.data_service import (
     serialize_delivery_invoice,
 )
 from app.services.filter_options_service import delivery_filter_options
+from app.shared.pagination_constants import MAX_LIST_PAGE_SIZE
 
 router = APIRouter(prefix="/deliveries-view", tags=["deliveries-view"], dependencies=[Depends(get_current_user)])
 
@@ -24,7 +25,7 @@ router = APIRouter(prefix="/deliveries-view", tags=["deliveries-view"], dependen
 @router.get("")
 def list_deliveries_view(
     page: int = Query(1, ge=1),
-    limit: int = Query(20, ge=1, le=200),
+    limit: int = Query(20, ge=1, le=MAX_LIST_PAGE_SIZE),
     search: str | None = None,
     address: str | None = None,
     deliveryType: str | None = None,

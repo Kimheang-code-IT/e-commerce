@@ -19,7 +19,6 @@ def get_user_by_id(db: Session, user_id: int) -> User | None:
 
 
 def create_refresh_session(db: Session, *, user_id: int, refresh_jti: str, expires_at: datetime) -> TokenSession:
-    TokenSession.__table__.create(bind=db.get_bind(), checkfirst=True)
     session = TokenSession(user_id=user_id, refresh_jti=refresh_jti, expires_at=expires_at)
     db.add(session)
     db.flush()

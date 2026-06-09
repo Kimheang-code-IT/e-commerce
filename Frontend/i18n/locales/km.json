@@ -565,6 +565,8 @@
             "toastDeletedDesc": "បានលុបតួនាទីដោយជោគជ័យ។",
             "toastAdded": "បានបង្កើតតួនាទី",
             "toastAddedDesc": "តួនាទីថ្មីដំណើរការហើយ។",
+            "toastDuplicateName": "ឈ្មោះតួនាទីមានរួចហើយ",
+            "toastDuplicateNameDesc": "សូមជ្រើសឈ្មោះផ្សេង។ ឈ្មោះតួនាទីត្រូវតែមិនដូចគ្នា។",
             "toastUpdated": "បានធ្វើបច្ចុប្បន្នភាពតួនាទី",
             "toastUpdatedDesc": "បានធ្វើសមកាលគោលនយោបាយ។",
             "allPages": "ចូលប្រើប្រាស់ពេញលេញ",

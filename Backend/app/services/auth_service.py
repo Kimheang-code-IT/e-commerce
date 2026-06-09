@@ -43,7 +43,12 @@ def issue_token_pair(db: Session, user_id: int, role_name: str) -> dict[str, str
 
 
 def login_user(db: Session, *, email: str, password: str) -> dict:
+	from app.services.data_service import record_history
+	from app.utils.timezone import cambodia_now
+
 	user = authenticate_user(db, email=email, password=password)
+	user.last_login = cambodia_now()
+	record_history(db, user.id, "Login", f"User logged in ({user.email})")
 	role_name = user.role_rel.name if user.role_rel else ""
 	tokens = issue_token_pair(db, user.id, role_name)
 	return {
