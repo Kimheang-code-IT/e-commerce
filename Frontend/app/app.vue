@@ -68,8 +68,8 @@ useHead({
   }
 })
 
-const title = 'ដំណាក់តន្ត្រី'
-const description = 'ដំណាក់តន្ត្រី'
+const title = 'Anya Music School'
+const description = 'Anya Music School'
 
 useSeoMeta({
   title,

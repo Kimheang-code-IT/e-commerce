@@ -40,9 +40,7 @@ function goToInvoice(row: any) {
 </script>
 
 <template>
-  <div class="flex flex-col h-full bg-background overflow-hidden text-foreground tracking-tight">
-    <LayoutAppHeader :title="t('pages.delivery.title')" show-datepicker />
-
+  <LayoutAppHeader :title="t('pages.delivery.title')" show-datepicker>
     <div class="flex-1 p-2 overflow-hidden">
       <TableApptable
         :title="t('pages.delivery.tableTitle')"
@@ -153,5 +151,5 @@ function goToInvoice(row: any) {
         </template>
       </TableApptable>
     </div>
-  </div>
+  </LayoutAppHeader>
 </template>

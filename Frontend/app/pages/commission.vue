@@ -20,15 +20,13 @@ async function fetchCommissionExportData(args: { startDate?: string; endDate?: s
 </script>
 
 <template>
-  <div class="flex flex-col h-full bg-background overflow-hidden text-foreground tracking-tight">
-    <LayoutAppHeader :title="t('pages.commission.title')" show-datepicker>
-      <template #right>
-        <UButton v-if="canExport" icon="i-lucide-download" color="neutral" variant="subtle" class="font-normal shadow-sm shrink-0"
-          @click="isExportOpen = true">
-          <span class="hidden sm:inline">{{ $t('common.export') }}</span>
-        </UButton>
-      </template>
-    </LayoutAppHeader>
+  <LayoutAppHeader :title="t('pages.commission.title')" show-datepicker>
+    <template #right>
+      <UButton v-if="canExport" icon="i-lucide-download" color="neutral" variant="subtle" class="font-normal shadow-sm shrink-0"
+        @click="isExportOpen = true">
+        <span class="hidden sm:inline">{{ $t('common.export') }}</span>
+      </UButton>
+    </template>
 
     <div class="flex-1 p-2 overflow-hidden">
       <TableApptable
@@ -91,6 +89,6 @@ async function fetchCommissionExportData(args: { startDate?: string; endDate?: s
       <CommonAppExport v-model:open="isExportOpen" :data="data" :fetch-export-data="fetchCommissionExportData"
         filename="commission" date-field="date" />
     </div>
-  </div>
+  </LayoutAppHeader>
 </template>
 

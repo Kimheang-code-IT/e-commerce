@@ -43,7 +43,7 @@ const searchGroups = computed(() => {
     <!-- Global search modal -->
     <UDashboardSearch :groups="searchGroups" />
     <!-- Main Content Area -->
-    <main class="flex-1 flex flex-col h-full overflow-y-auto">
+    <main class="flex flex-1 flex-col min-w-0 h-full overflow-hidden">
       <slot />
     </main>
   </UDashboardGroup>

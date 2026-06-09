@@ -119,7 +119,7 @@ async function onSubmit(payload: FormSubmitEvent<Schema>) {
     <UAuthForm :schema="schema" :description="t('pages.auth.loginDesc')" icon="i-lucide-lock" :fields="fields"
       :submit="{ label: t('pages.auth.loginBtn'), class: 'w-full h-10! text-xl font-normal' }" @submit="onSubmit">
       <template #leading>
-        <img src="/assets/images/logo.png" alt="Logo" class="h-20 w-auto mx-auto " />
+        <img src="/assets/images/logo.png" alt="Anya Music School" class="h-20 w-auto mx-auto" />
       </template>
 
       <template #footer>

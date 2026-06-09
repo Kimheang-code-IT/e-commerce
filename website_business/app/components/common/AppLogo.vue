@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import logoLight from '~/assets/image/logoapp.png'
-import logoDark from '~/assets/image/logoappdark.png'
+import logo from '~/assets/image/logo.png'
 
 const props = withDefaults(defineProps<{
   alt?: string
@@ -53,23 +52,13 @@ const imageStyle = computed(() => {
 <template>
   <span class="inline-flex shrink-0 items-center overflow-hidden rounded-md">
     <img
-      :src="logoLight"
+      :src="logo"
       :alt="logoAlt"
       width="180"
       height="56"
       loading="eager"
       decoding="async"
-      :class="[imageClass, 'dark:hidden']"
-      :style="imageStyle"
-    >
-    <img
-      :src="logoDark"
-      :alt="logoAlt"
-      width="180"
-      height="56"
-      loading="eager"
-      decoding="async"
-      :class="[imageClass, 'hidden dark:block']"
+      :class="imageClass"
       :style="imageStyle"
     >
   </span>

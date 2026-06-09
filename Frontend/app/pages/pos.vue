@@ -158,32 +158,29 @@ const previewCart = computed(() => {
 </script>
 
 <template>
-    <div class="flex flex-col h-full bg-background text-foreground overflow-hidden tracking-tight pb-20 lg:pb-0">
-        <!-- ── Header ── -->
-        <LayoutAppHeader hide-sidebar-toggle title="">
-            <template #leading>
-                <UButton to="/" color="primary" variant="solid" size="sm" icon="i-lucide-layout-dashboard"
-                    :aria-label="t('navigation.dashboard')" class="shrink-0">
-                    {{ t('navigation.dashboard') }}
-                </UButton>
-            </template>
-            <template #right>
-                <div class="flex items-center gap-2">
-                    <template v-if="isInvoicePreviewMode">
-                        <UButton icon="i-lucide-printer" color="primary" variant="solid" size="sm" class="shrink-0"
-                            @click="printInvoice">
-                            <span class="hidden sm:inline">{{ t('pages.pos.preview.print') }}</span>
-                        </UButton>
-                    </template>
-                    <template v-else>
-                        <UStepper v-model="currentStep" :items="mobileStepperItems" size="sm"
-                            class="sm:hidden min-w-[140px]" />
-                        <UStepper v-model="currentStep" :items="items" size="sm" class="hidden sm:flex min-w-[300px]" />
-                    </template>
-                </div>
-            </template>
-        </LayoutAppHeader>
-        <div v-if="!isInvoicePreviewMode" class="lg:hidden px-2 pt-2">
+    <LayoutAppHeader hide-sidebar-toggle :title="t('pages.pos.title')">
+        <template #leading>
+            <UButton to="/" color="primary" variant="solid" size="sm" icon="i-lucide-layout-dashboard"
+                :aria-label="t('navigation.dashboard')" class="shrink-0">
+                {{ t('navigation.dashboard') }}
+            </UButton>
+        </template>
+        <template #right>
+            <div class="flex items-center gap-2">
+                <template v-if="isInvoicePreviewMode">
+                    <UButton icon="i-lucide-printer" color="primary" variant="solid" size="sm" class="shrink-0"
+                        @click="printInvoice">
+                        <span class="hidden sm:inline">{{ t('pages.pos.preview.print') }}</span>
+                    </UButton>
+                </template>
+                <template v-else>
+                    <UStepper v-model="currentStep" :items="mobileStepperItems" size="sm"
+                        class="sm:hidden min-w-[140px]" />
+                    <UStepper v-model="currentStep" :items="items" size="sm" class="hidden sm:flex min-w-[300px]" />
+                </template>
+            </div>
+        </template>
+        <div v-if="!isInvoicePreviewMode" class="lg:hidden px-2 pt-2 pb-20 lg:pb-0">
             <UTabs v-model="mobilePanel" :items="mobilePanelItems" :content="false" color="primary" class="w-full" />
         </div>
 
@@ -370,6 +367,6 @@ const previewCart = computed(() => {
         <CommonAppModalCURD v-if="!isInvoicePreviewMode" v-model:open="isFinishDialogOpen"
             :title="t('pages.pos.printConfirm.title')" :description="t('pages.pos.printConfirm.description')"
             :submit-label="t('pages.pos.printConfirm.print')" :cancel-label="t('pages.pos.printConfirm.skip')"
-            type="primary" :loading="isFinishing" @submit="handleFinishWithPrint" @cancel="finishWithoutPrint" />
-    </div>
+            type="primary"             :loading="isFinishing" @submit="handleFinishWithPrint" @cancel="finishWithoutPrint" />
+    </LayoutAppHeader>
 </template>

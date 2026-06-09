@@ -17,15 +17,13 @@ function onSubmitUser(data: Record<string, any>) {
 </script>
 
 <template>
-    <div class="flex flex-col h-full bg-background overflow-hidden text-foreground tracking-tight">
-        <LayoutAppHeader :title="$t('pages.userManagement.title')" show-datepicker>
-            <template #right>
-                <UButton v-if="canCreate" icon="i-lucide-user-plus" color="primary" variant="solid"
-                    class="font-normal shadow-sm shrink-0" @click="handleAddNew">
-                    <span class="hidden sm:inline">{{ $t('pages.userManagement.addBtn') }}</span>
-                </UButton>
-            </template>
-        </LayoutAppHeader>
+    <LayoutAppHeader :title="$t('pages.userManagement.title')" show-datepicker>
+        <template #right>
+            <UButton v-if="canCreate" icon="i-lucide-user-plus" color="primary" variant="solid"
+                class="font-normal shadow-sm shrink-0" @click="handleAddNew">
+                <span class="hidden sm:inline">{{ $t('pages.userManagement.addBtn') }}</span>
+            </UButton>
+        </template>
 
         <div class="flex-1 p-2 overflow-hidden">
             <TableApptable :title="$t('pages.userManagement.tableTitle')" v-model:row-selection="rowSelection"
@@ -68,6 +66,6 @@ function onSubmitUser(data: Record<string, any>) {
             @submit="onSubmitUser"
         />
         <CommonAppModalCURD v-model:open="isConfirmOpen" v-bind="confirmConfig" @submit="finalizeAction" />
-    </div>
+    </LayoutAppHeader>
 </template>
 

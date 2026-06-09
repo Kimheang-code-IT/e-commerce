@@ -91,20 +91,18 @@ async function fetchReportExportData(args: { startDate?: string; endDate?: strin
 </script>
 
 <template>
-  <div class="flex flex-col h-full bg-background overflow-hidden text-foreground tracking-tight">
-    <LayoutAppHeader :title="t('pages.report.title')" show-datepicker>
-      <template #right>
-        <UButton v-if="canViewPos || canCheckoutPos" icon="i-lucide-receipt-text" color="primary" variant="solid"
-          class="font-normal shadow-sm shrink-0" :disabled="selectedReportRows.length === 0"
-          @click="goToSelectedInvoices">
-          <span class="hidden sm:inline">Preview Selected</span>
-        </UButton>
-        <UButton v-if="canExportReport" icon="i-lucide-download" color="neutral" variant="subtle"
-          class="font-normal shadow-sm shrink-0" @click="isExportOpen = true">
-          <span class="hidden sm:inline">{{ $t('common.export') }}</span>
-        </UButton>
-      </template>
-    </LayoutAppHeader>
+  <LayoutAppHeader :title="t('pages.report.title')" show-datepicker>
+    <template #right>
+      <UButton v-if="canViewPos || canCheckoutPos" icon="i-lucide-receipt-text" color="primary" variant="solid"
+        class="font-normal shadow-sm shrink-0" :disabled="selectedReportRows.length === 0"
+        @click="goToSelectedInvoices">
+        <span class="hidden sm:inline">Preview Selected</span>
+      </UButton>
+      <UButton v-if="canExportReport" icon="i-lucide-download" color="neutral" variant="subtle"
+        class="font-normal shadow-sm shrink-0" @click="isExportOpen = true">
+        <span class="hidden sm:inline">{{ $t('common.export') }}</span>
+      </UButton>
+    </template>
     <div class="flex-1 p-2 overflow-hidden">
       <TableApptable :title="t('pages.report.tableTitle')" v-model:row-selection="rowSelection"
         v-model:sorting="sorting" v-model:column-visibility="columnVisibility" v-model:pagination="pagination"
@@ -156,5 +154,5 @@ async function fetchReportExportData(args: { startDate?: string; endDate?: strin
 
     <CommonAppRefundDialog v-model:open="isRefundDialogOpen" v-model:reason="refundReason" :row="refundTargetRow"
       :submitting="submittingRefund" @confirm="onConfirmRefund" />
-  </div>
+  </LayoutAppHeader>
 </template>

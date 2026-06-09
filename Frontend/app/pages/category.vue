@@ -52,8 +52,7 @@ watch(newDescription, (value) => {
 </script>
 
 <template>
-    <div class="flex flex-col h-full bg-background overflow-hidden text-foreground tracking-tight">
-        <LayoutAppHeader :title="$t('pages.category.title')" show-datepicker />
+    <LayoutAppHeader :title="$t('pages.category.title')" show-datepicker>
         <div v-if="showCategoryForm" class="lg:hidden px-2 pt-2">
             <UTabs
                 v-model="mobileView"
@@ -190,5 +189,5 @@ watch(newDescription, (value) => {
         <!-- Modals -->
         <CommonAppModalCURD v-model:open="isConfirmOpen" v-bind="confirmConfig" @submit="finalizeAction" />
         <CommonAppExport v-model:open="isExportOpen" :data="filteredEntries" filename="categories" date-field="createdAt" />
-    </div>
+    </LayoutAppHeader>
 </template>

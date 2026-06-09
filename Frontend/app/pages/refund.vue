@@ -57,20 +57,18 @@ const isExportOpen = ref(false)
 </script>
 
 <template>
-  <div class="flex flex-col h-full bg-background overflow-hidden text-foreground tracking-tight">
-    <LayoutAppHeader :title="$t('pages.refund.title')" show-datepicker>
-      <template #right>
-        <UButton v-if="canViewPos || canCheckoutPos" icon="i-lucide-receipt-text" color="primary" variant="solid"
-          class="font-normal shadow-sm shrink-0" :disabled="selectedRefundRows.length === 0"
-          @click="goToSelectedInvoices">
-          <span class="hidden sm:inline">{{ $t('pages.refund.previewSelected') }}</span>
-        </UButton>
-        <UButton v-if="canView" icon="i-lucide-download" color="neutral" variant="subtle"
-          class="font-normal shadow-sm shrink-0" @click="isExportOpen = true">
-          <span class="hidden sm:inline">{{ $t('common.export') }}</span>
-        </UButton>
-      </template>
-    </LayoutAppHeader>
+  <LayoutAppHeader :title="$t('pages.refund.title')" show-datepicker>
+    <template #right>
+      <UButton v-if="canViewPos || canCheckoutPos" icon="i-lucide-receipt-text" color="primary" variant="solid"
+        class="font-normal shadow-sm shrink-0" :disabled="selectedRefundRows.length === 0"
+        @click="goToSelectedInvoices">
+        <span class="hidden sm:inline">{{ $t('pages.refund.previewSelected') }}</span>
+      </UButton>
+      <UButton v-if="canView" icon="i-lucide-download" color="neutral" variant="subtle"
+        class="font-normal shadow-sm shrink-0" @click="isExportOpen = true">
+        <span class="hidden sm:inline">{{ $t('common.export') }}</span>
+      </UButton>
+    </template>
 
     <div class="flex-1 p-2 overflow-hidden flex flex-col gap-2">
       <div class="flex-1 min-h-0">
@@ -141,5 +139,5 @@ const isExportOpen = ref(false)
 
     <CommonAppExport v-model:open="isExportOpen" :data="filteredRefundRows" filename="refunds"
       date-field="refundedAt" />
-  </div>
+  </LayoutAppHeader>
 </template>

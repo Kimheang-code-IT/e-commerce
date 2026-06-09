@@ -11,29 +11,37 @@ withDefaults(defineProps<Props>(), {
   hideSidebarToggle: false,
 })
 
-const { collapsed, isPosRoute } = useLayoutSidebar()
-
-const showHeaderUserMenu = computed(() => collapsed.value || isPosRoute.value)
+const route = useRoute()
+const panelId = computed(() => {
+  const slug = route.path.replace(/^\//, '').replace(/\//g, '-') || 'home'
+  return `page-${slug}`
+})
 </script>
 
 <template>
-  <ClientOnly>
-    <UDashboardNavbar :title="title">
-      <template #leading>
-        <slot name="leading">
-          <UDashboardSidebarCollapse v-if="!hideSidebarToggle" />
-        </slot>
-      </template>
+  <UDashboardPanel :id="panelId" class="flex flex-1 flex-col min-w-0 h-full">
+    <template #header>
+      <UDashboardNavbar :title="title" :toggle="!hideSidebarToggle">
+        <template #left>
+          <slot name="leading">
+            <UDashboardSidebarCollapse v-if="!hideSidebarToggle" />
+          </slot>
+        </template>
 
-      <div class="flex-1" />
+        <template #right>
+          <div class="flex flex-nowrap items-center justify-end gap-2 px-2">
+            <slot name="right" />
+            <CommonAppDatepicker v-if="showDatepicker" class="shrink-0" />
+            <LayoutUserMenu collapsed class="shrink-0" />
+          </div>
+        </template>
+      </UDashboardNavbar>
+    </template>
 
-      <template #right>
-        <div class="flex flex-nowrap items-center justify-end gap-2 px-2">
-          <slot name="right" />
-          <CommonAppDatepicker v-if="showDatepicker" class="shrink-0" />
-          <LayoutUserMenu v-if="showHeaderUserMenu" collapsed />
-        </div>
-      </template>
-    </UDashboardNavbar>
-  </ClientOnly>
+    <template #body>
+      <div class="flex flex-1 flex-col min-h-0 overflow-hidden bg-background text-foreground tracking-tight">
+        <slot />
+      </div>
+    </template>
+  </UDashboardPanel>
 </template>

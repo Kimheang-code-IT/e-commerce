@@ -53,19 +53,17 @@ function onProductImageError(event: Event) {
 </script>
 
 <template>
-    <div class="flex flex-col h-full bg-background overflow-hidden text-foreground tracking-tight">
-        <LayoutAppHeader :title="$t('pages.product.title')" show-datepicker>
-            <template #right>
-                <UButton v-if="canExport" icon="i-lucide-download" color="neutral" variant="subtle"
-                    class="font-normal shadow-sm shrink-0" @click="isExportOpen = true">
-                    <span class="hidden sm:inline">{{ $t('common.export') }}</span>
-                </UButton>
-                <UButton v-if="canCreate" icon="i-lucide-circle-plus" color="primary" variant="solid"
-                    class="font-normal shadow-sm shrink-0" @click="handleAddNew">
-                    <span class="hidden sm:inline">{{ $t('pages.product.addBtn') }}</span>
-                </UButton>
-            </template>
-        </LayoutAppHeader>
+    <LayoutAppHeader :title="$t('pages.product.title')" show-datepicker>
+        <template #right>
+            <UButton v-if="canExport" icon="i-lucide-download" color="neutral" variant="subtle"
+                class="font-normal shadow-sm shrink-0" @click="isExportOpen = true">
+                <span class="hidden sm:inline">{{ $t('common.export') }}</span>
+            </UButton>
+            <UButton v-if="canCreate" icon="i-lucide-circle-plus" color="primary" variant="solid"
+                class="font-normal shadow-sm shrink-0" @click="handleAddNew">
+                <span class="hidden sm:inline">{{ $t('pages.product.addBtn') }}</span>
+            </UButton>
+        </template>
 
         <div class="flex-1 p-2 overflow-hidden">
             <TableApptable :title="$t('pages.product.tableTitle')" v-model:row-selection="rowSelection"
@@ -215,5 +213,5 @@ function onProductImageError(event: Event) {
         />
 
         <CommonAppExport v-model:open="isExportOpen" :data="filteredEntries" filename="products" date-field="createdAt" />
-    </div>
+    </LayoutAppHeader>
 </template>

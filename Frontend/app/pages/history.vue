@@ -28,14 +28,12 @@ const localColumns = computed(() => [
 </script>
 
 <template>
-    <div class="flex flex-col h-full bg-background overflow-hidden text-foreground tracking-tight">
-        <LayoutAppHeader :title="$t('pages.history.title')" show-datepicker>
-            <template #right>
-                <UButton v-if="canExport" @click="isExportOpen = true" icon="i-lucide-download" color="neutral" variant="subtle" class="font-normal shadow-sm shrink-0">
-                    <span class="hidden sm:inline">{{ $t('common.export') }}</span>
-                </UButton>
-            </template>
-        </LayoutAppHeader>
+    <LayoutAppHeader :title="$t('pages.history.title')" show-datepicker>
+        <template #right>
+            <UButton v-if="canExport" @click="isExportOpen = true" icon="i-lucide-download" color="neutral" variant="subtle" class="font-normal shadow-sm shrink-0">
+                <span class="hidden sm:inline">{{ $t('common.export') }}</span>
+            </UButton>
+        </template>
 
         <div class="flex-1 p-2 overflow-hidden">
             <TableApptable
@@ -95,6 +93,6 @@ const localColumns = computed(() => [
             @submit="isDetailOpen = false"
         />
         <CommonAppExport v-model:open="isExportOpen" :data="filteredLogs" filename="audit-history" date-field="date" />
-    </div>
+    </LayoutAppHeader>
 </template>
 

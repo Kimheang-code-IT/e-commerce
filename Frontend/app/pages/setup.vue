@@ -132,7 +132,7 @@ async function onSubmit(payload: FormSubmitEvent<Schema>) {
       @submit="onSubmit"
     >
       <template #leading>
-        <img src="/assets/images/logo.png" alt="Logo" class="h-20 w-auto mx-auto" />
+        <img src="/assets/images/logo.png" alt="Anya Music School" class="h-20 w-auto mx-auto" />
       </template>
 
       <template #footer>

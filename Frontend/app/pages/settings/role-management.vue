@@ -25,15 +25,13 @@ function onSubmitRole(data: Record<string, any>) {
 </script>
 
 <template>
-    <div class="flex flex-col h-full bg-background overflow-hidden text-foreground tracking-tight">
-        <LayoutAppHeader :title="$t('pages.roleManagement.title')">
-            <template #right>
-                <UButton v-if="auth.hasPermission('role:create')" icon="i-lucide-shield-plus" color="primary" variant="solid"
-                    class="font-normal shadow-sm shrink-0" @click="handleAddNew">
-                    <span class="hidden sm:inline">{{ $t('pages.roleManagement.addBtn') }}</span>
-                </UButton>
-            </template>
-        </LayoutAppHeader>
+    <LayoutAppHeader :title="$t('pages.roleManagement.title')">
+        <template #right>
+            <UButton v-if="auth.hasPermission('role:create')" icon="i-lucide-shield-plus" color="primary" variant="solid"
+                class="font-normal shadow-sm shrink-0" @click="handleAddNew">
+                <span class="hidden sm:inline">{{ $t('pages.roleManagement.addBtn') }}</span>
+            </UButton>
+        </template>
 
         <div class="flex-1 p-2 overflow-hidden">
             <TableApptable :title="$t('pages.roleManagement.tableTitle')" v-model:row-selection="rowSelection"
@@ -80,5 +78,5 @@ function onSubmitRole(data: Record<string, any>) {
             @submit="onSubmitRole"
         />
         <CommonAppModalCURD v-model:open="isConfirmOpen" v-bind="confirmConfig" @submit="finalizeAction" />
-    </div>
+    </LayoutAppHeader>
 </template>

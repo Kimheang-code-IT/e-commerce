@@ -9,7 +9,7 @@ useHead({
     { name: 'viewport', content: 'width=device-width, initial-scale=1' }
   ],
   link: [
-    { rel: 'icon', href: '/favicon.ico' }
+    { rel: 'icon', type: 'image/png', href: '/image/logo.png' }
   ],
   htmlAttrs: {
     lang: locale
@@ -17,7 +17,8 @@ useHead({
 })
 
 useSeoMeta({
-  titleTemplate: `%s - ${siteName.value}`,
+  title: siteName.value,
+  titleTemplate: (titleChunk) => titleChunk || siteName.value,
   ogSiteName: siteName.value,
   twitterCard: 'summary_large_image',
   robots: 'index, follow, max-image-preview:large'

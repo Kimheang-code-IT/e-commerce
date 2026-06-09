@@ -47,7 +47,7 @@ const displayRows = computed(() => buildInvoiceDisplayRows(props.cart ?? []))
         <div class="px-6 pb-4 flex flex-col gap-5 bg-white">
           <div class="flex justify-between items-start">
             <div class="flex items-center gap-3 mt-2">
-              <img :src="logo" alt="PDME-Revenue logo" class="w-36 h-20 shrink-0 object-contain" loading="eager"
+              <img :src="logo" alt="Anya Music School" class="w-36 h-20 shrink-0 object-contain" loading="eager"
                 decoding="sync">
             </div>
             <h1 class="text-2xl font-black text-slate-800 uppercase italic mr-10 mt-8">

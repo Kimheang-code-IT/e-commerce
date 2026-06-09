@@ -377,7 +377,7 @@
             "loginSuccessDesc": "Welcome back, {name}",
             "loginFailedTitle": "Login Failed",
             "loginFailedDesc": "The email or password you entered is incorrect.",
-            "departmentLine": "Copyright by Damnak Dontrey",
+            "departmentLine": "Copyright by Anya Music School",
             "setupTitle": "Create Admin Account",
             "setupDesc": "No users exist yet. Create the first administrator to manage the system.",
             "setupName": "Admin name",

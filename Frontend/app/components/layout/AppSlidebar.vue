@@ -15,7 +15,7 @@ const { open, collapsed } = useLayoutSidebar()
     }">
     <template #header="{ collapsed }">
       <NuxtLink to="/" class="flex items-center gap-3 py-2">
-        <img :src="logo" alt="PDME-Revenue logo" class="w-60 h-16 shrink-0 rounded-full object-contain">
+        <img :src="logo" alt="Anya Music School" class="w-60 h-16 shrink-0 object-contain">
       </NuxtLink>
 
       <UDashboardSearchButton :collapsed="collapsed" class="bg-transparent ring-default mb-2" />

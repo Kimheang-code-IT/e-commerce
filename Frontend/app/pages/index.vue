@@ -61,27 +61,23 @@ const userSalePieData = computed<PieDataPoint[]>(() =>
 );
 </script>
 <template>
-    <div class="flex flex-col h-full bg-background text-foreground tracking-tight">
-      <div class="sticky top-0 z-30 bg-white dark:bg-gray-900">
-        <LayoutAppHeader :title="$t('pages.dashboard.title')" show-datepicker>
-          <template #right>
-            <div class="flex items-center gap-2">
-              <CommonAppMutilSelect
-                v-model="selectedCategoryItems"
-                :items="categories"
-                placeholder="Category"
-              />
-              <CommonAppMutilSelect
-                v-model="selectedProductItems"
-                :items="productOptions"
-                placeholder="Product"
-              />
-            </div>
-          </template>
-        </LayoutAppHeader>
-      </div>
+    <LayoutAppHeader :title="$t('pages.dashboard.title')" show-datepicker>
+      <template #right>
+        <div class="flex items-center gap-2">
+          <CommonAppMutilSelect
+            v-model="selectedCategoryItems"
+            :items="categories"
+            placeholder="Category"
+          />
+          <CommonAppMutilSelect
+            v-model="selectedProductItems"
+            :items="productOptions"
+            placeholder="Product"
+          />
+        </div>
+      </template>
 
-    <div class="flex-1 p-2 space-y-3">
+    <div class="flex-1 overflow-y-auto p-2 space-y-3">
     <!-- Top Summary Cards -->
     <UPageGrid class="grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
       <template
@@ -202,6 +198,5 @@ const userSalePieData = computed<PieDataPoint[]>(() =>
         </UCard>
       </div>
     </div>
-    </div>
-  </div>
+    </LayoutAppHeader>
 </template>
