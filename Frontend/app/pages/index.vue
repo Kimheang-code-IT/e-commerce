@@ -77,14 +77,14 @@ const userSalePieData = computed<PieDataPoint[]>(() =>
         </div>
       </template>
 
-    <div class="flex-1 min-h-0 -m-2 overflow-y-auto">
+    <div class="flex flex-col flex-1 min-h-0 gap-3 p-3 overflow-y-auto">
     <!-- Top Summary Cards -->
-    <UPageGrid class="grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+    <UPageGrid class="grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
       <template
         v-for="(stat, idx) in summaryStats"
         :key="idx"
       >
-        <UCard class="rounded-none shadow-none border-0 border-b border-r border-default">
+        <UCard class="shadow-sm border border-default">
           <div class="flex items-center gap-3">
             <div class="p-2 bg-primary/10 rounded-lg">
               <UIcon
@@ -111,12 +111,12 @@ const userSalePieData = computed<PieDataPoint[]>(() =>
 
     <!-- Bottom Grid: Reports and Distributions -->
     <div
-      class="grid grid-cols-1 lg:grid-cols-12 gap-2 items-stretch"
+      class="grid grid-cols-1 lg:grid-cols-12 gap-3 items-stretch"
       :style="{ minHeight: SECTION_HEIGHT.DASHBOARD }"
     >
       <!-- Left: Cambodia Map (Customer Buy Analytics) -->
       <UCard
-        class="lg:col-span-8 rounded-none shadow-none border-0 border-b border-r border-default flex flex-col overflow-hidden"
+        class="lg:col-span-8 shadow-sm border border-default flex flex-col overflow-hidden"
         :style="{ minHeight: SECTION_HEIGHT.DASHBOARD }"
         :ui="{ body: 'p-0 flex-1 min-h-0' }"
       >
@@ -150,11 +150,11 @@ const userSalePieData = computed<PieDataPoint[]>(() =>
 
       <!-- Right: Distribution Pie & Small Bar -->
       <div
-        class="lg:col-span-4 gap-2 flex flex-col min-h-0"
+        class="lg:col-span-4 gap-3 flex flex-col min-h-0"
         :style="{ minHeight: SECTION_HEIGHT.DASHBOARD }"
       >
         <UCard
-          class="rounded-none shadow-none border-0 border-b border-default relative min-h-0 overflow-hidden flex flex-col basis-[52%] p-0"
+          class="shadow-sm border border-default relative min-h-0 overflow-hidden flex flex-col basis-[52%] p-0"
         >
           <template #header>
             <h3 class="font-normal text-sm">
@@ -171,7 +171,7 @@ const userSalePieData = computed<PieDataPoint[]>(() =>
         </UCard>
 
         <UCard
-          class="rounded-none shadow-none border-0 border-b border-default relative min-h-0 overflow-hidden flex flex-col"
+          class="shadow-sm border border-default relative min-h-0 overflow-hidden flex flex-col flex-1"
         >
           <template #header>
             <h3 class="font-normal text-sm">
