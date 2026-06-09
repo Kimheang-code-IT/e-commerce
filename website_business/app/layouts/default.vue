@@ -6,7 +6,7 @@ const { t } = useI18n()
   <div class="flex min-h-dvh w-full max-w-full flex-col overflow-x-clip bg-default text-default">
     <a
       href="#products"
-      class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:rounded-md focus:bg-primary-600 focus:px-4 focus:py-2 focus:text-white focus:outline-none"
+      class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-100 focus:rounded-md focus:bg-primary-600 focus:px-4 focus:py-2 focus:text-white focus:outline-none"
     >
       {{ t('a11y.skipToProducts') }}
     </a>

@@ -66,7 +66,7 @@ async function onSelectCategory(slug: string) {
 </script>
 
 <template>
-  <section class="space-y-6" aria-labelledby="products-heading">
+  <section class="w-full max-w-full space-y-6" aria-labelledby="products-heading">
     <h2 id="products-heading" class="sr-only">
       {{ productsSectionTitle }}
     </h2>
@@ -131,12 +131,13 @@ async function onSelectCategory(slug: string) {
 
     <div
       v-else-if="filteredProducts.length"
-      class="grid grid-cols-2 gap-4 md:grid-cols-3 md:gap-6 lg:grid-cols-4"
+      class="product-grid -mx-4 grid w-[calc(100%+2rem)] grid-cols-1 gap-0 sm:mx-0 sm:w-full sm:grid-cols-2 sm:gap-4 md:grid-cols-3 md:gap-6 lg:grid-cols-4"
     >
       <CourseCard
         v-for="product in filteredProducts"
         :key="product.id ?? product.model"
         :course="product"
+        mobile-full-width
       />
     </div>
 
@@ -162,3 +163,13 @@ async function onSelectCategory(slug: string) {
     </div>
   </section>
 </template>
+
+<style scoped>
+@media (max-width: 639px) {
+  .product-grid :deep(article) {
+    border-radius: 0;
+    border-left-width: 0;
+    border-right-width: 0;
+  }
+}
+</style>
