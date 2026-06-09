@@ -20,13 +20,9 @@ export interface CourseCardItem {
 </script>
 
 <script setup lang="ts">
-const props = withDefaults(defineProps<{
+const props = defineProps<{
   course: CourseCardItem
-  /** Edge-to-edge single-column layout on small screens. */
-  mobileFullWidth?: boolean
-}>(), {
-  mobileFullWidth: false
-})
+}>()
 
 const { t } = useI18n()
 
@@ -74,14 +70,10 @@ const specRows = computed(() => [
 
 <template>
   <article
-    class="flex w-full flex-col overflow-hidden border border-default bg-elevated shadow-sm"
-    :class="mobileFullWidth ? 'rounded-none sm:rounded-sm' : 'rounded-sm'"
+    class="flex w-full flex-col overflow-hidden rounded-sm border border-default bg-elevated shadow-sm"
     :aria-label="`${course.model} ${course.name}`"
   >
-    <div
-      class="relative w-full overflow-hidden bg-gray-900"
-      :class="mobileFullWidth ? 'h-52 sm:h-48 md:h-56 lg:h-64' : 'h-36 sm:h-48 md:h-56 lg:h-64'"
-    >
+    <div class="relative h-36 w-full overflow-hidden bg-gray-900 sm:h-48 md:h-56 lg:h-64">
       <AppImage
         :src="course.image"
         :alt="imageAlt"
@@ -89,9 +81,7 @@ const specRows = computed(() => [
         class="size-full object-cover"
         width="640"
         height="360"
-        :sizes="mobileFullWidth
-          ? '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw'
-          : '(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw'"
+        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
       />
     </div>
 

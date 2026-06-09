@@ -71,7 +71,8 @@
     "localeEn": "EN",
     "localeKm": "ខ្មែរ",
     "footerNav": "Footer navigation",
-    "contactTelegram": "Contact us on Telegram"
+    "contactTelegram": "Contact us on Telegram",
+    "scrollToTop": "Back to top"
   },
   "error": {
     "title": "Page not found",

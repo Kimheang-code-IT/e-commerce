@@ -35,8 +35,6 @@ useSeoMeta({
 
 <template>
   <UApp class="w-full max-w-full overflow-x-clip">
-    <NuxtLoadingIndicator />
-
     <NuxtLayout>
       <NuxtPage />
     </NuxtLayout>
