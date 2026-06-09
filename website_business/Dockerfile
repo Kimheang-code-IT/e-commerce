@@ -1,7 +1,7 @@
-FROM node:20-alpine AS build
+FROM node:22-alpine AS build
 
 WORKDIR /app
-RUN corepack enable
+RUN corepack enable && corepack prepare pnpm@11.1.3 --activate
 
 COPY package.json pnpm-lock.yaml ./
 ENV CI=true
@@ -16,7 +16,7 @@ ENV NUXT_PUBLIC_API_BASE=$NUXT_PUBLIC_API_BASE
 
 RUN pnpm run build
 
-FROM node:20-alpine AS runner
+FROM node:22-alpine AS runner
 
 WORKDIR /app
 ENV NODE_ENV=production
