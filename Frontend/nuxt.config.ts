@@ -5,7 +5,12 @@ export default defineNuxtConfig({
   // SPA + static export: nginx serves `.output/public` (no Node server in Docker).
   ssr: false,
   nitro: {
-    preset: 'static'
+    preset: 'static',
+    prerender: {
+      routes: ['/'],
+      crawlLinks: false,
+      failOnError: false
+    }
   },
 
   app: {
@@ -13,6 +18,12 @@ export default defineNuxtConfig({
       meta: [
         { name: 'robots', content: 'noindex, nofollow, noarchive, nosnippet' }
       ]
+    }
+  },
+
+  router: {
+    options: {
+      strict: false
     }
   },
 

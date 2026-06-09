@@ -14,55 +14,54 @@ function showForbiddenToast() {
 }
 
 export default defineNuxtRouteMiddleware(async (to) => {
-  const auth = useAuthStore()
-  const path = to.path
-  const forbiddenToastState = useState<{ lastPath?: string }>('forbidden-toast', () => ({}))
+  if (!import.meta.client) return
 
-  const firstAllowedHome = () => getFirstAllowedHome(auth)
+  try {
+    const auth = useAuthStore()
+    const path = to.path.replace(/\/+$/, '') || '/'
+    const forbiddenToastState = useState<{ lastPath?: string }>('forbidden-toast', () => ({}))
 
-  // Define public pages
-  const isPublicPage = ['/login', '/otp', '/setup'].includes(to.path)
+    const firstAllowedHome = () => getFirstAllowedHome(auth)
 
-  if (!auth.isLoggedIn && isPublicPage && to.path !== '/setup') {
-    const needsSetup = await fetchNeedsSetup()
-    if (needsSetup) {
-      return navigateTo('/setup')
-    }
-  }
+    const isPublicPage = ['/login', '/setup'].includes(path)
 
-  // Redirect if not logged in and trying to access a private page
-  if (!auth.isLoggedIn && !isPublicPage) {
-    const needsSetup = await fetchNeedsSetup()
-    if (needsSetup) {
-      return navigateTo('/setup')
-    }
-    return navigateTo('/login')
-  }
-
-  // Redirect if logged in and trying to access login page
-  if (auth.isLoggedIn && isPublicPage) {
-    const home = firstAllowedHome()
-    if (home) return navigateTo(home)
-    // Logged-in user has no permissions payload yet; allow staying on login.
-    return
-  }
-
-  if (!auth.isLoggedIn || isPublicPage) return
-
-  if (!canAccessPath(path, auth)) {
-    const home = firstAllowedHome()
-
-    // Show a one-time toast when user hits an unauthorized page.
-    // This prevents spamming toasts during navigation/back-forward.
-    if (forbiddenToastState.value.lastPath !== path) {
-      forbiddenToastState.value.lastPath = path
-      showForbiddenToast()
+    if (!auth.isLoggedIn && isPublicPage && path !== '/setup') {
+      const needsSetup = await fetchNeedsSetup()
+      if (needsSetup) {
+        return navigateTo('/setup')
+      }
     }
 
-    if (home && home !== path) {
-      return navigateTo(home)
+    if (!auth.isLoggedIn && !isPublicPage) {
+      const needsSetup = await fetchNeedsSetup()
+      if (needsSetup) {
+        return navigateTo('/setup')
+      }
+      return navigateTo('/login')
     }
-    // No permitted app route at all; send to login to avoid redirect loops.
+
+    if (auth.isLoggedIn && isPublicPage) {
+      const home = firstAllowedHome()
+      if (home) return navigateTo(home)
+      return
+    }
+
+    if (!auth.isLoggedIn || isPublicPage) return
+
+    if (!canAccessPath(path, auth)) {
+      const home = firstAllowedHome()
+
+      if (forbiddenToastState.value.lastPath !== path) {
+        forbiddenToastState.value.lastPath = path
+        showForbiddenToast()
+      }
+
+      if (home && home !== path) {
+        return navigateTo(home)
+      }
+      return navigateTo('/login')
+    }
+  } catch {
     return navigateTo('/login')
   }
 })

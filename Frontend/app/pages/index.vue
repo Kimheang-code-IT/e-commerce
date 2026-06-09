@@ -198,5 +198,6 @@ const userSalePieData = computed<PieDataPoint[]>(() =>
         </UCard>
       </div>
     </div>
+    </div>
     </LayoutAppHeader>
 </template>

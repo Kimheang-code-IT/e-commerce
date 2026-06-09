@@ -1,7 +1,6 @@
 import { ref } from 'vue'
 import type { RowSelectionState, VisibilityState } from '@tanstack/vue-table'
 import { useI18n } from 'vue-i18n'
-import { useToast } from '@nuxt/ui/composables'
 
 export interface BaseTableOptions {
   initialVisibility?: VisibilityState
@@ -9,7 +8,7 @@ export interface BaseTableOptions {
 
 export function useBaseTable(options: BaseTableOptions = {}) {
   const { t } = useI18n()
-  const toast = useToast()
+  const toast = import.meta.client ? useToast() : { add: () => undefined }
 
   // --- UI-Specific Table States ---
   // Purely visual or interaction states (not sent to API endpoints)
