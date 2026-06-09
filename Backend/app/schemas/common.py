@@ -84,6 +84,7 @@ class ProductCreatePayload(BaseModel):
     added: int = Field(default=0, ge=0)
     damaged: int = Field(default=0, ge=0)
     status: str = Field(default="active", max_length=50)
+    showOnWebsite: bool = Field(default=False)
     image: str | None = Field(default=None, max_length=2_500_000)
     stockNote: str | None = Field(default=None, max_length=1000)
 
@@ -161,6 +162,7 @@ class ProductUpdatePayload(BaseModel):
     added: int | None = Field(default=None, ge=0)
     damaged: int | None = Field(default=None, ge=0)
     status: str | None = Field(default=None, max_length=50)
+    showOnWebsite: bool | None = None
     image: str | None = Field(default=None, max_length=2_500_000)
     stockNote: str | None = Field(default=None, max_length=1000)
 

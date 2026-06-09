@@ -26,7 +26,7 @@ def list_public_categories(
     q = (
         select(Category, func.count(Product.id).label("active_product_count"))
         .join(Product, Product.category_id == Category.id)
-        .where(Product.status == "active")
+        .where(Product.status == "active", Product.show_on_website.is_(True))
         .group_by(Category.id)
         .order_by(Category.name.asc())
     )
@@ -49,7 +49,10 @@ def list_public_products(
     db: Session = Depends(get_db),
 ):
     q = list_products_query(db, search=search, category=category)
-    q = q.where(Product.status == "active").order_by(Product.id.desc())
+    q = q.where(
+        Product.status == "active",
+        Product.show_on_website.is_(True),
+    ).order_by(Product.id.desc())
     rows, total = paginate_query(q, db, page, limit)
     products = [row[0] for row in rows]
     return list_response([serialize_catalog_product(row) for row in products], total)

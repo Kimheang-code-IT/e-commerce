@@ -85,6 +85,8 @@ export interface Product {
   added: number
   damaged: number
   status: 'active' | 'inactive' | 'out_of_stock'
+  /** When true, product appears on the public website catalog. */
+  showOnWebsite?: boolean
   /** Stock level band from backend (`GET /products` and `/products/stock-status`). */
   stockStatus?: ProductStockStatusTier
   stockNote?: string

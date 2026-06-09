@@ -635,6 +635,8 @@
         "descriptionPlaceholder": "ការពិពណ៌នាអំពីប្រភេទនេះ"
     },
     "product": {
+        "showOnWebsite": "គេហទំព័រ",
+        "showOnWebsiteAria": "បង្ហាញ {name} នៅលើគេហទំព័រ",
         "id": "ល.រ",
         "image": "រូបភាព",
         "name": "ឈ្មោះផលិតផល",

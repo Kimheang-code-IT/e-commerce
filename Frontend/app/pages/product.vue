@@ -15,7 +15,8 @@ const {
     filteredEntries, confirmConfig, isLoading,
     columns, entryFormFields,
     getDropdownActions, handleSaveRequest, finalizeAction, handleAddNew,
-    canCreate, canExport, canAdjustStock, canViewAdjustStock, canAddDamage, canViewAddDamage,
+    canCreate, canUpdate, canExport, canAdjustStock, canViewAdjustStock, canAddDamage, canViewAddDamage,
+    toggleShowOnWebsite, isTogglingShowOnWebsite,
     stockAdjustMode, stockAdjustQty, stockAdjustInPrice, stockAdjustOutPrice,
     stockAdjustNote, stockAdjustTarget, stockAdjustLotId, stockLotOptions, isStockLotsLoading,
     openStockAdjustDialog, applyStockAdjust,
@@ -75,6 +76,16 @@ function onProductImageError(event: Event) {
                 :data="filteredEntries" :columns="columns" :selectable="true"
                 :total-rows="totalRows" :loading="isLoading"
                 :get-row-actions="getDropdownActions">
+                <!-- Show on public website -->
+                <template #showOnWebsite-cell="{ row }">
+                    <UCheckbox
+                        :model-value="Boolean(row.original.showOnWebsite)"
+                        :disabled="!canUpdate || isTogglingShowOnWebsite(row.original.id)"
+                        :aria-label="t('product.showOnWebsiteAria', { name: row.original.name })"
+                        @update:model-value="toggleShowOnWebsite(row.original, $event === true)"
+                    />
+                </template>
+
                 <!-- Image -->
                 <template #image-cell="{ row }">
                     <img

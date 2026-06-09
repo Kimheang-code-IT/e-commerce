@@ -213,6 +213,7 @@ def create_product_service(*, db: Session, body: ProductCreatePayload, user_id: 
         in_stock=body.inStock,
         sold=body.sold,
         status=body.status,
+        show_on_website=bool(body.showOnWebsite),
         image="",
     )
     if body.image is not None and body.image.strip():
@@ -323,6 +324,8 @@ def update_product_service(*, db: Session, item_id: int, body: ProductUpdatePayl
         row.color = body.color
     if body.status is not None:
         row.status = body.status
+    if body.showOnWebsite is not None:
+        row.show_on_website = bool(body.showOnWebsite)
     if body.inPrice is not None:
         row.in_price = body.inPrice
     if body.outPrice is not None:

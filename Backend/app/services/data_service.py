@@ -196,6 +196,7 @@ def serialize_product(
         "added": added,
         "damaged": damaged,
         "status": row.status,
+        "showOnWebsite": bool(getattr(row, "show_on_website", False)),
         "stockStatus": stock_status_tier(int(row.in_stock or 0)),
         "createdAt": to_iso(row.created_at),
     }

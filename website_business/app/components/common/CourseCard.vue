@@ -73,14 +73,16 @@ const specRows = computed(() => [
     class="flex w-full flex-col overflow-hidden rounded-sm border border-default bg-elevated shadow-sm"
     :aria-label="`${course.model} ${course.name}`"
   >
-    <div class="relative h-36 w-full overflow-hidden bg-gray-900 sm:h-48 md:h-56 lg:h-64">
+    <div
+      class="relative flex w-full aspect-[3/4] items-center justify-center overflow-hidden bg-gray-900 sm:aspect-[4/5] md:aspect-[3/4] lg:aspect-[4/5]"
+    >
       <AppImage
         :src="course.image"
         :alt="imageAlt"
         :title="imageAlt"
-        class="size-full object-cover"
+        class="size-full object-contain object-center"
         width="640"
-        height="360"
+        height="800"
         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
       />
     </div>

@@ -60,6 +60,7 @@ type ProductApiPayload = {
   added: number;
   damaged: number;
   status: Product["status"];
+  showOnWebsite?: boolean;
   image?: string;
   stockNote?: string;
 };
@@ -270,7 +271,10 @@ export function useProduct() {
   });
 
   // --- Configs ---
+  const togglingShowOnWebsite = ref<Record<number, boolean>>({});
+
   const columns = computed<TableColumn<Product>[]>(() => [
+    { id: "showOnWebsite", header: t("product.showOnWebsite") },
     { accessorKey: "id", header: t("product.id") },
     { accessorKey: "image", header: t("product.image") },
     { accessorKey: "name", header: t("product.name") },
@@ -610,8 +614,31 @@ export function useProduct() {
       damaged: Number(data?.damaged ?? 0),
       status: (String(data?.status || "active").trim() ||
         "active") as Product["status"],
+      showOnWebsite: Boolean((data as Product)?.showOnWebsite),
       stockNote: (data as any)?.stockNote || undefined,
     };
+  }
+
+  async function toggleShowOnWebsite(product: Product, value: boolean) {
+    if (!perms.canUpdate.value) return;
+    const id = Number(product.id);
+    if (!Number.isFinite(id)) return;
+
+    togglingShowOnWebsite.value[id] = true;
+    try {
+      await mutation.run(
+        () => productApi.update(id, { showOnWebsite: value }),
+        "products-view",
+      );
+      const row = effectiveEntries.value.find((item) => item.id === id);
+      if (row) row.showOnWebsite = value;
+    } finally {
+      delete togglingShowOnWebsite.value[id];
+    }
+  }
+
+  function isTogglingShowOnWebsite(productId: number) {
+    return Boolean(togglingShowOnWebsite.value[productId]);
   }
 
   async function toProductApiPayloadForSave(
@@ -866,6 +893,8 @@ export function useProduct() {
     canViewAdjustStock: perms.canViewAdjustStock,
     canAddDamage: perms.canAddDamage,
     canViewAddDamage: perms.canViewAddDamage,
+    toggleShowOnWebsite,
+    isTogglingShowOnWebsite,
     handleSaveRequest,
     finalizeAction,
     handleAddNew,

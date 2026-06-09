@@ -1,7 +1,7 @@
 from __future__ import annotations
 from datetime import datetime
 from typing import TYPE_CHECKING
-from sqlalchemy import DateTime, Float, ForeignKey, Integer, String
+from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
 from app.utils.timezone import cambodia_now
@@ -34,6 +34,7 @@ class Product(Base):
     in_stock: Mapped[int] = mapped_column(Integer, default=0)
     sold: Mapped[int] = mapped_column(Integer, default=0)
     status: Mapped[str] = mapped_column(String(50), default="active")
+    show_on_website: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=cambodia_now)
 
     category_rel: Mapped[Category | None] = relationship(back_populates="products")

@@ -21,6 +21,7 @@ _PRODUCT_CATALOG_COLUMNS: list[tuple[str, str]] = [
     ("string_brand", "VARCHAR(120) NOT NULL DEFAULT ''"),
     ("finishing", "VARCHAR(120) NOT NULL DEFAULT ''"),
     ("color", "VARCHAR(120) NOT NULL DEFAULT ''"),
+    ("show_on_website", "BOOLEAN NOT NULL DEFAULT FALSE"),
 ]
 
 
@@ -38,9 +39,18 @@ def ensure_product_catalog_schema() -> None:
     if not alters:
         return
 
+    adding_show_on_website = "show_on_website" not in existing
+
     with engine.begin() as conn:
         for clause in alters:
             conn.execute(text(f"ALTER TABLE products {clause}"))
+        if adding_show_on_website:
+            conn.execute(
+                text(
+                    "UPDATE products SET show_on_website = TRUE "
+                    "WHERE status = 'active'"
+                )
+            )
         conn.execute(
             text(
                 "UPDATE products SET total_price = out_price "

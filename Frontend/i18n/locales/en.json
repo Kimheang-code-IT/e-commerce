@@ -634,6 +634,8 @@
         "descriptionPlaceholder": "Optional description for this category"
     },
     "product": {
+        "showOnWebsite": "Website",
+        "showOnWebsiteAria": "Show {name} on public website",
         "id": "No",
         "image": "Image",
         "name": "Name",
