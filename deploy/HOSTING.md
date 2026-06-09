@@ -2,8 +2,8 @@
 
 | URL | App | Access |
 |-----|-----|--------|
-| https://anyamusicschool.com | `website_business` | Public — SEO + sitemap |
-| https://admin.anyamusicschool.com | `Frontend` | Staff only — nginx IP allowlist |
+| https://anyamusicschool.com | `website_business` | Public — no login, SEO + sitemap |
+| https://admin.anyamusicschool.com | `Frontend` | Public URL — **login required in the app** (JWT + RBAC) |
 
 Backend API and uploads are **not** exposed directly; nginx proxies `/api/v1/` and `/uploads/` on both hosts.
 
@@ -93,26 +93,36 @@ Or on Windows before upload (requires local pnpm):
 
 ## 6. Nginx + TLS
 
+**Step A — HTTP first** (SSL files do not exist yet; do not use `anyamusicschool.conf` yet):
+
 ```bash
 sudo mkdir -p /var/www/certbot
-sudo cp deploy/nginx/anyamusicschool.conf /etc/nginx/sites-available/anyamusicschool
+sudo cp deploy/nginx/anyamusicschool.http.conf /etc/nginx/sites-available/anyamusicschool
 sudo ln -sf /etc/nginx/sites-available/anyamusicschool /etc/nginx/sites-enabled/
 sudo rm -f /etc/nginx/sites-enabled/default
-
-# IP allowlist for admin — REQUIRED before going live
-sudo cp deploy/nginx/admin-allowlist.conf.example /etc/nginx/snippets/admin-allowlist.conf
-sudo nano /etc/nginx/snippets/admin-allowlist.conf
-# Add: allow YOUR_OFFICE_IP;
-# Keep: deny all;
-
 sudo nginx -t
 sudo systemctl reload nginx
+```
 
+**Step B — Get SSL certificates:**
+
+```bash
 sudo certbot --nginx \
   -d anyamusicschool.com \
   -d www.anyamusicschool.com \
   -d admin.anyamusicschool.com
 ```
+
+Certbot updates nginx for HTTPS automatically.  
+If you prefer the repo config, after certbot succeeds:
+
+```bash
+sudo cp deploy/nginx/anyamusicschool.conf /etc/nginx/sites-available/anyamusicschool
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+Admin is **not** IP-blocked — anyone can open the login page; only authenticated users can use the admin (same as your local setup).
+Optional extra IP lock: see `deploy/nginx/admin-allowlist.conf.example`.
 
 ---
 
@@ -125,7 +135,7 @@ sudo certbot --nginx \
 | Sitemap | https://anyamusicschool.com/sitemap.xml |
 | Robots | https://anyamusicschool.com/robots.txt |
 | API health (via nginx) | https://anyamusicschool.com/api/v1/... |
-| Admin login | https://admin.anyamusicschool.com (from allowed IP only) |
+| Admin login | https://admin.anyamusicschool.com/login |
 
 **Google Search Console:** add `https://anyamusicschool.com`, submit sitemap  
 `https://anyamusicschool.com/sitemap.xml`
@@ -145,7 +155,8 @@ docker compose up -d --build website backend
 
 ## Security notes
 
-- Admin uses `robots.txt` Disallow + `noindex` meta — not for public search.
-- `admin.anyamusicschool.com` must use the IP allowlist; do not remove `deny all`.
+- Admin uses `robots.txt` Disallow + `noindex` meta — hidden from Google, but URL is reachable.
+- Admin pages require login; API routes require JWT (enforced by Backend + Frontend middleware).
+- Optional: nginx IP allowlist (`admin-allowlist.conf.example`) for extra lockdown.
 - Keep `API_DOCS_ENABLED=false` in production.
 - Use strong `JWT_SECRET_KEY` and database passwords.

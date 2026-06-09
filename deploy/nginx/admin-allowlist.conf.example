@@ -1,11 +1,13 @@
-# Copy to /etc/nginx/snippets/admin-allowlist.conf and add your real IPs.
-# Everyone not listed is blocked from admin.anyamusicschool.com.
+# OPTIONAL — extra nginx IP restriction for admin.anyamusicschool.com
+# Not required: the admin app already requires login (JWT + RBAC).
+#
+# Only enable if you want to block admin by IP in addition to app login:
+#   1. Uncomment allow lines below with your office/VPN IPs
+#   2. Add to admin server block in anyamusicschool.conf:
+#        include /etc/nginx/snippets/admin-allowlist.conf;
+#   3. sudo nginx -t && sudo systemctl reload nginx
 
 # allow 203.0.113.50;        # office public IP
 # allow 198.51.100.0/24;     # VPN range
-# allow 10.0.0.0/8;          # private VPN
 
-# Temporary: allow only localhost for first deploy test (remove in production)
-# allow 127.0.0.1;
-
-deny all;
+# deny all;
