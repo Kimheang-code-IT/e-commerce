@@ -1,34 +1,200 @@
 #!/usr/bin/env bash
-# Build Frontend static admin (Docker — no host pnpm required)
+# Deploy: git pull + website_business (Docker) + admin static + backend API
+#
+# Usage (on server):
+#   chmod +x build-admin.sh
+#   ./build-admin.sh
+#
+# Options:
+#   --no-pull       Skip git pull
+#   --admin-only    Rebuild admin static only (no Docker)
+#   --website-only  Rebuild website_business container only (no admin)
+#
+# Env overrides:
+#   ADMIN_OUT_DIR=/var/www/anyamusicschool-admin
+#   GIT_BRANCH=main
+#   COMPOSE_FILE=docker-compose.yml
+
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
-OUT_DIR="${1:-/var/www/anyamusicschool-admin}"
-IMAGE_TAG="ecom-admin-build:latest"
+cd "$ROOT"
+
+ADMIN_OUT_DIR="${ADMIN_OUT_DIR:-/var/www/anyamusicschool-admin}"
+GIT_BRANCH="${GIT_BRANCH:-main}"
+ADMIN_IMAGE_TAG="${ADMIN_IMAGE_TAG:-ecom-admin-build:latest}"
+COMPOSE_FILE="${COMPOSE_FILE:-docker-compose.yml}"
+
+SKIP_PULL=0
+ADMIN_ONLY=0
+WEBSITE_ONLY=0
+
+for arg in "$@"; do
+  case "$arg" in
+    --no-pull) SKIP_PULL=1 ;;
+    --admin-only) ADMIN_ONLY=1 ;;
+    --website-only) WEBSITE_ONLY=1 ;;
+    -h|--help)
+      sed -n '2,14p' "$0"
+      exit 0
+      ;;
+    *)
+      echo "Unknown option: $arg (try --help)" >&2
+      exit 1
+      ;;
+  esac
+done
+
+if [[ "$ADMIN_ONLY" -eq 1 && "$WEBSITE_ONLY" -eq 1 ]]; then
+  echo "Use only one of --admin-only or --website-only." >&2
+  exit 1
+fi
 
 if ! command -v docker >/dev/null 2>&1; then
   echo "docker is required." >&2
   exit 1
 fi
 
-echo "Building admin image..."
-docker build \
-  -f "$ROOT/Frontend/Dockerfile" \
-  -t "$IMAGE_TAG" \
-  --build-arg NUXT_PUBLIC_SITE_URL=https://admin.anyamusicschool.com \
-  --build-arg NUXT_PUBLIC_API_BASE=/api/v1 \
-  --build-arg NUXT_PUBLIC_USE_BACKEND_API=true \
-  "$ROOT/Frontend"
+if ! docker compose version >/dev/null 2>&1; then
+  echo "docker compose plugin is required." >&2
+  exit 1
+fi
 
-CONTAINER="$(docker create "$IMAGE_TAG")"
-trap 'docker rm -f "$CONTAINER" >/dev/null 2>&1 || true' EXIT
+compose() {
+  docker compose -f "$COMPOSE_FILE" "$@"
+}
 
-TMP_DIR="$(mktemp -d)"
-docker cp "$CONTAINER:/app/.output/public/." "$TMP_DIR/"
+load_root_env() {
+  if [[ -f "$ROOT/.env" ]]; then
+  set -a
+  # shellcheck disable=SC1091
+  source "$ROOT/.env"
+  set +a
+  fi
+}
 
-sudo mkdir -p "$OUT_DIR"
-sudo rsync -a --delete "$TMP_DIR/" "$OUT_DIR/"
-sudo chown -R www-data:www-data "$OUT_DIR"
-rm -rf "$TMP_DIR"
+git_pull() {
+  if [[ "$SKIP_PULL" -eq 1 ]]; then
+    echo "==> Skipping git pull (--no-pull)"
+    return
+  fi
 
-echo "Admin static files deployed to $OUT_DIR"
+  if [[ ! -d "$ROOT/.git" ]]; then
+    echo "==> Not a git repo — skipping pull"
+    return
+  fi
+
+  echo "==> Git pull ($GIT_BRANCH)"
+  git fetch origin "$GIT_BRANCH"
+  if ! git pull --ff-only origin "$GIT_BRANCH"; then
+    echo ""
+    echo "Git pull failed (local changes or diverged branch)." >&2
+    echo "Fix on server, then re-run:" >&2
+    echo "  git status" >&2
+    echo "  git stash && ./build-admin.sh" >&2
+    echo "  # or: git reset --hard origin/$GIT_BRANCH && ./build-admin.sh" >&2
+    exit 1
+  fi
+  echo "    at $(git log -1 --oneline)"
+}
+
+deploy_docker_stack() {
+  if [[ "$ADMIN_ONLY" -eq 1 ]]; then
+    return
+  fi
+
+  load_root_env
+
+  local services=(backend website)
+  if [[ "$WEBSITE_ONLY" -eq 0 ]]; then
+    services+=(celery-worker celery-beat)
+  fi
+
+  echo "==> Docker build: ${services[*]}"
+  compose build "${services[@]}"
+
+  echo "==> Docker up: ${services[*]}"
+  compose up -d "${services[@]}"
+
+  echo "==> Waiting for API health..."
+  local i
+  for i in $(seq 1 36); do
+    if curl -sf http://127.0.0.1:8000/health >/dev/null 2>&1; then
+      echo "    API healthy"
+      break
+    fi
+    if [[ "$i" -eq 36 ]]; then
+      echo "API not healthy — check: docker compose logs backend --tail 50" >&2
+      exit 1
+    fi
+    sleep 5
+  done
+
+  if [[ "$WEBSITE_ONLY" -eq 0 ]]; then
+    echo "==> Website container (website_business)"
+    local code
+    code="$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3001/ || true)"
+    echo "    http://127.0.0.1:3001/ → HTTP $code"
+  fi
+}
+
+deploy_admin_static() {
+  if [[ "$WEBSITE_ONLY" -eq 1 ]]; then
+    return
+  fi
+
+  echo "==> Building admin (Frontend static)"
+  docker build \
+    -f "$ROOT/Frontend/Dockerfile" \
+    -t "$ADMIN_IMAGE_TAG" \
+    --build-arg NUXT_PUBLIC_SITE_URL=https://admin.anyamusicschool.com \
+    --build-arg NUXT_PUBLIC_API_BASE=/api/v1 \
+    --build-arg NUXT_PUBLIC_USE_BACKEND_API=true \
+    "$ROOT/Frontend"
+
+  local container tmp_dir
+  container="$(docker create "$ADMIN_IMAGE_TAG")"
+  trap 'docker rm -f "$container" >/dev/null 2>&1 || true' RETURN
+
+  tmp_dir="$(mktemp -d)"
+  docker cp "$container:/app/.output/public/." "$tmp_dir/"
+  docker rm -f "$container" >/dev/null 2>&1 || true
+  trap - RETURN
+
+  echo "==> Deploy admin → $ADMIN_OUT_DIR"
+  sudo mkdir -p "$ADMIN_OUT_DIR"
+  sudo rsync -a --delete "$tmp_dir/" "$ADMIN_OUT_DIR/"
+  sudo chown -R www-data:www-data "$ADMIN_OUT_DIR"
+  rm -rf "$tmp_dir"
+
+  if [[ -f "$ADMIN_OUT_DIR/index.html" ]]; then
+    echo "    admin index.html OK"
+  else
+    echo "admin deploy failed — index.html missing" >&2
+    exit 1
+  fi
+}
+
+print_summary() {
+  echo ""
+  echo "=============================================="
+  echo " Deploy complete"
+  echo "=============================================="
+  compose ps 2>/dev/null || docker compose ps
+  echo ""
+  echo " Public site:  https://anyamusicschool.com"
+  echo " Admin:        https://admin.anyamusicschool.com"
+  echo ""
+}
+
+main() {
+  echo "Deploy from: $ROOT"
+  echo ""
+
+  git_pull
+  deploy_docker_stack
+  deploy_admin_static
+  print_summary
+}
+
+main

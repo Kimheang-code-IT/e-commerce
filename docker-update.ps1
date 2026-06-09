@@ -57,7 +57,8 @@ docker compose ps
 
 Write-Host ""
 Write-Host "API health: curl http://127.0.0.1:8000/health" -ForegroundColor Cyan
-Write-Host "Admin build: .\build-admin.ps1  (or ./build-admin.sh on server)" -ForegroundColor Cyan
+Write-Host "Server deploy: ./build-admin.sh  (git pull + website + admin)" -ForegroundColor Cyan
+Write-Host "Local admin build: .\build-admin.ps1" -ForegroundColor Cyan
 
 if ($Logs) {
     docker compose logs -f backend celery-worker

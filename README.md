@@ -36,8 +36,8 @@ First run with no users: open admin `/setup` in the browser.
 | Script | Purpose |
 |--------|---------|
 | `docker-update.ps1` / `docker-update.cmd` | Build + start Docker stack |
-| `build-admin.sh` | Build admin SPA on Linux server (Docker) → `/var/www/anyamusicschool-admin` |
-| `build-admin.ps1` | Build admin SPA on Windows |
+| `build-admin.sh` | **Server deploy:** `git pull` + `website_business` (Docker) + admin static + backend |
+| `build-admin.ps1` | Build admin SPA locally on Windows |
 
 ```powershell
 .\docker-update.ps1              # build + start
@@ -45,12 +45,14 @@ First run with no users: open admin `/setup` in the browser.
 .\docker-update.ps1 -Prod        # with docker-compose.prod.yml
 ```
 
-On the server:
+On the server (one command updates everything):
 
 ```bash
-docker compose up -d --build
+chmod +x build-admin.sh
 ./build-admin.sh
 ```
+
+Options: `--no-pull` `--admin-only` `--website-only`
 
 ## Environment files (safe to commit)
 
