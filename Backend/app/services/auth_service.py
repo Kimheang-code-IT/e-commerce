@@ -20,7 +20,7 @@ from app.security import (
 	role_permission_tokens,
 	verify_password,
 )
-from app.dependencies.auth import get_current_user, require_permission, require_role
+from app.dependencies.auth import get_current_user, require_any_permission, require_permission, require_role
 
 
 def _refresh_expiry_utc() -> datetime:

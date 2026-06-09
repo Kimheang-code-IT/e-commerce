@@ -33,11 +33,13 @@ export type ApiQueryParams = {
 
 export type DateQuery = { dateFrom?: string; dateTo?: string }
 
+type ListFetchOptions = { suppressErrorToast?: boolean }
+
 function makeCrudApi<T>(resource: string) {
   const api = useApi()
   return {
-    list: (params?: ApiQueryParams, signal?: AbortSignal) =>
-      api.get<ApiList<T>>(resource, { query: params, signal, dedupe: true }),
+    list: (params?: ApiQueryParams, signal?: AbortSignal, fetchOpts?: ListFetchOptions) =>
+      api.get<ApiList<T>>(resource, { query: params, signal, dedupe: true, ...fetchOpts }),
     create: (payload: Partial<T>) => api.post<T>(resource, payload),
     update: (id: string | number, payload: Partial<T>) => api.put<T>(`${resource}/${id}`, payload),
     remove: (id: string | number) => api.delete(`${resource}/${id}`)

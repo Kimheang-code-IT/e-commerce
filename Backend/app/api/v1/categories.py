@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.models import Category, Product, User
 from app.schemas.common import CategoryCreatePayload, CategoryUpdatePayload
-from app.services.auth_service import get_current_user, require_permission
+from app.services.auth_service import get_current_user, require_any_permission, require_permission
 from app.services.data_service import (
     apply_created_at_range,
     apply_sort,
@@ -33,7 +33,7 @@ def list_categories(
     dateTo: str | None = None,
     sortBy: str | None = None,
     sortOrder: str | None = Query(None, pattern="^(asc|desc)$"),
-    _: User = Depends(require_permission("category:view")),
+    _: User = Depends(require_any_permission("category:view", "product:view", "pos:view", "dashboard:view")),
     db: Session = Depends(get_db),
 ):
     cache_parts = {

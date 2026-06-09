@@ -11,7 +11,7 @@ from app.schemas.common import (
     SupplierProductUpdatePayload,
     SupplierUpdatePayload,
 )
-from app.services.auth_service import get_current_user, require_permission
+from app.services.auth_service import get_current_user, require_any_permission, require_permission
 from app.services.data_service import apply_created_at_range, apply_sort, list_response, paginate_query, record_history
 from app.shared.api_response import error_response
 from app.shared.pagination_constants import MAX_LIST_PAGE_SIZE
@@ -36,7 +36,7 @@ def _serialize_supplier(row: Supplier, product_count: int, total_amount: float, 
 @router.get("")
 def list_suppliers(
     query: ListQuery = Depends(list_query_dependency),
-    _: User = Depends(require_permission("supplier:view")),
+    _: User = Depends(require_any_permission("supplier:view", "product:view")),
     db: Session = Depends(get_db),
 ):
     totals_subq = (

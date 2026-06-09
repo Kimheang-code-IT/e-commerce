@@ -163,7 +163,7 @@ export function useProduct() {
         limit: 200,
         sortBy: "name",
         sortOrder: "asc",
-      });
+      }, undefined, { suppressErrorToast: true });
       supplierItems.value = (res.data || [])
         .map((item: any) => ({
           label: String(item?.name || "").trim(),

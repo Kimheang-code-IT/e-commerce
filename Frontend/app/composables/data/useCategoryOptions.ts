@@ -19,7 +19,11 @@ export function useCategoryOptions() {
     try {
       const res = await queryClient.getOrFetch(
         CATEGORY_OPTIONS_KEY,
-        () => categoryApi.list({ page: 1, limit: MAX_TABLE_PAGE_SIZE, sortBy: 'name', sortOrder: 'asc' }),
+        () => categoryApi.list(
+          { page: 1, limit: MAX_TABLE_PAGE_SIZE, sortBy: 'name', sortOrder: 'asc' },
+          undefined,
+          { suppressErrorToast: true },
+        ),
         CATEGORY_OPTIONS_TTL,
       )
       items.value = (res.data || [])

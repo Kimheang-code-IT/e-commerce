@@ -83,6 +83,10 @@ def user_has_permission(user: User, permission: str) -> bool:
     return any(alias in tokens for alias in ALIASES.get(permission, ()))
 
 
+def user_has_any_permission(user: User, *permissions: str) -> bool:
+    return any(user_has_permission(user, permission) for permission in permissions)
+
+
 def user_has_role(user: User, role_name: str) -> bool:
     role = getattr(user, "role_rel", None)
     if not role:

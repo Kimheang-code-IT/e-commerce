@@ -8,7 +8,13 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.repositories.auth_repository import get_user_by_id
-from app.security import TOKEN_TYPE_ACCESS, parse_bearer_token, user_has_permission, user_has_role
+from app.security import (
+    TOKEN_TYPE_ACCESS,
+    parse_bearer_token,
+    user_has_any_permission,
+    user_has_permission,
+    user_has_role,
+)
 
 bearer = HTTPBearer(auto_error=False)
 
@@ -37,6 +43,15 @@ def get_current_user(
 def require_permission(permission: str) -> Callable:
     def checker(user=Depends(get_current_user)):
         if not user_has_permission(user, permission):
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permission")
+        return user
+
+    return checker
+
+
+def require_any_permission(*permissions: str) -> Callable:
+    def checker(user=Depends(get_current_user)):
+        if not user_has_any_permission(user, *permissions):
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permission")
         return user
 

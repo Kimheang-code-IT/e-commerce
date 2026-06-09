@@ -1,5 +1,5 @@
 from app.security.passwords import get_password_hash, verify_password
-from app.security.rbac import role_permission_tokens, user_has_permission, user_has_role
+from app.security.rbac import role_permission_tokens, user_has_any_permission, user_has_permission, user_has_role
 from app.security.tokens import (
     TOKEN_TYPE_ACCESS,
     TOKEN_TYPE_REFRESH,
@@ -19,6 +19,7 @@ __all__ = [
     "parse_bearer_token",
     "role_permission_tokens",
     "user_has_permission",
+    "user_has_any_permission",
     "user_has_role",
     "verify_password",
 ]
