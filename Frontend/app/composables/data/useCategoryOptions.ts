@@ -8,13 +8,27 @@ const CATEGORY_OPTIONS_TTL = 60_000
 
 export type CategoryOption = { label: string; value: string }
 
+function canLoadCategoryOptions(auth: ReturnType<typeof useAuthStore>) {
+  return (
+    auth.hasPermission('category:view')
+    || auth.hasPermission('product:view')
+    || auth.hasPermission('pos:view')
+    || auth.hasPermission('dashboard:view')
+  )
+}
+
 export function useCategoryOptions() {
+  const auth = useAuthStore()
   const categoryApi = useCategoryApi()
   const queryClient = useQueryClient()
   const items = ref<CategoryOption[]>([])
   const isLoading = ref(false)
 
   async function load() {
+    if (!canLoadCategoryOptions(auth)) {
+      items.value = []
+      return
+    }
     isLoading.value = true
     try {
       const res = await queryClient.getOrFetch(

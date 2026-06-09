@@ -29,7 +29,7 @@ const {
   submittingRefund,
   openRefundDialog,
   confirmRefund
-} = useRefund()
+} = useRefund({ autoLoad: false })
 
 const {
   rowSelection,

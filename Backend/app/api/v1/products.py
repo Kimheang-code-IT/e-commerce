@@ -11,7 +11,7 @@ from app.schemas.common import (
     StockAdditionUpdatePayload,
     StockDamageUpdatePayload,
 )
-from app.services.auth_service import get_current_user, require_permission
+from app.services.auth_service import get_current_user, require_any_permission, require_permission
 from app.services.data_service import (
     apply_created_at_range,
     list_response,
@@ -53,7 +53,7 @@ def get_product_stock_status(
 def list_products(
     query: ListQuery = Depends(list_query_dependency),
     category: str | None = None,
-    _: User = Depends(require_permission("product:view")),
+    _: User = Depends(require_any_permission("product:view", "dashboard:view", "pos:view")),
     db: Session = Depends(get_db),
 ):
     return list_products_service(db=db, query=query, category=category)
@@ -63,7 +63,7 @@ def list_products(
 def list_products_view(
     query: ListQuery = Depends(list_query_dependency),
     category: str | None = None,
-    _: User = Depends(require_permission("product:view")),
+    _: User = Depends(require_any_permission("product:view", "dashboard:view", "pos:view")),
     db: Session = Depends(get_db),
 ):
     """Aligned with SQL view `products_view` (implemented via aggregates + product rows)."""

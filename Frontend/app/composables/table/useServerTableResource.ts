@@ -14,6 +14,8 @@ interface ServerTableResourceOptions<T, Q extends Record<string, unknown>> {
   listFn: (query: Q, signal?: AbortSignal) => Promise<ListResult<T>>
   localData: Ref<T[]>
   debounceMs?: number
+  /** When false, skips the initial onMounted fetch (e.g. dialog-only composable usage). */
+  autoLoad?: boolean
 }
 
 export function useServerTableResource<T, Q extends Record<string, unknown>>(options: ServerTableResourceOptions<T, Q>) {
@@ -69,9 +71,17 @@ export function useServerTableResource<T, Q extends Record<string, unknown>>(opt
     }, debounceMs)
   }
 
-  onMounted(load)
-  watch(options.serverQuery, scheduleLoad, { deep: true })
-  watch(options.useBackendApi, scheduleLoad)
+  if (options.autoLoad !== false) {
+    onMounted(load)
+  }
+  watch(options.serverQuery, () => {
+    if (options.autoLoad === false) return
+    scheduleLoad()
+  }, { deep: true })
+  watch(options.useBackendApi, () => {
+    if (options.autoLoad === false) return
+    scheduleLoad()
+  })
   onBeforeUnmount(() => {
     if (timer) clearTimeout(timer)
     controller?.abort()

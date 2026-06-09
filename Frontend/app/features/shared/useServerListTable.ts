@@ -9,6 +9,7 @@ type UseServerListTableOptions<T> = {
   extraQuery?: Ref<Record<string, string | number | undefined>>
   localData?: Ref<T[]> | Ref<any[]>
   listFn: (query: ApiQueryParams, signal?: AbortSignal) => Promise<{ data?: T[]; total?: number; aggregates?: Record<string, number> }>
+  autoLoad?: boolean
 }
 
 export function useServerListTable<T>(options: UseServerListTableOptions<T>) {
@@ -37,7 +38,8 @@ export function useServerListTable<T>(options: UseServerListTableOptions<T>) {
     serverQuery: mergedServerQuery,
     localData: fallbackData,
     listFn: options.listFn,
-    debounceMs: 220
+    debounceMs: 220,
+    autoLoad: options.autoLoad,
   })
 
   return {

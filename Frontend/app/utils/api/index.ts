@@ -13,6 +13,7 @@ import type {
   SystemUser
 } from '~/types'
 import { useAuthStore } from '~/stores/auth'
+import { OPTIONAL_FETCH } from '~/utils/api/optional'
 
 type ApiList<T> = { data: T[]; total?: number }
 type AuthUser = { id?: number; name: string; email: string; avatar?: string; role?: string; pageAccess?: string[] }
@@ -216,7 +217,8 @@ export function useHistoriesApi() {
       api.get<{ data: { actions: string[] } }>('/histories/filter-options', {
         query: params,
         signal,
-        dedupe: true
+        dedupe: true,
+        ...OPTIONAL_FETCH,
       })
   }
 }
@@ -237,7 +239,7 @@ export function useReportsViewApi() {
     filterOptions: (params?: DateQuery, signal?: AbortSignal) =>
       api.get<{ data: { products: string[]; provinces: string[] } }>(
         '/reports-view/filter-options',
-        { query: params, signal, dedupe: true }
+        { query: params, signal, dedupe: true, ...OPTIONAL_FETCH }
       ),
     exportCsv: (params?: ApiQueryParams) =>
       api.get<{ url?: string; data?: ReportRow[] }>('/reports-view/export', {
@@ -255,7 +257,7 @@ export function useDeliveriesViewApi() {
     filterOptions: (params?: DateQuery, signal?: AbortSignal) =>
       api.get<{
         data: { addresses: string[]; deliveryTypes: string[]; statuses: string[] }
-      }>(`${base}/filter-options`, { query: params, signal, dedupe: true })
+      }>(`${base}/filter-options`, { query: params, signal, dedupe: true, ...OPTIONAL_FETCH })
   }
 }
 
@@ -268,7 +270,8 @@ export function useCommissionViewApi() {
       api.get<{ data: { products: string[] } }>('/commission-view/filter-options', {
         query: params,
         signal,
-        dedupe: true
+        dedupe: true,
+        ...OPTIONAL_FETCH,
       }),
     exportCsv: (params?: ApiQueryParams) =>
       api.get<{ url?: string; data?: CommissionEntry[] }>('/commission-view/export', {
@@ -354,7 +357,7 @@ export function usePosApi() {
           paymentMethods: string[]
           addresses: string[]
         }
-      }>('/pos/filter-options', { signal, dedupe: true }),
+      }>('/pos/filter-options', { signal, dedupe: true, ...OPTIONAL_FETCH }),
     createPreviewSession: (invoices: any[]) =>
       withLegacyFallback(
         () => api.post<{ previewKey: string }>('/pos/preview', { invoices }),

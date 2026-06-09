@@ -117,7 +117,11 @@ export function useAnalyticsDashboard() {
     try {
       const productRes = await queryClient.getOrFetch(
         'reference:dashboard-products',
-        () => productApi.list({ page: 1, limit: MAX_TABLE_PAGE_SIZE }),
+        () => productApi.list(
+          { page: 1, limit: MAX_TABLE_PAGE_SIZE },
+          undefined,
+          { suppressErrorToast: true },
+        ),
         60_000,
       )
       products.value = (productRes.data || []).map((item: any) => ({

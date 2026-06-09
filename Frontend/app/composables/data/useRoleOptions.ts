@@ -7,17 +7,26 @@ const ROLE_OPTIONS_KEY = 'reference:roles'
 const ROLE_OPTIONS_TTL = 60_000
 
 export function useRoleOptions() {
+  const auth = useAuthStore()
   const systemRoleApi = useSystemRoleApi()
   const queryClient = useQueryClient()
   const roleNames = ref<string[]>([])
   const isLoading = ref(false)
 
   async function load() {
+    if (!auth.hasPermission('role:view')) {
+      roleNames.value = []
+      return
+    }
     isLoading.value = true
     try {
       const res = await queryClient.getOrFetch(
         ROLE_OPTIONS_KEY,
-        () => systemRoleApi.list({ page: 1, limit: MAX_TABLE_PAGE_SIZE, sortBy: 'name', sortOrder: 'asc' }),
+        () => systemRoleApi.list(
+          { page: 1, limit: MAX_TABLE_PAGE_SIZE, sortBy: 'name', sortOrder: 'asc' },
+          undefined,
+          { suppressErrorToast: true },
+        ),
         ROLE_OPTIONS_TTL,
       )
       roleNames.value = (res.data || [])

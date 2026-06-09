@@ -11,7 +11,13 @@ export type RefundRowActionHandlers = {
   onPreview?: (row: RefundRecord) => void
 }
 
-export function useRefund(handlers?: RefundRowActionHandlers) {
+export type UseRefundOptions = RefundRowActionHandlers & {
+  /** When false, do not fetch GET /refunds on mount (report page dialog-only usage). */
+  autoLoad?: boolean
+}
+
+export function useRefund(options?: UseRefundOptions) {
+  const { autoLoad = true, ...handlers } = options || {}
   const { t } = useI18n()
   const toast = useToast()
   const auth = useAuthStore()
@@ -34,6 +40,7 @@ export function useRefund(handlers?: RefundRowActionHandlers) {
     localData: refundRows,
     extraQuery: filterExtraQuery,
     listFn: (query, signal) => refundApi.list(query, signal),
+    autoLoad,
   })
 
   const isRefundDialogOpen = ref(false)
