@@ -16,12 +16,13 @@ const imageDomains = [
   'images.unsplash.com',
   hostnameFromUrl(apiBase),
   hostnameFromUrl(siteUrl)
-].filter(Boolean)
+].filter((host): host is string => Boolean(host))
 
 export default defineNuxtConfig({
   modules: [
     '@nuxt/eslint',
     '@nuxt/image',
+    '@nuxtjs/color-mode',
     '@nuxt/ui',
     '@nuxtjs/i18n',
     'nuxt-og-image'
