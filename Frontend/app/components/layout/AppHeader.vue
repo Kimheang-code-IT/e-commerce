@@ -42,7 +42,7 @@ const panelId = computed(() => {
     </template>
 
     <template #body>
-      <div class="flex flex-1 flex-col min-h-0 -m-4 overflow-hidden bg-background text-foreground tracking-tight">
+      <div class="flex flex-1 flex-col min-h-0 m-2 md:-m-4 overflow-hidden bg-background text-foreground tracking-tight">
         <slot />
       </div>
     </template>
