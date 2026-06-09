@@ -77,9 +77,9 @@ const userSalePieData = computed<PieDataPoint[]>(() =>
         </div>
       </template>
 
-    <div class="flex-1 min-h-0 overflow-y-auto">
+    <div class="flex-1 min-h-0 -m-2 overflow-y-auto">
     <!-- Top Summary Cards -->
-    <UPageGrid class="grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-0">
+    <UPageGrid class="grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
       <template
         v-for="(stat, idx) in summaryStats"
         :key="idx"
@@ -111,7 +111,7 @@ const userSalePieData = computed<PieDataPoint[]>(() =>
 
     <!-- Bottom Grid: Reports and Distributions -->
     <div
-      class="grid grid-cols-1 lg:grid-cols-12 gap-0 items-stretch"
+      class="grid grid-cols-1 lg:grid-cols-12 gap-2 items-stretch"
       :style="{ minHeight: SECTION_HEIGHT.DASHBOARD }"
     >
       <!-- Left: Cambodia Map (Customer Buy Analytics) -->
@@ -150,7 +150,7 @@ const userSalePieData = computed<PieDataPoint[]>(() =>
 
       <!-- Right: Distribution Pie & Small Bar -->
       <div
-        class="lg:col-span-4 gap-0 flex flex-col min-h-0"
+        class="lg:col-span-4 gap-2 flex flex-col min-h-0"
         :style="{ minHeight: SECTION_HEIGHT.DASHBOARD }"
       >
         <UCard
