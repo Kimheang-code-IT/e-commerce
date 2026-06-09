@@ -1,10 +1,16 @@
 {
   "seo": {
     "siteName": "Anya Music School",
-    "keywords": "Anya Music School, សាលាតន្ត្រី, ហ្គីតា, ឧបករណ៍តន្ត្រី, កាតាឡុក, កម្ពុជា, anyamusicschool"
+    "keywords": "Anya Music School, សាលាតន្ត្រី, ហ្គីតា, ឧបករណ៍តន្ត្រី, កាតាឡុក, កម្ពុជា, anyamusicschool",
+    "categoryDescription": "មើលផលិតផល {category} នៅ Anya Music School។ ប្រៀបធៀបលក្ខណៈបច្ចេកទេស ម៉ូដែល ពណ៌ និងតម្លៃ។",
+    "defaultOgImageAlt": "Anya Music School — ឧបករណ៍តន្ត្រី និងកាតាឡុកផលិតផល",
+    "categoryOgImageAlt": "ផលិតផល {category} នៅ Anya Music School",
+    "productImageAlt": "{model} {name} — រូបផលិតផល",
+    "priceLabel": "តម្លៃ {price}",
+    "priceWithDiscount": "តម្លៃបញ្ចុះ {sale} ពី {list}"
   },
   "home": {
-    "seoDescription": "មើលកាតាឡុកផលិតផលរបស់យើង ជាមួយលក្ខណៈបច្ចេកទេស តម្លៃ និងប្រភេទ។"
+    "seoDescription": "ទិញឧបករណ៍តន្ត្រី និងគ្រឿងបន្ថែមនៅ Anya Music School។ មើលហ្គីតា និងផលិតផលផ្សេងៗ ជាមួយលក្ខណៈបច្ចេកទេស ម៉ូដែល និងតម្លៃនៅកម្ពុជា។"
   },
   "hero": {
     "productCountSuffix": "ផលិតផល",
@@ -59,6 +65,7 @@
     }
   },
   "a11y": {
+    "skipToProducts": "រំលងទៅផលិតផល",
     "siteBanner": "បដាគេហទំព័រ",
     "changeLanguage": "ប្តូរភាសា",
     "localeEn": "EN",

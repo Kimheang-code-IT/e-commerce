@@ -36,6 +36,12 @@ const showCategoryTabs = computed(() =>
 
 const filteredProducts = computed(() => allProducts.value)
 
+const productsSectionTitle = computed(() => {
+  if (!activeCategory.value) return t('product.tabAll')
+  const tab = tabs.value.find((item) => item.slug === activeCategory.value)
+  return tab?.label || t('product.tabAll')
+})
+
 watch(
   () => route.query.category,
   async (value) => {
@@ -60,7 +66,10 @@ async function onSelectCategory(slug: string) {
 </script>
 
 <template>
-  <div class="space-y-6">
+  <section class="space-y-6" aria-labelledby="products-heading">
+    <h2 id="products-heading" class="sr-only">
+      {{ productsSectionTitle }}
+    </h2>
     <div
       v-if="showCategoryTabs"
       class="sticky top-16 z-40 -mx-4 border-b border-primary-200 bg-default/95 px-4 pt-4 backdrop-blur-md supports-backdrop-filter:bg-default/90 dark:border-primary-900/50 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8"
@@ -151,5 +160,5 @@ async function onSelectCategory(slug: string) {
         @click="onSelectCategory('')"
       />
     </div>
-  </div>
+  </section>
 </template>

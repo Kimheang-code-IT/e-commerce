@@ -1,32 +1,72 @@
 <script setup lang="ts">
-const { t } = useI18n()
-const { loadCatalog, categories } = useCatalog()
-const { siteName, applyPageSeo } = useSiteSeo()
+import { buildCatalogJsonLd } from '~/utils/seo/structured-data'
+
+const { t, locale } = useI18n()
+const { loadCatalog, categories, allProducts } = useCatalog()
+const { siteName, siteUrl, apiBase, applyPageSeo, resolvePageImage } = useSiteSeo()
 
 const route = useRoute()
 const initialCategory = typeof route.query.category === 'string' ? route.query.category : ''
 await loadCatalog(initialCategory)
 
+const activeCategoryId = computed(() =>
+  typeof route.query.category === 'string' ? route.query.category : ''
+)
+
+const activeCategory = computed(() =>
+  categories.value.find((item) => item.id === activeCategoryId.value)
+)
+
 const pageTitle = computed(() => {
-  const categoryId = typeof route.query.category === 'string' ? route.query.category : ''
-  if (!categoryId) return siteName.value
-  const category = categories.value.find((item) => item.id === categoryId)
-  return category?.name ? `${category.name} | ${siteName.value}` : siteName.value
+  if (!activeCategory.value?.name) return siteName.value
+  return `${activeCategory.value.name} | ${siteName.value}`
 })
 
-applyPageSeo({
-  title: pageTitle.value,
-  description: t('home.seoDescription'),
-  keywords: t('seo.keywords')
+const pageDescription = computed(() => {
+  if (activeCategory.value?.name) {
+    return t('seo.categoryDescription', { category: activeCategory.value.name })
+  }
+  return t('home.seoDescription')
 })
 
-watch(pageTitle, (title) => {
-  applyPageSeo({
-    title,
-    description: t('home.seoDescription'),
-    keywords: t('seo.keywords')
+const pageKeywords = computed(() => {
+  if (activeCategory.value?.name) {
+    return `${t('seo.keywords')}, ${activeCategory.value.name}`
+  }
+  return t('seo.keywords')
+})
+
+const pageImage = computed(() => {
+  const firstWithImage = allProducts.value.find((item) => String(item.image || '').trim())
+  return resolvePageImage(firstWithImage?.image)
+})
+
+const pageJsonLd = computed(() =>
+  buildCatalogJsonLd({
+    siteUrl: siteUrl.value || 'https://anyamusicschool.com',
+    siteName: siteName.value,
+    products: allProducts.value,
+    apiBase: apiBase.value,
+    categoryName: activeCategory.value?.name
   })
-})
+)
+
+function syncPageSeo() {
+  applyPageSeo({
+    title: pageTitle.value,
+    description: pageDescription.value,
+    keywords: pageKeywords.value,
+    image: pageImage.value,
+    imageAlt: activeCategory.value?.name
+      ? t('seo.categoryOgImageAlt', { category: activeCategory.value.name })
+      : t('seo.defaultOgImageAlt'),
+    jsonLd: pageJsonLd.value
+  })
+}
+
+syncPageSeo()
+
+watch([pageTitle, pageDescription, pageKeywords, pageImage, pageJsonLd, locale], syncPageSeo)
 </script>
 
 <template>

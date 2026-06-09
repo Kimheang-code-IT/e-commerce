@@ -1,10 +1,16 @@
 {
   "seo": {
     "siteName": "Anya Music School",
-    "keywords": "Anya Music School, music school, guitars, musical instruments, product catalog, Cambodia, anyamusicschool"
+    "keywords": "Anya Music School, music school, guitars, musical instruments, product catalog, Cambodia, anyamusicschool",
+    "categoryDescription": "Browse {category} products at Anya Music School. Compare specs, models, colors, and prices.",
+    "defaultOgImageAlt": "Anya Music School — musical instruments and product catalog",
+    "categoryOgImageAlt": "{category} products at Anya Music School",
+    "productImageAlt": "{model} {name} — product photo",
+    "priceLabel": "Price {price}",
+    "priceWithDiscount": "Sale price {sale}, was {list}"
   },
   "home": {
-    "seoDescription": "Browse our product catalog with specs, prices, and categories."
+    "seoDescription": "Shop musical instruments and accessories at Anya Music School. Browse guitars and more with detailed specs, models, and prices in Cambodia."
   },
   "hero": {
     "productCountSuffix": "products",
@@ -59,6 +65,7 @@
     }
   },
   "a11y": {
+    "skipToProducts": "Skip to products",
     "siteBanner": "Site banner",
     "changeLanguage": "Change language",
     "localeEn": "EN",

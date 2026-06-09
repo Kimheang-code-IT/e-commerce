@@ -4,14 +4,18 @@ const DEFAULT_FALLBACK = 'https://images.unsplash.com/photo-1516321318423-f06f85
 const props = withDefaults(defineProps<{
   src?: string
   alt?: string
+  title?: string
   fallback?: string
   width?: number | string
   height?: number | string
+  sizes?: string
   loading?: 'lazy' | 'eager'
+  fetchpriority?: 'high' | 'low' | 'auto'
 }>(), {
   alt: '',
   fallback: DEFAULT_FALLBACK,
-  loading: 'lazy'
+  loading: 'lazy',
+  fetchpriority: 'auto'
 })
 
 const hasError = ref(false)
@@ -27,6 +31,11 @@ const displaySrc = computed(() => {
 })
 
 const isRemoteImage = computed(() => /^https?:\/\//.test(displaySrc.value))
+
+const resolvedFetchPriority = computed(() => {
+  if (props.fetchpriority !== 'auto') return props.fetchpriority
+  return props.loading === 'eager' ? 'high' : 'auto'
+})
 
 watch(() => props.src, () => {
   hasError.value = false
@@ -44,9 +53,12 @@ function onError() {
     v-if="isRemoteImage"
     :src="displaySrc"
     :alt="alt"
+    :title="title || alt"
     :width="width"
     :height="height"
+    :sizes="sizes"
     :loading="loading"
+    :fetchpriority="resolvedFetchPriority"
     decoding="async"
     v-bind="$attrs"
     @error="onError"
@@ -56,9 +68,12 @@ function onError() {
     v-else
     :src="displaySrc"
     :alt="alt"
+    :title="title || alt"
     :width="width"
     :height="height"
+    :sizes="sizes"
     :loading="loading"
+    :fetchpriority="resolvedFetchPriority"
     decoding="async"
     v-bind="$attrs"
     @error="onError"

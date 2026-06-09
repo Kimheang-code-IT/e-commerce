@@ -38,19 +38,25 @@ const productCount = computed(() => {
           <img
             :src="heroLight"
             :alt="t('hero.imageAlt')"
+            :title="t('hero.imageAlt')"
             width="800"
             height="600"
             loading="eager"
+            fetchpriority="high"
             decoding="async"
+            sizes="(max-width: 1024px) 100vw, 50vw"
             class="h-44 w-full max-w-xl object-contain object-center sm:h-64 lg:h-80 dark:hidden"
           >
           <img
             :src="heroDark"
             :alt="t('hero.imageAlt')"
+            :title="t('hero.imageAlt')"
             width="800"
             height="600"
             loading="eager"
+            fetchpriority="high"
             decoding="async"
+            sizes="(max-width: 1024px) 100vw, 50vw"
             class="hidden h-44 w-full max-w-xl object-contain object-center sm:h-64 lg:h-80 dark:block"
           >
         </div>

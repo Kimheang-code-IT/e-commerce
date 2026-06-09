@@ -1,6 +1,23 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 import { defineNuxtConfig } from 'nuxt/config'
 
+const apiBase = process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8000/api/v1'
+const siteUrl = process.env.NUXT_PUBLIC_SITE_URL || 'https://anyamusicschool.com'
+
+function hostnameFromUrl(value: string) {
+  try {
+    return new URL(value).hostname
+  } catch {
+    return ''
+  }
+}
+
+const imageDomains = [
+  'images.unsplash.com',
+  hostnameFromUrl(apiBase),
+  hostnameFromUrl(siteUrl)
+].filter(Boolean)
+
 export default defineNuxtConfig({
   modules: [
     '@nuxt/eslint',
@@ -44,8 +61,15 @@ export default defineNuxtConfig({
   compatibilityDate: '2024-07-11',
 
   site: {
-    url: process.env.NUXT_PUBLIC_SITE_URL || 'https://anyamusicschool.com',
+    url: siteUrl,
     name: 'Anya Music School'
+  },
+
+  app: {
+    head: {
+      charset: 'utf-8',
+      viewport: 'width=device-width, initial-scale=1'
+    }
   },
 
   nitro: {
@@ -54,7 +78,8 @@ export default defineNuxtConfig({
         '/',
         '/km',
         '/sitemap.xml',
-        '/robots.txt'
+        '/robots.txt',
+        '/site.webmanifest'
       ],
       crawlLinks: false,
       autoSubfolderIndex: false,
@@ -107,9 +132,10 @@ export default defineNuxtConfig({
   },
 
   image: {
-    domains: ['images.unsplash.com'],
+    domains: imageDomains,
     quality: 80,
-    format: ['webp']
+    format: ['webp', 'jpeg', 'png'],
+    densities: [1, 2]
   },
 
   ogImage: {
@@ -118,8 +144,8 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     public: {
-      siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'https://anyamusicschool.com',
-      apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8000/api/v1'
+      siteUrl,
+      apiBase
     }
   }
 })
