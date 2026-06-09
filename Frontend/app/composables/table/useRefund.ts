@@ -97,6 +97,7 @@ export function useRefund(options?: UseRefundOptions) {
   })
 
   async function loadRefunds() {
+    if (!autoLoad) return
     try {
       await resource.refresh()
     } catch {
@@ -298,7 +299,7 @@ export function useRefund(options?: UseRefundOptions) {
         return
       }
 
-      await loadRefunds()
+      if (autoLoad) await loadRefunds()
       await onSuccess?.()
 
       toast.add({

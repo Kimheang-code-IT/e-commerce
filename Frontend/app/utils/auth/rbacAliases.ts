@@ -35,7 +35,7 @@ export const RBAC_ALIASES: Record<string, readonly string[]> = {
   'commission:view': ['settings:commission-management:view'],
   'commission:export': ['settings:commission-management:export'],
   'refund:view': ['settings:refund-management:view'],
-  'refund:create': ['settings:refund-management:create'],
+  'refund:create': ['settings:refund-management:create', 'settings:report-management:refund'],
   'refund:delete': ['settings:refund-management:delete'],
   'dashboard:view': ['settings:dashboard-management:view'],
   'role:view': ['settings:role-management:view'],

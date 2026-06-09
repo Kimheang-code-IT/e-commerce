@@ -594,7 +594,8 @@
                 "adjustStock": "Adjust stock",
                 "viewAdjustStock": "View stock history",
                 "addDamage": "Add damaged stock",
-                "viewAddDamage": "View damaged stock"
+                "viewAddDamage": "View damaged stock",
+                "refund": "Refund from report"
             },
             "analyticsRoles": "Target Roles",
             "analyticsPermissions": "Global Permissions",

@@ -595,7 +595,8 @@
                 "adjustStock": "កែស្តុក",
                 "viewAdjustStock": "មើលប្រវត្តិស្តុក",
                 "addDamage": "បន្ថែមស្តុកខូច",
-                "viewAddDamage": "មើលស្តុកខូច"
+                "viewAddDamage": "មើលស្តុកខូច",
+                "refund": "សងប្រាក់ពីរបាយការណ៍"
             },
             "analyticsRoles": "តួនាទីសរុប",
             "analyticsPermissions": "ការអនុញ្ញាតសកម្មភាព",

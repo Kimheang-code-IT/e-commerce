@@ -46,7 +46,10 @@ ALIASES: dict[str, tuple[str, ...]] = {
     "commission:export": ("settings:commission-management:export",),
     # Refund permissions
     "refund:view": ("settings:refund-management:view",),
-    "refund:create": ("settings:refund-management:create",),
+    "refund:create": (
+        "settings:refund-management:create",
+        "settings:report-management:refund",
+    ),
     "refund:delete": ("settings:refund-management:delete",),
     # dashboard permissions
     "dashboard:view": ("settings:dashboard-management:view",),

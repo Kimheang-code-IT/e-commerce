@@ -43,6 +43,7 @@ const ACTION_I18N_KEY: Record<string, string> = {
   'view-adjust-stock': 'pages.roleManagement.actions.viewAdjustStock',
   'add-damage': 'pages.roleManagement.actions.addDamage',
   'view-add-damage': 'pages.roleManagement.actions.viewAddDamage',
+  refund: 'pages.roleManagement.actions.refund',
 }
 
 export function parseRolePermissionToken(token: string): { page: string; action: string } | null {

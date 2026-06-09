@@ -24,7 +24,7 @@ export const PAGE_PERMISSION_MAP: Record<string, string[]> = {
   ],
   'settings:pos-management': ['view', 'checkout'],
   'settings:finance-management': ['view', 'update'],
-  'settings:report-management': ['view', 'export'],
+  'settings:report-management': ['view', 'export', 'refund'],
   'settings:refund-management': ['view', 'create', 'delete'],
   'settings:delivery-management': ['view', 'update', 'export'],
   'settings:history-management': ['view', 'export'],

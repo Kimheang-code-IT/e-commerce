@@ -80,6 +80,7 @@ export function useSystemRoleManagement() {
         'view-adjust-stock',
         'add-damage',
         'view-add-damage',
+        'refund',
     ] as const
 
     const roleSummary = computed(() => ({
