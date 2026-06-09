@@ -38,7 +38,7 @@ function handlePageChange(page: number) {
 </script>
 
 <template>
-  <div class="flex flex-row items-center justify-between border-t border-accented py-2 px-3 gap-2 shrink-0 bg-background/50 w-full overflow-hidden">
+  <div class="flex flex-row items-center justify-between border-t border-default py-2 px-3 gap-2 shrink-0 bg-neutral-50 dark:bg-slate-900 w-full overflow-hidden">
     <!-- Rows per page selector (Left) -->
     <div class="flex items-center gap-1 shrink-0">
       <span class="text-[10px] text-muted-foreground whitespace-nowrap hidden sm:inline">{{ $t('components.rowsPerPage') }}</span>

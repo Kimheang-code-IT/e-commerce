@@ -1,9 +1,9 @@
 <template>
-  <div class="flex flex-col w-full h-full min-h-0 overflow-hidden bg-background">
+  <div class="flex flex-col w-full h-full min-h-0 overflow-hidden border border-default bg-background">
     <!-- Header Toolbar -->
     <div
       v-if="title || $slots.header || globalFilter !== undefined || columnVisibility !== undefined || filterValue !== undefined || filterValueSecondary !== undefined"
-      class="flex flex-row items-center gap-2 px-3 py-2.5 border-b border-accented shrink-0 overflow-hidden">
+      class="flex flex-row items-center gap-2 px-3 py-2.5 border-b border-default shrink-0 overflow-hidden">
       <div class="flex-1 flex items-center gap-2 min-w-0">
         <ClientOnly>
           <div v-if="title" class="min-w-0 hidden md:block">
@@ -46,14 +46,14 @@
         thead: 'sticky top-0 inset-x-0 z-20 bg-neutral-100 dark:bg-slate-800',
         th: 'py-2 px-3 text-sm font-normal text-muted-foreground bg-neutral-100 dark:bg-slate-800 whitespace-nowrap',
         tfoot: 'sticky bottom-0 inset-x-0 z-20 bg-neutral-100 dark:bg-slate-800 border-t border-default shadow-[0_-2px_8px_rgba(0,0,0,0.06)] dark:shadow-[0_-2px_8px_rgba(0,0,0,0.25)]',
-        tr: 'border-b border-accented/50 last:border-b-0',
+        tr: 'border-b border-default last:border-b-0',
         td: 'py-2 px-3 text-sm font-normal'
       }">
       <!-- Loading State: Skeleton Rows -->
       <template #loading-state>
         <div class="flex flex-col">
           <div v-for="i in 8" :key="i"
-            class="flex items-center gap-4 px-4 py-4 border-b border-accented/50 last:border-0">
+            class="flex items-center gap-4 px-4 py-4 border-b border-default last:border-0">
             <USkeleton class="h-4 w-8 shrink-0" />
             <USkeleton class="h-4 w-24 shrink-0" />
             <USkeleton class="h-4 flex-1" />
