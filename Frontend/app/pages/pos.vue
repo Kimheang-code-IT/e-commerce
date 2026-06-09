@@ -180,12 +180,12 @@ const previewCart = computed(() => {
                 </template>
             </div>
         </template>
-        <div v-if="!isInvoicePreviewMode" class="lg:hidden pb-20 lg:pb-0">
+        <div v-if="!isInvoicePreviewMode" class="lg:hidden shrink-0 border-b border-default">
             <UTabs v-model="mobilePanel" :items="mobilePanelItems" :content="false" color="primary" class="w-full" />
         </div>
 
         <!-- ── Body: Split Layout ── -->
-        <div class="flex flex-col lg:flex-row flex-1 overflow-hidden min-h-0">
+        <div class="flex flex-col lg:flex-row flex-1 min-h-0 overflow-hidden">
             <div :class="[
                 isInvoicePreviewMode ? 'flex' : (mobilePanel === 'left' ? 'flex' : 'hidden'),
                 isInvoicePreviewMode ? 'lg:flex w-full' : 'lg:flex w-full lg:w-[65%]',
@@ -210,7 +210,7 @@ const previewCart = computed(() => {
                                 color="neutral"
                                 variant="soft"
                                 size="md"
-                                icon="i-lucide-panel-left-open"
+                                icon="i-lucide-search"
                                 :aria-label="t('common.search')"
                                 @click="posSearchExpanded = true"
                             />
@@ -235,7 +235,7 @@ const previewCart = computed(() => {
                     </div>
 
                     <!-- Product Area — scrollable -->
-                    <div class="flex-1 overflow-y-auto p-3 pb-20 relative">
+                    <div class="flex-1 overflow-y-auto px-3 pt-2 pb-20 lg:p-3 relative">
 
                         <!-- Empty State -->
                         <div v-if="!isLoadingProducts && filteredProducts.length === 0"

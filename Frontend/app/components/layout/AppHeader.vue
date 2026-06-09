@@ -4,14 +4,11 @@ interface Props {
   showDatepicker?: boolean
   /** Hide menu toggle (e.g. POS fullscreen uses Dashboard link instead). */
   hideSidebarToggle?: boolean
-  /** Full-width body on mobile (no m-2 inset). Used by POS. */
-  flush?: boolean
 }
 
 withDefaults(defineProps<Props>(), {
   showDatepicker: false,
   hideSidebarToggle: false,
-  flush: false,
 })
 
 const route = useRoute()
@@ -22,11 +19,8 @@ const panelId = computed(() => {
 </script>
 
 <template>
-  <UDashboardPanel
-    :id="panelId"
-    class="flex flex-1 flex-col min-w-0 h-full"
-    :ui="{ body: 'flex flex-1 flex-col min-h-0 overflow-hidden p-0 m-0 gap-0' }"
-  >
+  <UDashboardPanel :id="panelId" class="flex flex-1 flex-col min-w-0 h-full"
+    :ui="{ body: 'flex flex-1 flex-col min-h-0 overflow-hidden p-0 m-0 gap-0' }">
     <template #header>
       <UDashboardNavbar :title="title" :toggle="!hideSidebarToggle">
         <template #left>
@@ -46,9 +40,7 @@ const panelId = computed(() => {
 
     <template #body>
       <div
-        class="flex flex-1 flex-col min-h-0 overflow-hidden bg-background text-foreground tracking-tight"
-        :class="flush ? '-m-4' : 'm-2 md:-m-4'"
-      >
+        class="flex flex-1 flex-col min-h-0 m-2 md:-m-4 overflow-hidden bg-background text-foreground tracking-tight">
         <slot />
       </div>
     </template>
