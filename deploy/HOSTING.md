@@ -73,14 +73,16 @@ Services:
 
 ## 5. Build and deploy admin (static)
 
-On the server:
+On the server (uses Docker — no Node/pnpm install on the host):
 
 ```bash
 chmod +x deploy/scripts/build-admin.sh
 ./deploy/scripts/build-admin.sh
 ```
 
-Or on Windows before upload:
+Output is copied to `/var/www/anyamusicschool-admin` for nginx.
+
+Or on Windows before upload (requires local pnpm):
 
 ```powershell
 .\deploy\scripts\build-admin.ps1
