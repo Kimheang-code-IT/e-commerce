@@ -22,7 +22,7 @@ const panelId = computed(() => {
   <UDashboardPanel
     :id="panelId"
     class="flex flex-1 flex-col min-w-0 h-full"
-    :ui="{ body: 'flex flex-1 flex-col min-h-0 p-0 m-0 overflow-hidden' }"
+    :ui="{ body: 'flex flex-1 flex-col min-h-0 -m-2 -p-2 overflow-hidden' }"
   >
     <template #header>
       <UDashboardNavbar :title="title" :toggle="!hideSidebarToggle">
@@ -42,7 +42,7 @@ const panelId = computed(() => {
     </template>
 
     <template #body>
-      <div class="flex flex-1 flex-col min-h-0 overflow-hidden bg-background text-foreground tracking-tight">
+      <div class="flex flex-1 flex-col min-h-0 -m-2 -p-2 overflow-hidden bg-background text-foreground tracking-tight">
         <slot />
       </div>
     </template>
