@@ -1,5 +1,9 @@
 # Hosting: anyamusicschool.com
 
+**Hostinger VPS:** `srv1740865` — IP `187.127.109.98`
+
+> **Full Hostinger guide:** [deploy/HOSTINGER.md](./HOSTINGER.md) — start here for step-by-step hPanel + SSH setup.
+
 | URL | App | Access |
 |-----|-----|--------|
 | https://anyamusicschool.com | `website_business` | Public — no login, SEO + sitemap |
@@ -11,13 +15,24 @@ Backend API and uploads are **not** exposed directly; nginx proxies `/api/v1/` a
 
 ## 1. DNS
 
-Point these A records to your server IP:
+Point these A records to **`187.127.109.98`** (your VPS):
 
 | Host | Type | Value |
 |------|------|-------|
-| `@` | A | your-server-ip |
-| `www` | A | your-server-ip |
-| `admin` | A | your-server-ip |
+| `@` | A | `187.127.109.98` |
+| `www` | A | `187.127.109.98` |
+| `admin` | A | `187.127.109.98` |
+
+At your domain registrar (where you bought `anyamusicschool.com`), add the three rows above. DNS can take 5–60 minutes to propagate.
+
+Check from your PC:
+
+```bash
+ping anyamusicschool.com
+ping admin.anyamusicschool.com
+```
+
+Both should resolve to `187.127.109.98`.
 
 ---
 
