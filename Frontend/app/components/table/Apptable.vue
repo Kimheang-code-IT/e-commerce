@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col w-full h-full overflow-hidden border border-default rounded-xs bg-background shadow-sm">
+  <div class="flex flex-col w-full h-full min-h-0 overflow-hidden bg-background">
     <!-- Header Toolbar -->
     <div
       v-if="title || $slots.header || globalFilter !== undefined || columnVisibility !== undefined || filterValue !== undefined || filterValueSecondary !== undefined"

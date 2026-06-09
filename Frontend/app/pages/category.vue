@@ -69,7 +69,7 @@ watch(newDescription, (value) => {
                 v-if="showCategoryForm"
                 :class="[
                     mobileView === 'form' ? 'flex' : 'hidden',
-                    'lg:flex w-full lg:w-[30%] lg:shrink-0 flex-col gap-4 p-5 border border-default overflow-y-auto'
+                    'lg:flex w-full lg:w-[30%] lg:shrink-0 flex-col gap-4 p-5 border-r border-default overflow-y-auto'
                 ]"
             >
                 <h2 class="text-base font-semibold text-foreground">{{ $t('category.addTitle') }}</h2>

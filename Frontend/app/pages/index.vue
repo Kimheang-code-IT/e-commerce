@@ -84,7 +84,7 @@ const userSalePieData = computed<PieDataPoint[]>(() =>
         v-for="(stat, idx) in summaryStats"
         :key="idx"
       >
-        <UCard class="shadow-sm border-accented">
+        <UCard class="rounded-none shadow-none border-0 border-b border-r border-default">
           <div class="flex items-center gap-3">
             <div class="p-2 bg-primary/10 rounded-lg">
               <UIcon
@@ -116,7 +116,7 @@ const userSalePieData = computed<PieDataPoint[]>(() =>
     >
       <!-- Left: Cambodia Map (Customer Buy Analytics) -->
       <UCard
-        class="lg:col-span-8 shadow-sm border-accented flex flex-col overflow-hidden"
+        class="lg:col-span-8 rounded-none shadow-none border-0 border-b border-r border-default flex flex-col overflow-hidden"
         :style="{ minHeight: SECTION_HEIGHT.DASHBOARD }"
         :ui="{ body: 'p-0 flex-1 min-h-0' }"
       >
@@ -154,7 +154,7 @@ const userSalePieData = computed<PieDataPoint[]>(() =>
         :style="{ minHeight: SECTION_HEIGHT.DASHBOARD }"
       >
         <UCard
-          class="shadow-sm border-accented relative min-h-0 overflow-hidden flex flex-col basis-[52%] p-0"
+          class="rounded-none shadow-none border-0 border-b border-default relative min-h-0 overflow-hidden flex flex-col basis-[52%] p-0"
         >
           <template #header>
             <h3 class="font-normal text-sm">
@@ -171,7 +171,7 @@ const userSalePieData = computed<PieDataPoint[]>(() =>
         </UCard>
 
         <UCard
-          class="shadow-sm border-accented relative min-h-0 overflow-hidden flex flex-col"
+          class="rounded-none shadow-none border-0 border-b border-default relative min-h-0 overflow-hidden flex flex-col"
         >
           <template #header>
             <h3 class="font-normal text-sm">
