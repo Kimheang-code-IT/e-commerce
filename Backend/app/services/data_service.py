@@ -129,18 +129,28 @@ def batch_stock_totals(db: Session, product_ids: list[int]) -> tuple[dict[int, i
     return added, damaged
 
 
+def catalog_display_prices(row: Product) -> tuple[float, float, float]:
+    """List price, sale price, and out price for public catalog cards."""
+    out_price = float(row.out_price or 0)
+    list_price = out_price or float(getattr(row, "total_price", 0) or 0)
+    stored_sale = float(getattr(row, "discount_price", 0) or 0)
+    if stored_sale > 0 and stored_sale < list_price:
+        return list_price, stored_sale, out_price
+    return list_price, list_price, out_price
+
+
 def serialize_catalog_product(row: Product) -> dict[str, Any]:
     category_public = Category.to_public_id(row.category_id) if row.category_id else ""
-    total_price = float(getattr(row, "total_price", 0) or row.out_price or 0)
-    discount_price = float(getattr(row, "discount_price", 0) or 0)
+    list_price, sale_price, out_price = catalog_display_prices(row)
     return {
         "id": str(row.id),
         "category": category_public,
         "image": public_image_url(getattr(row, "image", None) or ""),
         "model": getattr(row, "model", None) or "",
         "name": row.name,
-        "discountPrice": discount_price,
-        "totalPrice": total_price,
+        "outPrice": out_price,
+        "discountPrice": sale_price,
+        "totalPrice": list_price,
         "size": getattr(row, "size", None) or "",
         "top": getattr(row, "top", None) or "",
         "backSide": getattr(row, "back_side", None) or "",
@@ -166,7 +176,7 @@ def serialize_product(
         "name": row.name,
         "model": getattr(row, "model", None) or "",
         "discountPrice": float(getattr(row, "discount_price", 0) or 0),
-        "totalPrice": float(getattr(row, "total_price", 0) or row.out_price or 0),
+        "totalPrice": float(row.out_price or getattr(row, "total_price", 0) or 0),
         "size": getattr(row, "size", None) or "",
         "top": getattr(row, "top", None) or "",
         "backSide": getattr(row, "back_side", None) or "",

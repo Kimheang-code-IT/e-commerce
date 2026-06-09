@@ -35,8 +35,9 @@ const filteredCourses = computed(() => {
     const haystack = [
       item.model,
       item.name,
+      String(item.outPrice ?? ''),
       String(item.discountPrice ?? ''),
-      String(item.totalPrice),
+      String(item.totalPrice ?? ''),
       item.size,
       item.top,
       item.backSide,

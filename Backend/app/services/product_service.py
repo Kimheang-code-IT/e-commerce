@@ -192,8 +192,12 @@ def create_product_service(*, db: Session, body: ProductCreatePayload, user_id: 
         db,
         name=body.name,
         model=body.model,
-        discount_price=body.discountPrice,
-        total_price=body.totalPrice or body.outPrice,
+        discount_price=(
+            body.discountPrice
+            if body.discountPrice > 0 and body.discountPrice < body.outPrice
+            else 0
+        ),
+        total_price=body.outPrice,
         size=body.size,
         top=body.top,
         back_side=body.backSide,
@@ -297,10 +301,12 @@ def update_product_service(*, db: Session, item_id: int, body: ProductUpdatePayl
     row.category_id = next_category_id
     if body.model is not None:
         row.model = body.model
+    if body.outPrice is not None:
+        row.total_price = body.outPrice
     if body.discountPrice is not None:
-        row.discount_price = body.discountPrice
-    if body.totalPrice is not None:
-        row.total_price = body.totalPrice
+        out_p = float(body.outPrice if body.outPrice is not None else row.out_price or 0)
+        sale = float(body.discountPrice or 0)
+        row.discount_price = sale if sale > 0 and sale < out_p else 0
     if body.size is not None:
         row.size = body.size
     if body.top is not None:

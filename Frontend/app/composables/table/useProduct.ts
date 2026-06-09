@@ -17,7 +17,26 @@ import { useCategoryOptions } from "~/composables/data/useCategoryOptions";
 type ProductFormPayload = Omit<Product, "image"> & {
   image?: unknown;
   imageCurrent?: string;
+  /** USD or % off outPrice for public website display (form-only). */
+  websiteDiscount?: number;
 };
+
+function websiteDiscountFromProduct(entry: Pick<Product, "outPrice" | "discountPrice">): number {
+  const out = Number(entry.outPrice ?? 0);
+  const sale = Number(entry.discountPrice ?? 0);
+  if (out > 0 && sale > 0 && sale < out) return Math.round((out - sale) * 100) / 100;
+  return 0;
+}
+
+function catalogPricesFromForm(outPrice: number, websiteDiscount: number) {
+  const out = Math.max(0, Number(outPrice ?? 0));
+  const discountOff = Math.max(0, Number(websiteDiscount ?? 0));
+  const sale =
+    discountOff > 0 && discountOff < out
+      ? Math.round((out - discountOff) * 100) / 100
+      : 0;
+  return { totalPrice: out, discountPrice: sale };
+}
 type ProductApiPayload = {
   name: string;
   model?: string;
@@ -326,24 +345,6 @@ export function useProduct() {
       textRule: "text",
     },
     {
-      key: "discountPrice",
-      label: t("product.discountPrice"),
-      type: "currency",
-      placeholder: "0.00",
-      required: false,
-      min: 0,
-      currencyPrefix: "USD",
-    },
-    {
-      key: "totalPrice",
-      label: t("product.totalPrice"),
-      type: "currency",
-      placeholder: "0.00",
-      required: false,
-      min: 0,
-      currencyPrefix: "USD",
-    },
-    {
       key: "size",
       label: t("product.size"),
       type: "input",
@@ -432,6 +433,15 @@ export function useProduct() {
       currencyPrefix: "USD",
     },
     {
+      key: "websiteDiscount",
+      label: t("product.websiteDiscount"),
+      type: "money-tabs",
+      refPriceKey: "outPrice",
+      placeholder: "0.00",
+      required: false,
+      min: 0,
+    },
+    {
       key: "commission",
       label: t("product.commission"),
       type: "money-tabs",
@@ -470,6 +480,7 @@ export function useProduct() {
           selectedEntry.value = {
             ...entry,
             supplierId: resolvedSupplierId,
+            websiteDiscount: websiteDiscountFromProduct(entry),
           };
           isFormOpen.value = true;
         },
@@ -567,11 +578,16 @@ export function useProduct() {
   function toProductApiPayload(
     data: Partial<Product> | null | undefined,
   ): ProductApiPayload {
+    const outPrice = Number(data?.outPrice ?? 0);
+    const { totalPrice, discountPrice } = catalogPricesFromForm(
+      outPrice,
+      Number((data as ProductFormPayload)?.websiteDiscount ?? websiteDiscountFromProduct(data as Product)),
+    );
     return {
       name: String(data?.name || "").trim(),
       model: String(data?.model || "").trim(),
-      discountPrice: Number(data?.discountPrice ?? 0),
-      totalPrice: Number(data?.totalPrice ?? data?.outPrice ?? 0),
+      discountPrice,
+      totalPrice,
       size: String(data?.size || "").trim(),
       top: String(data?.top || "").trim(),
       backSide: String(data?.backSide || "").trim(),
@@ -585,7 +601,7 @@ export function useProduct() {
           ? Number(data.supplierId)
           : undefined,
       inPrice: Number(data?.inPrice ?? 0),
-      outPrice: Number(data?.outPrice ?? 0),
+      outPrice,
       commission: Number(data?.commission ?? 0),
       totalStock: Number(data?.totalStock ?? 0),
       inStock: Number(data?.inStock ?? 0),

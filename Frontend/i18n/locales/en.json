@@ -641,6 +641,7 @@
         "modelPlaceholder": "e.g. AG-40-SS",
         "discountPrice": "Discount Price",
         "totalPrice": "Total Price",
+        "websiteDiscount": "Website discount",
         "size": "Size",
         "sizePlaceholder": "e.g. 40 INCH",
         "top": "Top",
