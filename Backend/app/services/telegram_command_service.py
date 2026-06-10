@@ -176,6 +176,7 @@ class TelegramCommandService:
                 "/category",
                 "/product",
                 "/payment",
+                "/reward",
                 "/commission",
                 "/product_report",
             }:
@@ -188,6 +189,8 @@ class TelegramCommandService:
                     await self.prompt_product_list(chat_id)
                 elif command == "/payment":
                     await self.prompt_payment_list(chat_id)
+                elif command == "/reward":
+                    await self.prompt_reward_list(chat_id)
                 elif command == "/commission":
                     await self.prompt_commission_list(chat_id)
                 elif command == "/product_report":
@@ -217,6 +220,9 @@ class TelegramCommandService:
             return
         elif "payment" in lower_text:
             await self.prompt_payment_list(chat_id)
+            return
+        elif "reward" in lower_text:
+            await self.prompt_reward_list(chat_id)
             return
         elif "commission" in lower_text:
             await self.prompt_commission_list(chat_id)
@@ -285,6 +291,9 @@ class TelegramCommandService:
             if type_prefix == "payment_price":
                 await self.prompt_payment_list(chat_id)
                 return
+            if type_prefix == "reward_product":
+                await self.prompt_reward_list(chat_id)
+                return
             if type_prefix == "commission_user":
                 await self.prompt_commission_list(chat_id)
                 return
@@ -328,6 +337,19 @@ class TelegramCommandService:
             )
             return
 
+        if data.startswith("rwd_select_"):
+            reward_key = data.replace("rwd_select_", "")
+            if reward_key == "all":
+                user_report_context[chat_id] = {}
+            else:
+                user_report_context[chat_id] = {"reward_id": int(reward_key)}
+            await self._menu_reply(
+                chat_id,
+                "📅 <b>Select Period</b>\nChoose a period for this reward report:",
+                telegram_menu_service.get_date_menu("rwd_detail"),
+            )
+            return
+
         if data.startswith("usr_select_"):
             user_key = data.replace("usr_select_", "")
             if user_key == "all":
@@ -346,13 +368,14 @@ class TelegramCommandService:
             await self.process_date_callback(chat_id, data)
 
     def _detail_report_types(self) -> set[str]:
-        return {"prod_detail", "cat_detail", "pay_detail", "usr_detail"}
+        return {"prod_detail", "cat_detail", "pay_detail", "rwd_detail", "usr_detail"}
 
     def _menu_prefix_for_report(self, report_type: str) -> str:
         return {
             "prod_detail": "product_report",
             "cat_detail": "category_price",
             "pay_detail": "payment_price",
+            "rwd_detail": "reward_product",
             "usr_detail": "commission_user",
         }.get(report_type, report_type)
 
@@ -433,6 +456,15 @@ class TelegramCommandService:
                 )
                 await self._send_chunked_report(chat_id, menu_prefix, messages)
                 return
+            if report_type == "rwd_detail":
+                messages = report_service.format_reward_report_messages(
+                    db,
+                    start,
+                    end,
+                    reward_id=ctx.get("reward_id"),
+                )
+                await self._send_chunked_report(chat_id, menu_prefix, messages)
+                return
             if report_type == "usr_detail":
                 messages = report_service.format_commission_report_messages(
                     db,
@@ -482,6 +514,15 @@ class TelegramCommandService:
                 chat_id,
                 "💳 <b>Payment Report</b>\nSelect a payment method:",
                 telegram_menu_service.get_payment_list_menu(methods),
+            )
+
+    async def prompt_reward_list(self, chat_id: str):
+        with next(get_db()) as db:
+            rewards = report_repo.get_all_rewards(db)
+            await self._menu_reply(
+                chat_id,
+                "🎁 <b>Reward Report</b>\nSelect a reward bundle:",
+                telegram_menu_service.get_reward_list_menu(rewards),
             )
 
     async def prompt_commission_list(self, chat_id: str):

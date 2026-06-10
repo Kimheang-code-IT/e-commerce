@@ -5,6 +5,7 @@ class TelegramMenuService:
                 [{"text": "📦 Product Report", "callback_data": "main_product_report"}],
                 [{"text": "📁 Category Report", "callback_data": "main_category_price"}],
                 [{"text": "💳 Payment Report", "callback_data": "main_payment_price"}],
+                [{"text": "🎁 Reward Report", "callback_data": "main_reward_product"}],
                 [{"text": "👤 Commission Report", "callback_data": "main_commission_user"}],
                 [{"text": "📊 Backup Google Sheets", "callback_data": "main_google_backup"}]
             ]
@@ -36,7 +37,7 @@ class TelegramMenuService:
         return {
             "keyboard": [
                 [{"text": "📦 Product Report"}, {"text": "📁 Category"}],
-                [{"text": "💳 Payment"}],
+                [{"text": "💳 Payment"}, {"text": "🎁 Reward"}],
                 [{"text": "👤 Commission"}, {"text": "📊 Backup Google Sheets"}],
             ],
             "resize_keyboard": True,
@@ -61,6 +62,15 @@ class TelegramMenuService:
         for m in methods:
             name = m['payment_method']
             keyboard.append([{"text": f"💳 {name}", "callback_data": f"pay_select_{name}"}])
+        keyboard.append([{"text": "⬅️ Back to Main Menu", "callback_data": "back_main"}])
+        return {"inline_keyboard": keyboard}
+
+    def get_reward_list_menu(self, rewards):
+        keyboard = [[{"text": "🎁 All Rewards", "callback_data": "rwd_select_all"}]]
+        for reward in rewards:
+            keyboard.append(
+                [{"text": f"🎁 {reward['name']}", "callback_data": f"rwd_select_{reward['id']}"}]
+            )
         keyboard.append([{"text": "⬅️ Back to Main Menu", "callback_data": "back_main"}])
         return {"inline_keyboard": keyboard}
 

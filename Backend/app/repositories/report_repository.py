@@ -735,4 +735,56 @@ class ReportRepository:
             for r in results
         ]
 
+    def get_all_rewards(self, db: Session):
+        query = text(
+            "SELECT id, name FROM rewards WHERE status = 'active' ORDER BY name ASC"
+        )
+        rows = db.execute(query).fetchall()
+        return [{"id": int(r[0]), "name": r[1]} for r in rows]
+
+    def get_period_reward_product_rows(
+        self,
+        db: Session,
+        start_date=None,
+        end_date=None,
+        *,
+        reward_id: int | None = None,
+    ):
+        """Reward lines are checkout items with price/total = 0 (free POS reward bundles)."""
+        query = text("""
+            SELECT
+                COALESCE(p.name, ci.product_name, 'Unknown') AS product_name,
+                COALESCE(SUM(ci.quantity), 0) AS reward_qty,
+                COALESCE(SUM(ci.quantity * COALESCE(p.out_price, 0)), 0) AS reward_price_total
+            FROM checkout_items ci
+            INNER JOIN invoices i ON i.id = ci.invoice_id
+            LEFT JOIN products p ON p.id = ci.product_id
+            WHERE i.status = 'paid'
+              AND ci.price = 0
+              AND ci.total = 0
+              AND (:start_date IS NULL OR i.created_at >= :start_date)
+              AND (:end_date IS NULL OR i.created_at <= :end_date)
+              AND (
+                :reward_id IS NULL
+                OR ci.product_id IN (
+                    SELECT product_id FROM reward_products WHERE reward_id = :reward_id
+                )
+              )
+            GROUP BY COALESCE(p.name, ci.product_name, 'Unknown'), p.id
+            HAVING COALESCE(SUM(ci.quantity), 0) > 0
+            ORDER BY product_name ASC
+        """)
+        rows = db.execute(
+            query,
+            {"start_date": start_date, "end_date": end_date, "reward_id": reward_id},
+        ).fetchall()
+        return [
+            {
+                "product_name": r[0] or "Unknown",
+                "reward_qty": int(r[1] or 0),
+                "reward_price_total": float(r[2] or 0),
+            }
+            for r in rows
+        ]
+
 report_repo = ReportRepository()

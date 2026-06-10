@@ -289,6 +289,23 @@ class ReportService:
             f"- total income : ${float(row.get('grand_total') or 0):.2f}\n"
         )
 
+    def _format_reward_product_block(self, row: dict, *, escape) -> str:
+        name = escape((row.get("product_name") or "").strip() or "Unknown")
+        return (
+            f"+ {name}\n"
+            f"- total stock reward : {int(row.get('reward_qty') or 0)}\n"
+            f"- Total Price Reward : ${float(row.get('reward_price_total') or 0):.2f}\n"
+        )
+
+    def _scoped_reward_footer(self, rows: list[dict]) -> str:
+        total_qty = sum(int(row.get("reward_qty") or 0) for row in rows)
+        total_price = sum(float(row.get("reward_price_total") or 0) for row in rows)
+        return (
+            "\n-------------------------------------------\n"
+            f"Total Product Reward : {total_qty}\n"
+            f"Total Price Reward : ${total_price:.2f}\n"
+        )
+
     def _scoped_category_footer(self, rows: list[dict], expense_total: float) -> str:
         sale_total = sum(float(row.get("sale_total") or 0) for row in rows)
         return (
@@ -421,6 +438,32 @@ class ReportService:
                 blocks.append(self._format_payment_block(row, escape=_escape_telegram_html))
 
         footer = self._scoped_payment_footer(payments)
+        return self._chunk_report_lines(header, blocks, footer)
+
+    def format_reward_report_messages(
+        self,
+        db: Session,
+        start_date=None,
+        end_date=None,
+        *,
+        reward_id: int | None = None,
+    ) -> list[str]:
+        from app.services.alert_service import _escape_telegram_html
+
+        start, end = self._normalize_period_bounds(start_date, end_date)
+        products = report_repo.get_period_reward_product_rows(
+            db, start, end, reward_id=reward_id
+        )
+
+        header = self._period_report_header("Reward Product", start_date, end_date, _escape_telegram_html)
+        blocks: list[str] = []
+        if not products:
+            blocks.append("<i>No reward activity in this period.</i>\n")
+        else:
+            for row in products:
+                blocks.append(self._format_reward_product_block(row, escape=_escape_telegram_html))
+
+        footer = self._scoped_reward_footer(products)
         return self._chunk_report_lines(header, blocks, footer)
 
     def format_period_product_report_messages(
