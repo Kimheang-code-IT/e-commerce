@@ -28,6 +28,8 @@ export const PERMISSIONS = {
   refundView: 'refund:view',
   refundCreate: 'refund:create',
   refundDelete: 'refund:delete',
+  /** Refund from report page (role token: settings:report-management:refund). */
+  reportRefund: 'report:refund',
   deliveryView: 'delivery:view',
   deliveryUpdate: 'delivery:update',
   deliveryExport: 'delivery:export',

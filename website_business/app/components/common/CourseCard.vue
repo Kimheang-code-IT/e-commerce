@@ -81,7 +81,7 @@ const specRows = computed(() => [
 
 <template>
   <article
-    class="flex w-full flex-col overflow-hidden rounded-sm border border-default bg-elevated shadow-sm"
+    class="flex w-full flex-col overflow-hidden rounded-sm border border-default bg-elevated shadow-sm dark:shadow-black/20"
     :aria-label="`${course.model} ${course.name}`"
   >
     <div
@@ -98,12 +98,12 @@ const specRows = computed(() => [
       />
     </div>
 
-    <div class="flex flex-1 flex-col bg-white px-3 py-4 text-black sm:px-4 sm:py-5">
+    <div class="flex flex-1 flex-col bg-white px-3 py-4 text-foreground dark:bg-[#0f172a] sm:px-4 sm:py-5">
       <div class="text-center">
-        <h3 class="text-base font-bold uppercase leading-snug text-red-600 sm:text-lg md:text-xl">
+        <h3 class="text-base font-bold uppercase leading-snug text-red-600 dark:text-red-400 sm:text-lg md:text-xl">
           {{ course.model }}
         </h3>
-        <p class="mt-1.5 text-sm font-semibold uppercase leading-snug text-blue-800 sm:text-base md:text-lg">
+        <p class="mt-1.5 text-sm font-semibold uppercase leading-snug text-blue-800 dark:text-blue-300 sm:text-base md:text-lg">
           {{ course.name }}
         </p>
 
@@ -113,7 +113,7 @@ const specRows = computed(() => [
             ? t('seo.priceWithDiscount', { sale: formattedSalePrice, list: formattedListPrice })
             : t('seo.priceLabel', { price: formattedSalePrice })"
         >
-          <p class="text-xl font-bold leading-none text-red-600 sm:text-2xl md:text-3xl" aria-hidden="true">
+          <p class="text-xl font-bold leading-none text-red-600 dark:text-red-400 sm:text-2xl md:text-3xl" aria-hidden="true">
             {{ formattedSalePrice }}
           </p>
           <p
@@ -126,13 +126,13 @@ const specRows = computed(() => [
         </div>
       </div>
 
-      <div class="my-3 border-t border-dashed border-black/50 sm:my-4" />
+      <div class="my-3 border-t border-dashed border-black/50 dark:border-white/25 sm:my-4" />
 
       <ul class="space-y-1 text-sm font-semibold leading-relaxed sm:text-base md:text-lg">
         <li
           v-for="(row, index) in specRows"
           :key="row.key"
-          :class="index % 2 === 0 ? 'text-red-600' : 'text-blue-800'"
+          :class="index % 2 === 0 ? 'text-red-600 dark:text-red-400' : 'text-blue-800 dark:text-blue-300'"
         >
           - {{ row.label }} : {{ row.value }}
         </li>

@@ -125,17 +125,14 @@ export function useReport(handlers?: ReportRowActionHandlers) {
     rowSelection.value = next
   })
 
+  const canRefund = computed(
+    () =>
+      auth.hasPermission('refund:create') || auth.hasPermission('report:refund'),
+  )
+
   function getDropdownActions(row: ReportRow): DropdownMenuItem[][] {
     if (!handlers) return []
     const items: DropdownMenuItem[] = []
-    if (auth.hasPermission('refund:create')) {
-      items.push({
-        label: t('pages.report.actions.refund'),
-        icon: 'i-lucide-rotate-ccw',
-        color: 'warning',
-        onSelect: () => handlers.onRefund(row)
-      })
-    }
     if (handlers.onPreview && (auth.hasPermission('pos:view') || auth.hasPermission('pos:checkout'))) {
       items.push({
         label: t('pages.report.actions.preview'),
@@ -172,6 +169,7 @@ export function useReport(handlers?: ReportRowActionHandlers) {
     someFilteredSelected,
     toggleSelectAllFiltered,
     columns,
+    canRefund,
     getDropdownActions,
     totalRows: resource.totalRows,
     refresh: () => resource.refresh()

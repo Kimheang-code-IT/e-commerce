@@ -27,6 +27,7 @@ export const RBAC_ALIASES: Record<string, readonly string[]> = {
   'finance:update': ['settings:finance-management:update'],
   'report:view': ['settings:report-management:view'],
   'report:export': ['settings:report-management:export'],
+  'report:refund': ['settings:report-management:refund'],
   'delivery:view': ['settings:delivery-management:view'],
   'delivery:update': ['settings:delivery-management:update'],
   'delivery:export': ['settings:delivery-management:export'],

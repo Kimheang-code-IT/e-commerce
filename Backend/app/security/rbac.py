@@ -34,6 +34,7 @@ ALIASES: dict[str, tuple[str, ...]] = {
     # Report permissions
     "report:view": ("settings:report-management:view",),
     "report:export": ("settings:report-management:export",),
+    "report:refund": ("settings:report-management:refund",),
     # Delivery permissions
     "delivery:view": ("settings:delivery-management:view",),
     "delivery:update": ("settings:delivery-management:update",),

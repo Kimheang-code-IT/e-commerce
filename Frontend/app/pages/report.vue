@@ -49,6 +49,7 @@ const {
   selectedProducts,
   selectedProvinces,
   columns,
+  canRefund,
   getDropdownActions,
   isLoading,
   refresh: refreshReports
@@ -146,6 +147,34 @@ async function fetchReportExportData(args: { startDate?: string; endDate?: strin
         </template>
         <template #invoiceNo-cell="{ row }">
           <span class="text-sm font-medium">{{ row.original.invoiceNo }}</span>
+        </template>
+
+        <template #action-cell="{ row }">
+          <div class="flex items-center gap-1">
+            <UButton
+              v-if="canRefund"
+              icon="i-lucide-rotate-ccw"
+              color="warning"
+              variant="soft"
+              size="xs"
+              @click="openRefundDialog(row.original)"
+            >
+              <span class="hidden sm:inline">{{ t('pages.report.actions.refund') }}</span>
+            </UButton>
+            <UDropdownMenu
+              v-if="getDropdownActions(row.original).length"
+              :items="getDropdownActions(row.original)"
+              :content="{ align: 'end' }"
+            >
+              <UButton
+                icon="i-lucide-ellipsis-vertical"
+                color="neutral"
+                variant="ghost"
+                class="rounded-md"
+                size="sm"
+              />
+            </UDropdownMenu>
+          </div>
         </template>
       </TableApptable>
       <CommonAppExport v-model:open="isExportOpen" :data="filteredReportRows" :fetch-export-data="fetchReportExportData"

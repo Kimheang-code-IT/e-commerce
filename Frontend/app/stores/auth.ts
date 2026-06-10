@@ -23,7 +23,7 @@ export const useAuthStore = defineStore('auth', () => {
   const pageAccess = computed<string[]>(() => {
     const data = user.value
     if (data && Array.isArray(data.pageAccess)) {
-      return data.pageAccess.map((x: unknown) => String(x))
+      return data.pageAccess.map((x: unknown) => String(x).toLowerCase())
     }
     return []
   })
