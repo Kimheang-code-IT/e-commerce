@@ -38,18 +38,6 @@ export default defineAppConfig({
     to: '/'
   },
   footer: {
-    nav: [
-      { slug: 'about' },
-      { slug: 'team' },
-      { slug: 'careers' },
-      { slug: 'jobs' },
-      { slug: 'contact' },
-      { slug: 'terms' },
-      { slug: 'privacy' },
-      { slug: 'refund' },
-      { slug: 'cookies' },
-      { slug: 'faq' }
-    ],
-    social: SOCIAL_LINKS
+    nav: SOCIAL_LINKS
   }
 })

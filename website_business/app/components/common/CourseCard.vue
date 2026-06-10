@@ -20,14 +20,11 @@ export interface CourseCardItem {
 </script>
 
 <script setup lang="ts">
-import { useSocialLinks } from '~/composables/useSocialLinks'
-
 const props = defineProps<{
   course: CourseCardItem
 }>()
 
 const { t } = useI18n()
-const socialLinks = useSocialLinks()
 
 function formatPrice(price: string | number) {
   if (typeof price === 'number') {
@@ -60,14 +57,25 @@ const imageAlt = computed(() =>
   })
 )
 
+/** Product spec labels — English only (not localized). */
+const SPEC_LABELS = {
+  size: 'Size',
+  top: 'Top',
+  backSide: 'Back & Side',
+  fretboard: 'Fretboard',
+  string: 'String',
+  finishing: 'Finishing',
+  color: 'Color',
+} as const
+
 const specRows = computed(() => [
-  { key: 'size', label: t('product.spec.size'), value: props.course.size },
-  { key: 'top', label: t('product.spec.top'), value: props.course.top },
-  { key: 'backSide', label: t('product.spec.backSide'), value: props.course.backSide },
-  { key: 'fretboard', label: t('product.spec.fretboard'), value: props.course.fretboard },
-  { key: 'string', label: t('product.spec.string'), value: props.course.string },
-  { key: 'finishing', label: t('product.spec.finishing'), value: props.course.finishing },
-  { key: 'color', label: t('product.spec.color'), value: props.course.color },
+  { key: 'size', label: SPEC_LABELS.size, value: props.course.size },
+  { key: 'top', label: SPEC_LABELS.top, value: props.course.top },
+  { key: 'backSide', label: SPEC_LABELS.backSide, value: props.course.backSide },
+  { key: 'fretboard', label: SPEC_LABELS.fretboard, value: props.course.fretboard },
+  { key: 'string', label: SPEC_LABELS.string, value: props.course.string },
+  { key: 'finishing', label: SPEC_LABELS.finishing, value: props.course.finishing },
+  { key: 'color', label: SPEC_LABELS.color, value: props.course.color },
 ])
 </script>
 
@@ -129,27 +137,6 @@ const specRows = computed(() => [
           - {{ row.label }} : {{ row.value }}
         </li>
       </ul>
-
-      <div
-        v-if="socialLinks.length"
-        class="mt-4 flex flex-wrap items-center justify-center gap-2 border-t border-dashed border-black/30 pt-3"
-      >
-        <a
-          v-for="link in socialLinks"
-          :key="link.label"
-          :href="link.to"
-          target="_blank"
-          rel="noopener noreferrer"
-          :aria-label="link.label"
-          :title="link.label"
-          :class="[
-            'flex size-8 items-center justify-center rounded-md text-white transition-colors',
-            link.class
-          ]"
-        >
-          <UIcon :name="link.icon" class="size-4" />
-        </a>
-      </div>
     </div>
   </article>
 </template>
