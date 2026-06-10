@@ -17,6 +17,7 @@ useHead({
     { name: 'mobile-web-app-capable', content: 'yes' }
   ],
   link: [
+    { rel: 'shortcut icon', type: 'image/png', href: '/image/logo.png' },
     { rel: 'icon', type: 'image/png', sizes: '48x48', href: '/image/logo.png' },
     { rel: 'icon', type: 'image/png', sizes: '192x192', href: '/image/logo.png' },
     { rel: 'apple-touch-icon', href: '/image/logo.png' },
