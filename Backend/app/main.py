@@ -16,7 +16,7 @@ from app.api.v1.routes import router as api_router
 from app.core.config import settings
 from app.core.database import Base, engine
 from app.core.logging_config import setup_logging
-from app.core.health import run_health_checks
+from app.core.health import is_live, run_health_checks
 from app.core.scheduler import start_scheduler, shutdown_scheduler
 
 setup_logging()
@@ -45,19 +45,24 @@ app.add_middleware(RateLimitMiddleware)
 
 def init_db() -> None:
     """Create tables from SQLAlchemy models (aligned with `e-commerce.sql`)."""
-    # Prevent replica startup races (e.g. duplicate *_id_seq) by serializing schema init.
-    with engine.begin() as conn:
+    from app.core.stock_lot_migration import ensure_stock_lot_schema
+    from app.core.product_catalog_migration import ensure_product_catalog_schema
+    from app.core.search_index_migration import ensure_search_indexes
+
+    # Serialize schema init across uvicorn workers without holding a DB transaction
+    # open during slow migrations (that would block the second worker until timeout).
+    conn = engine.connect()
+    try:
         conn.execute(text("SELECT pg_advisory_lock(572901, 1)"))
         try:
-            Base.metadata.create_all(bind=conn)
-            from app.core.stock_lot_migration import ensure_stock_lot_schema
-            from app.core.product_catalog_migration import ensure_product_catalog_schema
-            from app.core.search_index_migration import ensure_search_indexes
+            Base.metadata.create_all(bind=engine)
             ensure_stock_lot_schema()
             ensure_product_catalog_schema()
             ensure_search_indexes()
         finally:
             conn.execute(text("SELECT pg_advisory_unlock(572901, 1)"))
+    finally:
+        conn.close()
 
 
 @app.middleware("http")
@@ -90,7 +95,7 @@ async def global_error_handler(request: Request, exc: Exception):
 
 def _health_response():
     payload = run_health_checks()
-    if payload["status"] != "ok":
+    if not is_live(payload):
         return JSONResponse(status_code=503, content=payload)
     return payload
 
@@ -107,7 +112,11 @@ def api_health():
 
 @app.on_event("startup")
 def on_startup():
-    init_db()
+    try:
+        init_db()
+    except Exception:
+        logger.exception("Database initialization failed")
+        raise
     start_scheduler()
 @app.on_event("shutdown")
 def on_shutdown():

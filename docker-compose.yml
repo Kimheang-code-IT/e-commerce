@@ -10,6 +10,10 @@ services:
       - ./Backend/.env
     environment:
       BACKEND_REPLICAS: ${BACKEND_REPLICAS:-1}
+      # Override .env localhost defaults — use Compose service hostnames inside the stack.
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
     command:
       - uvicorn
       - app.main:app
@@ -37,7 +41,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
-      start_period: 60s
+      start_period: 120s
     depends_on:
       db:
         condition: service_healthy
@@ -85,6 +89,10 @@ services:
       dockerfile: Dockerfile
     env_file:
       - ./Backend/.env
+    environment:
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
     command:
       - celery
       - -A
@@ -124,6 +132,10 @@ services:
     command: python -m app.scripts.telegram_polling
     env_file:
       - ./Backend/.env
+    environment:
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
     depends_on:
       db:
         condition: service_healthy
@@ -162,6 +174,10 @@ services:
     command: celery -A app.core.celery_app.celery_app beat --loglevel=INFO
     env_file:
       - ./Backend/.env
+    environment:
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
     depends_on:
       db:
         condition: service_healthy

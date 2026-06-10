@@ -33,8 +33,18 @@ def run_health_checks() -> dict:
         "database": {"status": "ok" if db_ok else "error", "detail": db_detail},
         "redis": {"status": "ok" if redis_ok else "error", "detail": redis_detail},
     }
-    healthy = db_ok and redis_ok
+    if not db_ok:
+        status = "error"
+    elif not redis_ok:
+        status = "degraded"
+    else:
+        status = "ok"
     return {
-        "status": "ok" if healthy else "degraded",
+        "status": status,
         "checks": checks,
     }
+
+
+def is_live(payload: dict) -> bool:
+    """Container / load-balancer liveness: API is up when Postgres is reachable."""
+    return payload["checks"]["database"]["status"] == "ok"
