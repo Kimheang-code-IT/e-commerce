@@ -31,7 +31,7 @@ def list_rewards(
     dateTo: str | None = None,
     sortBy: str | None = None,
     sortOrder: str | None = Query(None, pattern="^(asc|desc)$"),
-    _: User = Depends(require_any_permission("product:view", "pos:view")),
+    _: User = Depends(require_permission("reward:view")),
     db: Session = Depends(get_db),
 ):
     q = list_rewards_query(
@@ -47,7 +47,7 @@ def list_rewards(
 
 @router.get("/rewards/pos")
 def list_pos_rewards(
-    _: User = Depends(require_permission("pos:view")),
+    _: User = Depends(require_any_permission("pos:view", "reward:view")),
     db: Session = Depends(get_db),
 ):
     q = list_rewards_query(active_only=True, sort_by="name", sort_order="asc")
@@ -59,7 +59,7 @@ def list_pos_rewards(
 def create_reward_route(
     body: RewardCreatePayload,
     current_user: User = Depends(get_current_user),
-    _: User = Depends(require_permission("product:create")),
+    _: User = Depends(require_permission("reward:create")),
     db: Session = Depends(get_db),
 ):
     product_ids = [item.productId for item in body.products]
@@ -83,7 +83,7 @@ def update_reward_route(
     item_id: int,
     body: RewardUpdatePayload,
     current_user: User = Depends(get_current_user),
-    _: User = Depends(require_permission("product:update")),
+    _: User = Depends(require_permission("reward:update")),
     db: Session = Depends(get_db),
 ):
     if body.products is not None:
@@ -111,7 +111,7 @@ def update_reward_route(
 def delete_reward_route(
     item_id: int,
     current_user: User = Depends(get_current_user),
-    _: User = Depends(require_permission("product:delete")),
+    _: User = Depends(require_permission("reward:delete")),
     db: Session = Depends(get_db),
 ):
     row = db.get(Reward, item_id)

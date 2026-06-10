@@ -610,6 +610,7 @@
                 "category": "Category",
                 "supplier": "Supplier",
                 "product": "Product",
+                "reward": "Rewards",
                 "pos": "POS",
                 "finance": "Finance",
                 "report": "Report",

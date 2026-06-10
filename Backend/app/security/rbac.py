@@ -23,6 +23,23 @@ ALIASES: dict[str, tuple[str, ...]] = {
     "product:view-adjust-stock": ("settings:product-management:view-adjust-stock",),
     "product:add-damage": ("settings:product-management:add-damage",),
     "product:view-add-damage": ("settings:product-management:view-add-damage",),
+    # Reward permissions (product-management tokens kept for existing roles)
+    "reward:view": (
+        "settings:reward-management:view",
+        "settings:product-management:view",
+    ),
+    "reward:create": (
+        "settings:reward-management:create",
+        "settings:product-management:create",
+    ),
+    "reward:update": (
+        "settings:reward-management:update",
+        "settings:product-management:update",
+    ),
+    "reward:delete": (
+        "settings:reward-management:delete",
+        "settings:product-management:delete",
+    ),
     # POS permissions
     "pos:view": ("settings:pos-management:view",),
     "pos:checkout": ("settings:pos-management:checkout",),

@@ -19,7 +19,7 @@ export function useReward() {
   const productApi = useProductApi()
   const { formattedRange } = useGlobalFilter()
   const { t, toast, rowSelection, columnVisibility, isConfirmOpen } = useBaseTable({})
-  const perms = useModulePermissions('product')
+  const perms = useModulePermissions('reward')
 
   const { sorting, columnFilters, pagination, serverQuery } = useTableQuery({
     initialSorting: [{ id: 'id', desc: true }],

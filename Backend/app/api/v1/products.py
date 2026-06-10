@@ -53,7 +53,16 @@ def get_product_stock_status(
 def list_products(
     query: ListQuery = Depends(list_query_dependency),
     category: str | None = None,
-    _: User = Depends(require_any_permission("product:view", "dashboard:view", "pos:view")),
+    _: User = Depends(
+        require_any_permission(
+            "product:view",
+            "dashboard:view",
+            "pos:view",
+            "reward:view",
+            "reward:create",
+            "reward:update",
+        )
+    ),
     db: Session = Depends(get_db),
 ):
     return list_products_service(db=db, query=query, category=category)
@@ -63,7 +72,16 @@ def list_products(
 def list_products_view(
     query: ListQuery = Depends(list_query_dependency),
     category: str | None = None,
-    _: User = Depends(require_any_permission("product:view", "dashboard:view", "pos:view")),
+    _: User = Depends(
+        require_any_permission(
+            "product:view",
+            "dashboard:view",
+            "pos:view",
+            "reward:view",
+            "reward:create",
+            "reward:update",
+        )
+    ),
     db: Session = Depends(get_db),
 ):
     """Aligned with SQL view `products_view` (implemented via aggregates + product rows)."""
