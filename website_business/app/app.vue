@@ -1,8 +1,19 @@
 <script setup lang="ts">
+const config = useRuntimeConfig()
 const { seo } = useAppConfig()
 const { locale, t } = useI18n()
 
 const siteName = computed(() => seo?.siteName || t('seo.siteName'))
+const siteUrl = computed(() => String(config.public.siteUrl || '').replace(/\/+$/, ''))
+
+const verificationMeta = computed(() => {
+  const tags: { name: string, content: string }[] = []
+  const google = String(config.public.googleSiteVerification || '').trim()
+  const bing = String(config.public.bingSiteVerification || '').trim()
+  if (google) tags.push({ name: 'google-site-verification', content: google })
+  if (bing) tags.push({ name: 'msvalidate.01', content: bing })
+  return tags
+})
 
 useHead({
   meta: [
@@ -12,12 +23,14 @@ useHead({
     { name: 'application-name', content: siteName.value },
     { name: 'apple-mobile-web-app-title', content: siteName.value },
     { name: 'apple-mobile-web-app-capable', content: 'yes' },
-    { name: 'mobile-web-app-capable', content: 'yes' }
+    { name: 'mobile-web-app-capable', content: 'yes' },
+    ...verificationMeta.value
   ],
   link: [
     { rel: 'icon', type: 'image/png', href: '/image/logo.png' },
     { rel: 'apple-touch-icon', href: '/image/logoapp.png' },
-    { rel: 'manifest', href: '/site.webmanifest' }
+    { rel: 'manifest', href: '/site.webmanifest' },
+    ...(siteUrl.value ? [{ rel: 'sitemap', type: 'application/xml', href: `${siteUrl.value}/sitemap.xml` }] : [])
   ],
   htmlAttrs: {
     lang: locale

@@ -47,7 +47,8 @@ const pageJsonLd = computed(() =>
     siteName: siteName.value,
     products: allProducts.value,
     apiBase: apiBase.value,
-    categoryName: activeCategory.value?.name
+    categoryName: activeCategory.value?.name,
+    sameAs: (useAppConfig().social || []).map((link: { to: string }) => link.to).filter(Boolean)
   })
 )
 

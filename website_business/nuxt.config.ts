@@ -146,7 +146,9 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       siteUrl,
-      apiBase
+      apiBase,
+      googleSiteVerification: process.env.NUXT_PUBLIC_GOOGLE_SITE_VERIFICATION || '',
+      bingSiteVerification: process.env.NUXT_PUBLIC_BING_SITE_VERIFICATION || ''
     }
   }
 })

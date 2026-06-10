@@ -22,12 +22,11 @@ export function normalizeSiteUrl(value: string | undefined) {
 }
 
 export function buildLocalizedPaths(path = '', categoryId = '') {
+  const normalizedPath = path ? `/${path.replace(/^\/+/, '')}` : ''
   const query = categoryId ? `?category=${encodeURIComponent(categoryId)}` : ''
-  const suffix = `${path}${query}`
-  return {
-    en: suffix || '/',
-    km: `/km${suffix}`
-  }
+  const en = normalizedPath ? `${normalizedPath}${query}` : query ? `/${query}` : '/'
+  const km = normalizedPath ? `/km${normalizedPath}${query}` : query ? `/km${query}` : '/km'
+  return { en, km }
 }
 
 export function buildSitemapXml(entries: SitemapEntry[]) {
