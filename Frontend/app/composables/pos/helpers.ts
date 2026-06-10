@@ -194,6 +194,7 @@ export function resetCustomerForm() {
     customerName: '',
     customerPhone: '',
     customerAddress: '',
+    addressNote: '',
     deliveryType: 'VET',
     deliveryPrice: 2,
     deliveryDate: new Date().toISOString(),

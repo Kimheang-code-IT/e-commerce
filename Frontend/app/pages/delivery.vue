@@ -84,6 +84,10 @@ function goToInvoice(row: any) {
           </div>
         </template>
 
+        <template #seller-cell="{ row }">
+          <span class="text-sm font-medium text-foreground">{{ row.original.seller || '—' }}</span>
+        </template>
+
         <template #customer-cell="{ row }">
           <span class="text-sm text-foreground">{{ row.original.customer || '—' }}</span>
         </template>

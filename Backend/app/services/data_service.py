@@ -261,8 +261,8 @@ def serialize_commission_row(ci: CheckoutItem, inv: Invoice, seller: User | None
     }
 
 
-def serialize_delivery_invoice(inv: Invoice) -> dict[str, Any]:
-    return {
+def serialize_delivery_invoice(inv: Invoice, *, seller: str | None = None) -> dict[str, Any]:
+    payload = {
         "id": inv.id,
         "no": inv.id,
         "invoiceNo": inv.invoice_no,
@@ -275,6 +275,9 @@ def serialize_delivery_invoice(inv: Invoice) -> dict[str, Any]:
         "total": float(inv.total or 0),
         "date": to_iso(inv.created_at),
     }
+    if seller is not None:
+        payload["seller"] = seller
+    return payload
 
 
 def serialize_role(row: Role) -> dict[str, Any]:

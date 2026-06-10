@@ -250,6 +250,7 @@ export function usePos() {
     customerName: customer.customerName,
     customerPhone: customer.customerPhone,
     customerAddress: customer.customerAddress,
+    addressNote: customer.addressNote,
     deliveryType: customer.deliveryType,
     deliveryPrice: customer.deliveryPrice,
     deliveryDate: customer.deliveryDate,

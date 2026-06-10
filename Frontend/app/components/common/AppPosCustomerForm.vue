@@ -5,12 +5,14 @@ import {
   POS_WALK_IN_DELIVERY_TYPE,
   usePosFormOptions
 } from '~/composables/pos/usePosFormOptions'
+import { usePosInvoiceTerms } from '~/composables/pos/usePosInvoiceTerms'
 import { sanitizeByTextRule } from '~/utils/validation/textRules'
 
 const customerType = defineModel<string>('customerType', { required: true })
 const customerName = defineModel<string>('customerName', { required: true })
 const customerPhone = defineModel<string>('customerPhone', { required: true })
 const customerAddress = defineModel<string>('customerAddress', { required: true })
+const addressNote = defineModel<string>('addressNote', { default: '' })
 const deliveryType = defineModel<string>('deliveryType', { required: true })
 const deliveryPrice = defineModel<number>('deliveryPrice', { required: true })
 const deliveryDate = defineModel<string>('deliveryDate', { required: true })
@@ -39,6 +41,11 @@ watch(customerPhone, (value) => {
   const sanitized = sanitizeByTextRule('numeric', String(value || ''))
   if (sanitized !== value) customerPhone.value = sanitized
 })
+
+watch(addressNote, (value) => {
+  const sanitized = sanitizeByTextRule('text', String(value || ''))
+  if (sanitized !== value) addressNote.value = sanitized
+})
 const deliveryDatePart = ref('')
 const deliveryTimePart = ref('')
 
@@ -47,6 +54,7 @@ const {
   paymentMethodItems,
   addressItems: provinceItems
 } = usePosFormOptions()
+const { termsTitle, termsLines } = usePosInvoiceTerms()
 
 const deliveryPriceError = computed(() => {
   const v = Number(deliveryPrice.value)
@@ -81,6 +89,7 @@ function onSelectCustomerType(type: string) {
     customerName.value = 'Walk-in'
     customerPhone.value = '000000000'
     customerAddress.value = POS_WALK_IN_ADDRESS
+    addressNote.value = ''
     deliveryType.value = POS_WALK_IN_DELIVERY_TYPE
     paymentMethod.value = 'cash'
     deliveryStatus.value = 'pending'
@@ -90,6 +99,7 @@ function onSelectCustomerType(type: string) {
   customerName.value = ''
   customerPhone.value = ''
   customerAddress.value = ''
+  addressNote.value = ''
   deliveryType.value = 'VET'
   paymentMethod.value = 'cash'
 }
@@ -292,6 +302,27 @@ watch([deliveryDatePart, deliveryTimePart], () => {
             size="lg"
             class="w-full mt-1"
           />
+        </div>
+
+        <div class="space-y-1.5 w-full">
+          <label class="text-sm text-muted-foreground">{{ $t('pages.pos.customer.form.addressNote') }}</label>
+          <UTextarea
+            v-model="addressNote"
+            :placeholder="$t('pages.pos.customer.form.addressNotePlaceholder')"
+            :rows="3"
+            size="lg"
+            class="w-full mt-1"
+          />
+        </div>
+
+        <div class="rounded-lg border border-default bg-muted/30 p-3 space-y-2">
+          <h3 class="text-xs font-bold text-muted-foreground uppercase tracking-widest">
+            {{ termsTitle }}
+          </h3>
+          <div v-for="(line, index) in termsLines" :key="index" class="space-y-1">
+            <p class="text-sm text-foreground font-semibold">{{ line.km }}</p>
+            <p class="text-sm text-muted-foreground font-medium">{{ line.en }}</p>
+          </div>
         </div>
       </div>
     </div>

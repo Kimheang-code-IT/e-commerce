@@ -5,11 +5,14 @@ import { useDeliveryApi } from '~/utils/api'
 import { useBaseTable } from '~/composables/table/useBaseTable'
 import { useServerListTable } from '~/features/shared/useServerListTable'
 import { useViewFilterOptions } from '~/composables/useViewFilterOptions'
+import { useAuthStore } from '~/stores/auth'
 import { formatCurrency } from '~/utils/format/currency'
 
 export function useDelivery() {
   const { t } = useI18n()
+  const auth = useAuthStore()
   const perms = useModulePermissions('delivery')
+  const isAdmin = computed(() => auth.hasRole(['admin']))
   const deliveryApi = useDeliveryApi()
   const { rowSelection, columnVisibility } = useBaseTable({})
   const localRows = ref<DeliveryEntry[]>([])
@@ -52,8 +55,12 @@ export function useDelivery() {
     pagination.value.pageIndex = 0
   })
 
-  const columns = computed<TableColumn<DeliveryEntry>[]>(() => [
+  const columns = computed<TableColumn<DeliveryEntry>[]>(() => {
+    const base: TableColumn<DeliveryEntry>[] = [
     { accessorKey: 'invoiceNo', header: t('pages.delivery.columns.invoiceNo'), footer: `Count: ${deliverySummary.value.count}` },
+    ...(isAdmin.value
+      ? [{ accessorKey: 'seller', header: t('pages.delivery.columns.seller') } satisfies TableColumn<DeliveryEntry>]
+      : []),
     { accessorKey: 'customer', header: t('pages.delivery.columns.customer') },
     { accessorKey: 'address', header: t('pages.delivery.columns.address') },
     { accessorKey: 'deliveryType', header: t('pages.delivery.columns.deliveryType') },
@@ -62,7 +69,9 @@ export function useDelivery() {
     { accessorKey: 'total', header: t('pages.delivery.columns.total'), footer: formatCurrency(deliverySummary.value.totalSum, 'USD') },
     { accessorKey: 'date', header: t('pages.delivery.columns.date') },
     { id: 'actions', header: '' },
-  ])
+    ]
+    return base
+  })
 
   async function updateStatus(invoiceId: string, status: string) {
     await deliveryApi.updateStatus(invoiceId, status)
@@ -99,5 +108,6 @@ export function useDelivery() {
     updateAllPendingToDelivered,
     canUpdate: perms.canUpdate,
     canExport: perms.canExport,
+    isAdmin,
   }
 }

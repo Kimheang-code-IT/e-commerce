@@ -145,7 +145,7 @@
             "toastDeleted": "Category deleted"
         },
         "supplier": {
-            "title": "Supplier Management",
+            "title": "Supplier",
             "tableTitle": "Suppliers",
             "addBtn": "Add Supplier",
             "formTitleNew": "Add Supplier",
@@ -218,6 +218,8 @@
                     "deliveryPrice": "Delivery Price",
                     "address": "Address",
                     "addressPlaceholder": "Select a province...",
+                    "addressNote": "Note",
+                    "addressNotePlaceholder": "Add delivery note or special instructions...",
                     "deliveryDate": "Delivery Date",
                     "paymentMethod": "Payment Method",
                     "deliveryStatus": "Delivery Status",
@@ -547,6 +549,7 @@
                 "no": "No.",
                 "invoiceId": "Invoice No.",
                 "invoiceNo": "Invoice No.",
+                "seller": "Seller",
                 "customer": "Customer",
                 "address": "Address",
                 "deliveryType": "Delivery Type",

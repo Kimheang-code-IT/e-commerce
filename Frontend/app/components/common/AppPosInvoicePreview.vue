@@ -5,6 +5,7 @@ import {
   buildInvoiceDisplayRows,
   type PosCartItem,
 } from '~/composables/pos/helpers'
+import { usePosInvoiceTerms } from '~/composables/pos/usePosInvoiceTerms'
 import logo from '~/assets/images/logo.png'
 
 const { t } = useI18n()
@@ -29,6 +30,7 @@ const props = defineProps<{
   customerPhone: string
   deliveryType: string
   deliveryPrice: number
+  addressNote?: string
   selectedReportInvoice: ReportInvoice | null
   checkoutInvoiceNo?: string
   displaySubtotal: number
@@ -36,7 +38,12 @@ const props = defineProps<{
   displayTotal: number
 }>()
 
+const { termsTitle, termsLines } = usePosInvoiceTerms()
 const displayRows = computed(() => buildInvoiceDisplayRows(props.cart ?? []))
+const displayAddressNote = computed(() => {
+  const fromReport = String((props.selectedReportInvoice as { addressNote?: string } | null)?.addressNote || '').trim()
+  return fromReport || String(props.addressNote || '').trim()
+})
 </script>
 
 <template>
@@ -148,10 +155,14 @@ const displayRows = computed(() => buildInvoiceDisplayRows(props.cart ?? []))
             <div class="grid grid-cols-[1fr_250px] gap-8">
               <div class="space-y-4">
                 <div class="space-y-2 mt-4">
-                  <h3 class="text-[12px] font-bold text-slate-500 uppercase tracking-widest">{{
-                    t('pages.pos.invoice.terms.title') }}</h3>
-                  <p class="text-[14px] text-slate-600 font-bold">{{ t('pages.pos.invoice.terms.km') }}</p>
-                  <p class="text-[14px] text-slate-400 font-bold">{{ t('pages.pos.invoice.terms.en') }}</p>
+                  <h3 class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">{{ termsTitle }}</h3>
+                  <div v-for="(line, index) in termsLines" :key="index" class="space-y-1">
+                    <p class="text-[12px] text-slate-600 font-bold">{{ line.km }}</p>
+                    <p class="text-[12px] text-slate-400 font-bold">{{ line.en }}</p>
+                  </div>
+                  <p v-if="displayAddressNote" class="text-[12px] text-slate-700 font-semibold whitespace-pre-wrap pt-1">
+                    {{ displayAddressNote }}
+                  </p>
                 </div>
               </div>
 

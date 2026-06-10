@@ -129,6 +129,7 @@ export interface ReportRow {
 export interface DeliveryEntry {
   invoiceId: string
   invoiceNo?: string
+  seller?: string
   customer?: string
   address: string
   deliveryType: 'VET' | 'Domnaksiiksa' | 'Grap' | 'J&T' | string

@@ -28,6 +28,7 @@ const {
     customerName,
     customerPhone,
     customerAddress,
+    addressNote,
     deliveryType,
     deliveryPrice,
     deliveryDate,
@@ -266,7 +267,8 @@ const previewCart = computed(() => {
                 <!-- ══ LEFT: Customer Info Panel ══ -->
                 <CommonAppPosCustomerForm v-else-if="currentStep === 1" v-model:customer-type="customerType"
                     v-model:customer-name="customerName" v-model:customer-phone="customerPhone"
-                    v-model:customer-address="customerAddress" v-model:delivery-type="deliveryType"
+                    v-model:customer-address="customerAddress" v-model:address-note="addressNote"
+                    v-model:delivery-type="deliveryType"
                     v-model:delivery-price="deliveryPrice" v-model:delivery-date="deliveryDate"
                     v-model:payment-method="paymentMethod" v-model:delivery-status="deliveryStatus"
                     v-model:seller-id="sellerId" />
@@ -284,6 +286,7 @@ const previewCart = computed(() => {
                                     :customer-phone="group.header.phoneCustomer || customerPhone"
                                     :delivery-type="group.header.deliveryType || deliveryType"
                                     :delivery-price="group.header.deliveryPrice || 0"
+                                    :address-note="group.header.addressNote || addressNote"
                                     :selected-report-invoice="group.header" :display-subtotal="group.subtotal"
                                     :display-discount="group.header.discount || 0"
                                     :display-total="group.subtotal - (group.header.discount || 0)" />
@@ -294,6 +297,7 @@ const previewCart = computed(() => {
                             :customer-phone="selectedReportInvoice?.phoneCustomer || customerPhone"
                             :delivery-type="selectedReportInvoice?.deliveryType || deliveryType"
                             :delivery-price="selectedReportInvoice?.deliveryPrice || deliveryPrice"
+                            :address-note="selectedReportInvoice?.addressNote || addressNote"
                             :selected-report-invoice="selectedReportInvoice" :checkout-invoice-no="checkoutInvoiceNo"
                             :display-subtotal="displaySubtotal" :display-discount="displayDiscount"
                             :display-total="displayTotal" />

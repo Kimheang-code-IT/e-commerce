@@ -3,8 +3,9 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.models import Invoice
+from app.models import Invoice, User
 from app.schemas.common import DeliveryUpdatePayload
+from app.security import user_has_role
 from app.services.auth_service import get_current_user, require_permission
 from app.services.cache_service import invalidate_after_checkout
 from app.services.data_service import (
@@ -22,6 +23,20 @@ from app.shared.pagination_constants import MAX_LIST_PAGE_SIZE
 router = APIRouter(prefix="/deliveries-view", tags=["deliveries-view"], dependencies=[Depends(get_current_user)])
 
 
+def _delivery_scope_user_id(user: User) -> int | None:
+    """Admins see all deliveries; everyone else sees only their own checkouts."""
+    if user_has_role(user, "admin"):
+        return None
+    return user.id
+
+
+def _base_query(*, seller_user_id: int | None = None):
+    q = select(Invoice, User).join(User, Invoice.user_id == User.id)
+    if seller_user_id is not None:
+        q = q.where(Invoice.user_id == seller_user_id)
+    return q
+
+
 @router.get("")
 def list_deliveries_view(
     page: int = Query(1, ge=1),
@@ -34,16 +49,17 @@ def list_deliveries_view(
     dateTo: str | None = None,
     sortBy: str | None = None,
     sortOrder: str | None = Query(None, pattern="^(asc|desc)$"),
-    _=Depends(require_permission("delivery:view")),
+    current_user=Depends(require_permission("delivery:view")),
     db: Session = Depends(get_db),
 ):
-    q = select(Invoice)
+    q = _base_query(seller_user_id=_delivery_scope_user_id(current_user))
     if search:
         keyword = search.strip()
         q = q.where(
             Invoice.invoice_no.ilike(f"%{keyword}%")
             | Invoice.customer_name.ilike(f"%{keyword}%")
             | Invoice.customer_address.ilike(f"%{keyword}%")
+            | User.name.ilike(f"%{keyword}%")
         )
     addresses = parse_csv(address)
     if addresses:
@@ -62,6 +78,7 @@ def list_deliveries_view(
         {
             "id": Invoice.id,
             "invoiceId": Invoice.invoice_no,
+            "seller": User.name,
             "address": Invoice.customer_address,
             "deliveryType": Invoice.delivery_type,
             "deliveryPrice": Invoice.delivery_price,
@@ -70,7 +87,7 @@ def list_deliveries_view(
         },
     )
     rows, total = paginate_query(q, db, page, limit)
-    data = [serialize_delivery_invoice(row[0]) for row in rows]
+    data = [serialize_delivery_invoice(inv, seller=seller.name) for inv, seller in rows]
     return list_response(data, total)
 
 
@@ -85,6 +102,10 @@ def update_delivery_status(
     inv = db.scalar(select(Invoice).where(Invoice.invoice_no == invoice_no))
     if not inv:
         raise HTTPException(status_code=404, detail="Invoice not found")
+
+    scope_user_id = _delivery_scope_user_id(current_user)
+    if scope_user_id is not None and inv.user_id != scope_user_id:
+        raise HTTPException(status_code=403, detail="Not allowed to update this delivery")
 
     old_status = inv.delivery_status
     inv.delivery_status = payload.deliveryStatus
@@ -107,7 +128,15 @@ def update_delivery_status(
 def deliveries_filter_options(
     dateFrom: str | None = None,
     dateTo: str | None = None,
-    _=Depends(require_permission("delivery:view")),
+    current_user=Depends(require_permission("delivery:view")),
     db: Session = Depends(get_db),
 ):
-    return {"data": delivery_filter_options(db, date_from=dateFrom, date_to=dateTo)}
+    scope_user_id = _delivery_scope_user_id(current_user)
+    return {
+        "data": delivery_filter_options(
+            db,
+            date_from=dateFrom,
+            date_to=dateTo,
+            seller_user_id=scope_user_id,
+        )
+    }
