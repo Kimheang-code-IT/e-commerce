@@ -60,10 +60,11 @@ def start_scheduler():
             return
         scheduler.start()
         logger.info(
-            "Scheduler started (%s). Backup=%s at %s; low-stock every 2h",
+            "Scheduler started (%s). Backup=%s at %s; low-stock=%s",
             settings.scheduler_timezone,
             settings.google_backup_enabled,
             settings.google_backup_time,
+            settings.LOW_STOCK_ALERT_ENABLED,
         )
     except Exception as e:
         logger.error(f"Failed to start scheduler: {e}")

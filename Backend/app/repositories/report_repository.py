@@ -354,6 +354,124 @@ class ReportRepository:
             for r in rows
         ]
 
+    def get_period_product_report_rows(self, db: Session, start_date=None, end_date=None):
+        """Per-product stats for Telegram period reports (sales, refunds, stock, damage)."""
+        query = text("""
+            WITH sold AS (
+                SELECT
+                    ci.product_id,
+                    MAX(ci.product_name) AS product_name,
+                    COALESCE(SUM(ci.quantity), 0) AS sold_qty,
+                    COALESCE(SUM(ci.total), 0) AS sale_total
+                FROM checkout_items ci
+                INNER JOIN invoices i ON i.id = ci.invoice_id
+                WHERE i.status = 'paid'
+                  AND (:start_date IS NULL OR i.created_at >= :start_date)
+                  AND (:end_date IS NULL OR i.created_at <= :end_date)
+                  AND ci.id NOT IN (
+                      SELECT checkout_item_id FROM refund_records
+                      WHERE checkout_item_id IS NOT NULL
+                  )
+                GROUP BY ci.product_id
+            ),
+            refunds AS (
+                SELECT
+                    product_id,
+                    COALESCE(SUM(qty), 0) AS refund_qty,
+                    COALESCE(SUM(amount), 0) AS refund_amount
+                FROM refund_records
+                WHERE product_id IS NOT NULL
+                  AND (:start_date IS NULL OR refunded_at >= :start_date)
+                  AND (:end_date IS NULL OR refunded_at <= :end_date)
+                GROUP BY product_id
+            ),
+            additions AS (
+                SELECT
+                    product_id,
+                    COALESCE(SUM(qty), 0) AS added_qty,
+                    COALESCE(SUM(qty * in_price), 0) AS added_price
+                FROM product_stock_additions
+                WHERE (:start_date IS NULL OR created_at >= :start_date)
+                  AND (:end_date IS NULL OR created_at <= :end_date)
+                GROUP BY product_id
+            ),
+            damages AS (
+                SELECT
+                    pd.product_id,
+                    COALESCE(SUM(pd.qty), 0) AS damaged_qty,
+                    COALESCE(SUM(pd.qty * COALESCE(p.in_price, 0)), 0) AS damaged_price
+                FROM product_damages pd
+                LEFT JOIN products p ON p.id = pd.product_id
+                WHERE (:start_date IS NULL OR pd.created_at >= :start_date)
+                  AND (:end_date IS NULL OR pd.created_at <= :end_date)
+                GROUP BY pd.product_id
+            )
+            SELECT
+                p.id,
+                COALESCE(NULLIF(TRIM(p.name), ''), sold.product_name, '—') AS name,
+                COALESCE(p.in_stock, 0) AS current_stock,
+                COALESCE(sold.sold_qty, 0) AS sold_qty,
+                COALESCE(sold.sale_total, 0) AS sale_total,
+                COALESCE(refunds.refund_qty, 0) AS refund_qty,
+                COALESCE(refunds.refund_amount, 0) AS refund_amount,
+                COALESCE(additions.added_qty, 0) AS added_qty,
+                COALESCE(additions.added_price, 0) AS added_price,
+                COALESCE(damages.damaged_qty, 0) AS damaged_qty,
+                COALESCE(damages.damaged_price, 0) AS damaged_price
+            FROM products p
+            LEFT JOIN sold ON sold.product_id = p.id
+            LEFT JOIN refunds ON refunds.product_id = p.id
+            LEFT JOIN additions ON additions.product_id = p.id
+            LEFT JOIN damages ON damages.product_id = p.id
+            WHERE COALESCE(sold.sold_qty, 0) > 0
+               OR COALESCE(refunds.refund_qty, 0) > 0
+               OR COALESCE(additions.added_qty, 0) > 0
+               OR COALESCE(damages.damaged_qty, 0) > 0
+            ORDER BY sale_total DESC, name ASC
+        """)
+        rows = db.execute(query, {"start_date": start_date, "end_date": end_date}).fetchall()
+        return [
+            {
+                "product_id": int(r[0]),
+                "name": r[1] or "—",
+                "current_stock": int(r[2] or 0),
+                "sold_qty": int(r[3] or 0),
+                "sale_total": float(r[4] or 0),
+                "refund_qty": int(r[5] or 0),
+                "refund_amount": float(r[6] or 0),
+                "added_qty": int(r[7] or 0),
+                "added_price": float(r[8] or 0),
+                "damaged_qty": int(r[9] or 0),
+                "damaged_price": float(r[10] or 0),
+            }
+            for r in rows
+        ]
+
+    def get_daily_product_report_rows(self, db: Session, start_date=None, end_date=None):
+        return self.get_period_product_report_rows(db, start_date, end_date)
+
+    def get_daily_expense_total(self, db: Session, start_date=None, end_date=None) -> float:
+        """Cost of goods sold + commission for non-refunded sales in range."""
+        query = text("""
+            SELECT
+                COALESCE(SUM(ci.quantity * COALESCE(p.in_price, 0)), 0) AS cogs,
+                COALESCE(SUM(ci.quantity * COALESCE(p.commission, 0)), 0) AS commission
+            FROM checkout_items ci
+            INNER JOIN invoices i ON i.id = ci.invoice_id
+            LEFT JOIN products p ON p.id = ci.product_id
+            WHERE i.status = 'paid'
+              AND (:start_date IS NULL OR i.created_at >= :start_date)
+              AND (:end_date IS NULL OR i.created_at <= :end_date)
+              AND ci.id NOT IN (
+                  SELECT checkout_item_id FROM refund_records
+                  WHERE checkout_item_id IS NOT NULL
+              )
+        """)
+        row = db.execute(query, {"start_date": start_date, "end_date": end_date}).fetchone()
+        if not row:
+            return 0.0
+        return float(row[0] or 0) + float(row[1] or 0)
+
     def get_daily_sales_totals(self, db: Session, start_date=None, end_date=None):
         """Invoice totals for paid invoices with at least one non-refunded line in range."""
         query = text("""

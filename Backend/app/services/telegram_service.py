@@ -55,11 +55,12 @@ class TelegramService:
             except Exception as e:
                 logger.error(f"Failed to answer callback: {e}")
 
-    async def notify_checkout(self, invoice, items):
+    async def notify_checkout(self, invoice, items, *, seller_name: str = ""):
         if not settings.telegram_notify_enabled or not settings.telegram_chat_id:
             return
 
         try:
+            seller = (seller_name or "").strip() or "N/A"
             msg = f"🧾 <b>New Checkout Completed</b>\n\n"
             msg += f"Invoice ID: {invoice.invoice_no}\n"
             msg += f"Customer: {invoice.customer_name or 'N/A'}\n"
@@ -85,7 +86,8 @@ class TelegramService:
             msg += f"Delivery Fee: ${delivery_fee:.2f}\n"
             msg += f"Discount: ${discount:.2f}\n"
             msg += f"<b>Total: ${grand_total:.2f}</b>\n\n"
-            msg += f"Date: {invoice.created_at.strftime('%Y-%m-%d %H:%M')}"
+            msg += f"Date: {invoice.created_at.strftime('%Y-%m-%d %H:%M')}\n"
+            msg += f"By: {seller}"
 
             await self.send_message(settings.telegram_chat_id, msg)
         except Exception as e:

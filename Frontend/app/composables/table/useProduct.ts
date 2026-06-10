@@ -490,11 +490,25 @@ export function useProduct() {
         },
       });
     }
+    if (perms.canAdjustStock.value) {
+      items.push({
+        label: t("pages.roleManagement.actions.adjustStock"),
+        icon: "i-lucide-package-plus",
+        onSelect: () => openStockAdjustDialog(entry, "added"),
+      });
+    }
     if (perms.canViewAdjustStock.value) {
       items.push({
         label: t("product.viewAddedStock"),
         icon: "i-lucide-history",
         onSelect: () => openHistory(entry, "added"),
+      });
+    }
+    if (perms.canAddDamage.value) {
+      items.push({
+        label: t("pages.roleManagement.actions.addDamage"),
+        icon: "i-lucide-package-minus",
+        onSelect: () => openStockAdjustDialog(entry, "damaged"),
       });
     }
     if (perms.canViewAddDamage.value) {
@@ -806,6 +820,8 @@ export function useProduct() {
   }
 
   async function openHistory(entry: Product, type: "added" | "damaged") {
+    if (type === "added" && !perms.canViewAdjustStock.value && !perms.canAdjustStock.value) return;
+    if (type === "damaged" && !perms.canViewAddDamage.value && !perms.canAddDamage.value) return;
     selectedEntry.value = entry;
     historyType.value = type;
     historyPagination.value.pageIndex = 0;

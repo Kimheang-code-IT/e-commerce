@@ -42,11 +42,12 @@ def _build_beat_schedule() -> dict:
             "task": "app.tasks.send_daily_product_report",
             "schedule": crontab(hour=8, minute=0),
         },
-        "low-stock-alert": {
+    }
+    if settings.LOW_STOCK_ALERT_ENABLED:
+        schedule["low-stock-alert"] = {
             "task": "app.tasks.check_low_stock_alert_task",
             "schedule": crontab(minute=0, hour="*/2"),
-        },
-    }
+        }
     if settings.google_backup_enabled:
         schedule["daily-google-backup"] = {
             "task": "app.tasks.scheduled_google_backup_task",

@@ -10,7 +10,7 @@ from sqlalchemy import select
 from app.core.celery_app import celery_app
 from app.core.config import settings
 from app.core.database import SessionLocal
-from app.models import CheckoutItem, Invoice
+from app.models import CheckoutItem, Invoice, User
 from app.services.alert_service import run_google_backup_with_notify, run_low_stock_alert
 from app.services.cache_service import invalidate_after_checkout
 from app.services.invoice_pdf_service import generate_invoice_pdf
@@ -73,7 +73,9 @@ def send_checkout_notification_task(self, invoice_id: int) -> dict:
             items = db.execute(
                 select(CheckoutItem).where(CheckoutItem.invoice_id == invoice.id)
             ).scalars().all()
-            asyncio.run(telegram_service.notify_checkout(invoice, items))
+            seller = db.get(User, invoice.user_id) if invoice.user_id else None
+            seller_name = seller.name if seller else ""
+            asyncio.run(telegram_service.notify_checkout(invoice, items, seller_name=seller_name))
             return {"status": "ok", "invoice_id": invoice_id}
         finally:
             db.close()
@@ -176,7 +178,10 @@ def scheduled_google_backup_task() -> dict:
 @celery_app.task(name="app.tasks.send_daily_sales_summary_task", base=IdempotentTask)
 def send_daily_sales_summary_task() -> dict:
     from app.core.scheduler_lock import try_acquire_scheduler_lock
-    from app.utils.timezone import cambodia_today_sales_window, format_cambodia_report_date_label
+    from app.utils.timezone import (
+        cambodia_today_sales_window,
+        format_cambodia_report_date_dd_mmm_yyyy,
+    )
 
     if not settings.telegram_daily_sales_summary_enabled:
         return {"status": "skipped", "reason": "telegram_daily_sales_disabled"}
@@ -196,7 +201,7 @@ def send_daily_sales_summary_task() -> dict:
     start, end, now = cambodia_today_sales_window(
         start_hour=sh, start_minute=sm, end_hour=eh, end_minute=em
     )
-    date_label = format_cambodia_report_date_label(now)
+    date_label = format_cambodia_report_date_dd_mmm_yyyy(now)
 
     def _ampm(hour: int, minute: int) -> str:
         h12 = hour % 12 or 12
@@ -207,11 +212,17 @@ def send_daily_sales_summary_task() -> dict:
 
     db = SessionLocal()
     try:
-        msg = report_service.format_daily_sales_summary(
+        messages = report_service.format_daily_sales_summary(
             db, start, end, date_label=date_label, time_label=time_label
         )
-        asyncio.run(telegram_service.send_message(settings.telegram_chat_id, msg))
-        return {"status": "ok", "window_start": start.isoformat(), "window_end": end.isoformat()}
+        for msg in messages:
+            asyncio.run(telegram_service.send_message(settings.telegram_chat_id, msg))
+        return {
+            "status": "ok",
+            "window_start": start.isoformat(),
+            "window_end": end.isoformat(),
+            "messages": len(messages),
+        }
     except Exception as exc:
         logger.exception("Daily sales summary task failed: %s", exc)
         return {"status": "error", "error": str(exc)}
@@ -224,9 +235,12 @@ def send_daily_product_report() -> dict:
     if not settings.telegram_report_enabled or not settings.telegram_chat_id:
         return {"status": "skipped", "reason": "telegram disabled"}
 
+    from app.utils.timezone import cambodia_now
+
     db = SessionLocal()
     try:
-        messages = report_service.format_product_report_messages(db)
+        today = cambodia_now().date()
+        messages = report_service.format_product_report_messages(db, today, today)
         for msg in messages:
             asyncio.run(telegram_service.send_message(settings.telegram_chat_id, msg))
         return {"status": "ok", "messages": len(messages)}

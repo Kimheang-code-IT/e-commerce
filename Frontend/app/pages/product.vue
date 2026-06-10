@@ -147,7 +147,7 @@ function onProductImageError(event: Event) {
                         color="primary"
                         size="sm"
                         class="px-2 underline"
-                        @click="canAdjustStock ? openStockAdjustDialog(row.original, 'added') : openHistory(row.original, 'added')"
+                        @click="openHistory(row.original, 'added')"
                     >
                         {{ row.original.added }}
                     </UButton>
@@ -161,7 +161,7 @@ function onProductImageError(event: Event) {
                         :color="row.original.damaged > 0 ? 'error' : 'neutral'"
                         size="sm"
                         class="px-2 underline"
-                        @click="canAddDamage ? openStockAdjustDialog(row.original, 'damaged') : openHistory(row.original, 'damaged')"
+                        @click="openHistory(row.original, 'damaged')"
                     >
                         {{ row.original.damaged }}
                     </UButton>

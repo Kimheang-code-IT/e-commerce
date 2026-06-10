@@ -2,10 +2,9 @@ class TelegramMenuService:
     def get_main_menu(self):
         return {
             "inline_keyboard": [
-                [{"text": "💰 Summary Price", "callback_data": "main_summary_price"}],
+                [{"text": "📦 Product Report", "callback_data": "main_product_report"}],
                 [{"text": "📁 Price by Category", "callback_data": "main_category_price"}],
                 [{"text": "📦 Price by Product", "callback_data": "main_product_price"}],
-                [{"text": "📦 Product Report", "callback_data": "main_product_report"}],
                 [{"text": "💳 Price by Payment", "callback_data": "main_payment_price"}],
                 [{"text": "👤 Commission by User", "callback_data": "main_commission_user"}],
                 [{"text": "🚚 Price by Delivery Type", "callback_data": "main_delivery_type"}],
@@ -38,10 +37,9 @@ class TelegramMenuService:
     def get_reply_keyboard(self):
         return {
             "keyboard": [
-                [{"text": "💰 Summary"}, {"text": "📁 Category"}],
+                [{"text": "📦 Product Report"}, {"text": "📁 Category"}],
                 [{"text": "📦 Product"}, {"text": "💳 Payment"}],
                 [{"text": "👤 Commission"}, {"text": "🚚 Delivery"}],
-                [{"text": "📦 Product Report"}],
                 [{"text": "📊 Backup Google Sheets"}]
             ],
             "resize_keyboard": True,

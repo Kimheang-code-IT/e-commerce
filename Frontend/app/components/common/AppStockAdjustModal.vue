@@ -31,12 +31,6 @@ const emit = defineEmits<{
 
 const { t } = useI18n();
 
-watch(open, (isOpen) => {
-  if (!isOpen || props.mode !== "added") return;
-  if (!inPrice.value) inPrice.value = Number(props.defaultInPrice || 0);
-  if (!outPrice.value) outPrice.value = Number(props.defaultOutPrice || 0);
-});
-
 const selectedLotRemaining = computed(() => {
   if (!stockLotId.value) return null;
   const opt = props.stockLotOptions.find((o) => o.value === stockLotId.value);

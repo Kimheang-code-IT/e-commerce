@@ -2,8 +2,13 @@
 
 from __future__ import annotations
 
+from datetime import date, datetime, time
+
 from sqlalchemy import exists, or_, select
 from sqlalchemy.orm import Session
+
+from app.services.data_service import parse_iso_date
+from app.utils.timezone import format_report_period_date_label
 
 from app.models import CheckoutItem, Invoice, RefundRecord, User
 from app.services.data_service import (
@@ -169,6 +174,125 @@ class ReportService:
     TELEGRAM_MAX_MESSAGE_LEN = 4096
     TELEGRAM_SAFE_MESSAGE_LEN = 3500
 
+    @staticmethod
+    def _normalize_period_bounds(start_date, end_date):
+        def _to_start(value):
+            if value is None:
+                return None
+            if isinstance(value, str):
+                return parse_iso_date(value[:10], end_of_day=False)
+            if isinstance(value, date) and not isinstance(value, datetime):
+                return datetime.combine(value, time.min)
+            return value
+
+        def _to_end(value):
+            if value is None:
+                return None
+            if isinstance(value, str):
+                return parse_iso_date(value[:10], end_of_day=True)
+            if isinstance(value, date) and not isinstance(value, datetime):
+                return datetime.combine(value, time(23, 59, 59))
+            return value
+
+        return _to_start(start_date), _to_end(end_date)
+
+    @staticmethod
+    def _format_refund_label(refund_qty: int, refund_amount: float) -> str:
+        if refund_qty > 0:
+            return f"{refund_qty} (${refund_amount:.2f})"
+        return "0"
+
+    def _format_period_product_block(
+        self,
+        row: dict,
+        *,
+        escape,
+        sold_qty_label: str = "total sale stock",
+    ) -> str:
+        name = escape((row.get("name") or "").strip() or "—")
+        refund_label = self._format_refund_label(
+            int(row.get("refund_qty") or 0),
+            float(row.get("refund_amount") or 0),
+        )
+        return (
+            f"+ Product Name : {name}\n"
+            f"- total stock currently stock : {int(row.get('current_stock') or 0)}\n"
+            f"- {sold_qty_label} : {int(row.get('sold_qty') or 0)}\n"
+            f"- total product refund : {refund_label}\n"
+            f"- Total add to stock : {int(row.get('added_qty') or 0)}\n"
+            f"- total price sale today : ${float(row.get('sale_total') or 0):.2f}\n"
+            f"- total add Stock : {int(row.get('added_qty') or 0)}\n"
+            f"- Total price add stock : ${float(row.get('added_price') or 0):.2f}\n"
+            f"- Total Damanaged Stock : {int(row.get('damaged_qty') or 0)}\n"
+            f"- Total Price Damaged : ${float(row.get('damaged_price') or 0):.2f}\n"
+        )
+
+    def _format_period_product_footer(
+        self,
+        totals: dict,
+        *,
+        expense_total: float,
+        add_price_total: float,
+        damaged_price_total: float,
+    ) -> str:
+        return (
+            "\n-------------------------------------------\n"
+            f"Subtotal : ${float(totals.get('subtotal') or 0):.2f}\n"
+            f"Delivery total : ${float(totals.get('delivery_total') or 0):.2f}\n"
+            f"Discount Total : ${float(totals.get('discount_total') or 0):.2f}\n"
+            f"Total Add price : ${add_price_total:.2f}\n"
+            f"Total Damaged : ${damaged_price_total:.2f}\n"
+            f"Total Income : ${float(totals.get('grand_total') or 0):.2f}\n"
+            f"Total Expense : ${expense_total:.2f}\n"
+        )
+
+    def format_period_product_report_messages(
+        self,
+        db: Session,
+        start_date=None,
+        end_date=None,
+        *,
+        title: str = "Product Report",
+        sold_qty_label: str = "total sale stock",
+    ) -> list[str]:
+        from app.services.alert_service import _escape_telegram_html
+
+        start, end = self._normalize_period_bounds(start_date, end_date)
+        products = report_repo.get_period_product_report_rows(db, start, end)
+        totals = report_repo.get_daily_sales_totals(db, start, end)
+        expense_total = report_repo.get_daily_expense_total(db, start, end)
+        add_price_total = sum(float(row.get("added_price") or 0) for row in products)
+        damaged_price_total = sum(float(row.get("damaged_price") or 0) for row in products)
+
+        start_label = format_report_period_date_label(start_date)
+        end_label = format_report_period_date_label(end_date)
+        header = (
+            f"📊 <b>{_escape_telegram_html(title)}</b>\n\n"
+            f"Start Date : {_escape_telegram_html(start_label)}\n"
+            f"End Date : {_escape_telegram_html(end_label)}\n\n"
+        )
+
+        product_blocks: list[str] = []
+        if not products:
+            product_blocks.append("<i>No product activity in this period.</i>\n")
+        else:
+            for row in products:
+                product_blocks.append(
+                    self._format_period_product_block(
+                        row,
+                        escape=_escape_telegram_html,
+                        sold_qty_label=sold_qty_label,
+                    )
+                )
+
+        footer = self._format_period_product_footer(
+            totals,
+            expense_total=expense_total,
+            add_price_total=add_price_total,
+            damaged_price_total=damaged_price_total,
+        )
+        return self._chunk_report_lines(header, product_blocks, footer)
+
     def format_daily_sales_summary(
         self,
         db: Session,
@@ -176,32 +300,41 @@ class ReportService:
         end_date=None,
         *,
         date_label: str,
-        time_label: str = "7:00AM-7:00PM",
-    ) -> str:
+        time_label: str | None = None,
+    ) -> list[str]:
         from app.services.alert_service import _escape_telegram_html
 
-        lines = report_repo.get_daily_sales_lines(db, start_date, end_date)
-        totals = report_repo.get_daily_sales_totals(db, start_date, end_date)
+        start, end = self._normalize_period_bounds(start_date, end_date)
+        products = report_repo.get_period_product_report_rows(db, start, end)
+        totals = report_repo.get_daily_sales_totals(db, start, end)
+        expense_total = report_repo.get_daily_expense_total(db, start, end)
+        add_price_total = sum(float(row.get("added_price") or 0) for row in products)
+        damaged_price_total = sum(float(row.get("damaged_price") or 0) for row in products)
 
-        msg = f"📊 <b>Report Today</b> ({_escape_telegram_html(date_label)} : {time_label})\n\n"
-        if not lines:
-            msg += "<i>No sales in this period.</i>\n"
+        header = f"📊 <b>Report Today</b> : ({_escape_telegram_html(date_label)})\n\n"
+        if time_label:
+            header += f"<i>{_escape_telegram_html(time_label)}</i>\n\n"
+
+        product_blocks: list[str] = []
+        if not products:
+            product_blocks.append("<i>No product activity in this period.</i>\n")
         else:
-            for row in lines:
-                name = _escape_telegram_html((row.get("product_name") or "").strip() or "—")
-                qty = int(row.get("qty") or 0)
-                unit = float(row.get("unit_price") or 0)
-                line_total = float(row.get("line_total") or 0)
-                msg += f". {name} : {qty} * ${unit:.2f} = ${line_total:.2f}\n"
+            for row in products:
+                product_blocks.append(
+                    self._format_period_product_block(
+                        row,
+                        escape=_escape_telegram_html,
+                        sold_qty_label="total sale stock today",
+                    )
+                )
 
-        msg += (
-            "\n-------------------------------------------\n"
-            f". subtotal : ${float(totals.get('subtotal') or 0):.2f}\n"
-            f". Delivery total : ${float(totals.get('delivery_total') or 0):.2f}\n"
-            f". discount Total : ${float(totals.get('discount_total') or 0):.2f}\n"
-            f". Total Price : ${float(totals.get('grand_total') or 0):.2f}\n"
+        footer = self._format_period_product_footer(
+            totals,
+            expense_total=expense_total,
+            add_price_total=add_price_total,
+            damaged_price_total=damaged_price_total,
         )
-        return msg.rstrip()
+        return self._chunk_report_lines(header, product_blocks, footer)
 
     def format_summary_price(self, db: Session, start_date=None, end_date=None, label="Today") -> str:
         data = report_repo.get_summary_price(db, start_date, end_date)
@@ -286,41 +419,19 @@ class ReportService:
             msg += f"Invoices: {row['total_invoices']}\n\n"
         return msg
 
-    def format_product_report_messages(self, db: Session) -> list[str]:
-        rows = report_repo.get_product_report_rows(db)
-        header = "📦 <b>Product Report</b>\n\n"
-        if not rows:
-            return [header + "No sold or in-stock products found."]
-
-        lines: list[str] = []
-        grand_gross = 0.0
-        grand_net = 0.0
-        grand_total_in_stock = 0.0
-
-        for i, row in enumerate(rows, 1):
-            sold_qty = int(row["sold_qty"])
-            line_net = float(row["total_price_sold"])
-            line_gross = float(row.get("total_price_sold_gross") or line_net)
-            grand_gross += line_gross
-            grand_net += line_net
-            grand_total_in_stock += row["total_price_in_stock"]
-            lines.append(
-                f"{i}. {row['name']}\n"
-                f"Sold Qty: {sold_qty}\n"
-                f"Total Price Sold: ${line_net:.2f}\n"
-                f"Stock Qty: {row['stock_qty']}\n"
-                f"Total Price In Stock: ${row['total_price_in_stock']:.2f}\n"
-            )
-
-        discount_usd = max(0.0, grand_gross - grand_net)
-        discount_pct = (discount_usd / grand_gross * 100.0) if grand_gross > 0 else 0.0
-        footer = (
-            "============================\n\n"
-            f"Grand Total Sold: ${grand_gross:.2f}\n"
-            f"Discount USD: ${discount_usd:.2f} ({discount_pct:.2f}%)\n"
-            f"Grand Total In Stock: ${grand_total_in_stock:.2f}\n\n"
+    def format_product_report_messages(
+        self,
+        db: Session,
+        start_date=None,
+        end_date=None,
+    ) -> list[str]:
+        return self.format_period_product_report_messages(
+            db,
+            start_date,
+            end_date,
+            title="Product Report",
+            sold_qty_label="total sale stock",
         )
-        return self._chunk_report_lines(header, lines, footer)
 
     def _chunk_report_lines(self, header: str, lines: list[str], footer: str) -> list[str]:
         chunks: list[str] = []

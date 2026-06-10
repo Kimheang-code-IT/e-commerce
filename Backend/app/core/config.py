@@ -61,7 +61,7 @@ class Settings(BaseSettings):
     DAILY_SALES_WINDOW_START: str = "07:00"
     DAILY_SALES_WINDOW_END: str = "19:00"
 
-    LOW_STOCK_ALERT_ENABLED: bool = True
+    LOW_STOCK_ALERT_ENABLED: bool = False
     LOW_STOCK_THRESHOLD: int = 10
 
     GOOGLE_SHEET_ID: str | None = None

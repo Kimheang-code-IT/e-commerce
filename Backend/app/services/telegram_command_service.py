@@ -170,7 +170,6 @@ class TelegramCommandService:
                 return
 
             elif command in {
-                "/summary",
                 "/category",
                 "/product",
                 "/payment",
@@ -181,13 +180,7 @@ class TelegramCommandService:
                 if not telegram_reports_enabled():
                     await self._reply_reports_disabled(chat_id)
                     return
-                if command == "/summary":
-                    await telegram_service.send_message(
-                        chat_id,
-                        "💰 <b>Summary Price</b>\nSelect period:",
-                        telegram_menu_service.get_date_menu("summary_price"),
-                    )
-                elif command == "/category":
+                if command == "/category":
                     await telegram_service.send_message(
                         chat_id,
                         "📁 <b>Price by Category</b>\nSelect period:",
@@ -220,7 +213,7 @@ class TelegramCommandService:
                         telegram_menu_service.get_date_menu("delivery_type"),
                     )
                 elif command == "/product_report":
-                    await self.send_product_report(chat_id)
+                    await self.prompt_product_report_period(chat_id)
                 return
             else:
                 await telegram_service.send_message(
@@ -239,10 +232,7 @@ class TelegramCommandService:
             return
 
         if "product report" in lower_text:
-            await self.send_product_report(chat_id)
-            return
-        elif "summary" in lower_text:
-            await telegram_service.send_message(chat_id, "💰 <b>Summary Price</b>\nSelect period:", telegram_menu_service.get_date_menu("summary_price"))
+            await self.prompt_product_report_period(chat_id)
             return
         elif "category" in lower_text:
             with next(get_db()) as db:
@@ -347,7 +337,7 @@ class TelegramCommandService:
             return
 
         if data == "main_product_report":
-            await self.send_product_report(chat_id)
+            await self.prompt_product_report_period(chat_id)
             return
 
         if data == "main_category_price":
@@ -427,14 +417,10 @@ class TelegramCommandService:
             if type_prefix == "google_backup":
                 await self.trigger_google_backup(chat_id)
                 return
-            if type_prefix == "product_report":
-                await self.send_product_report(chat_id)
-                return
-            
             labels = {
-                "summary_price": "💰 Summary Price",
                 "category_price": "📁 Price by Category",
                 "product_price": "📦 Price by Product",
+                "product_report": "📦 Product Report",
                 "payment_price": "💳 Price by Payment",
                 "commission_user": "👤 Commission by User",
                 "delivery_type": "🚚 Price by Delivery Type"
@@ -628,8 +614,19 @@ class TelegramCommandService:
             elif report_type == "product_price": msg = report_service.format_product_price(db, start, end, label)
             elif report_type == "payment_price": msg = report_service.format_payment_price(db, start, end, label)
             elif report_type == "commission_user": msg = report_service.format_commission_user(db, start, end, label)
-            elif report_type == "delivery_type": msg = report_service.format_delivery_type_price(db, start, end, label)
-            
+            elif report_type == "delivery_type":
+                msg = report_service.format_delivery_type_price(db, start, end, label)
+            elif report_type == "product_report":
+                messages = report_service.format_product_report_messages(db, start, end)
+                for index, msg in enumerate(messages):
+                    reply_markup = (
+                        telegram_menu_service.get_post_report_menu(report_type)
+                        if index == len(messages) - 1
+                        else None
+                    )
+                    await telegram_service.send_message(chat_id, msg, reply_markup)
+                return
+
             if msg:
                 await telegram_service.send_message(chat_id, msg, telegram_menu_service.get_post_report_menu(report_type))
         except Exception as e:
@@ -638,18 +635,11 @@ class TelegramCommandService:
         finally:
             db.close()
 
-    async def send_product_report(self, chat_id: str):
-        db = SessionLocal()
-        try:
-            messages = report_service.format_product_report_messages(db)
-            for index, msg in enumerate(messages):
-                # Keep keyboard only in last message to avoid clutter.
-                reply_markup = telegram_menu_service.get_reply_keyboard() if index == len(messages) - 1 else None
-                await telegram_service.send_message(chat_id, msg, reply_markup)
-        except Exception as e:
-            logger.error(f"Product report error: {e}")
-            await telegram_service.send_message(chat_id, "❌ Error generating product report.")
-        finally:
-            db.close()
+    async def prompt_product_report_period(self, chat_id: str):
+        await self._menu_reply(
+            chat_id,
+            "📦 <b>Product Report</b>\nSelect period:",
+            telegram_menu_service.get_date_menu("product_report"),
+        )
 
 telegram_command_service = TelegramCommandService()
