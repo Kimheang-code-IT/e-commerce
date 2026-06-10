@@ -15,6 +15,29 @@ export interface Category {
   createdAt: string
 }
 
+export interface RewardProductItem {
+  productId: number
+  qty: number
+  name?: string
+  image?: string
+  inStock?: number
+  outPrice?: number
+  salePrice?: number
+  categoryId?: string
+  category?: string
+  status?: string
+}
+
+export interface Reward {
+  id: number
+  name: string
+  status?: string
+  productIds: number[]
+  productNames: string
+  products: RewardProductItem[]
+  createdAt: string
+}
+
 export interface Statistic {
   label: string
   value: string

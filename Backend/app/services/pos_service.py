@@ -58,18 +58,21 @@ def _requested_qty_by_product(payload: PosCheckoutPayload) -> dict[int, int]:
 
 def _merge_line_totals(line_totals: list[dict]) -> list[dict]:
     """One checkout row per product (combine duplicate product lines / FIFO batches)."""
-    merged: dict[int, dict] = {}
+    merged: dict[tuple[int, bool], dict] = {}
     for row in line_totals:
         pid = int(row["product"].id)
-        if pid not in merged:
-            merged[pid] = {
+        is_reward = bool(row.get("is_reward"))
+        key = (pid, is_reward)
+        if key not in merged:
+            merged[key] = {
                 "product": row["product"],
                 "qty": 0,
                 "slices": [],
                 "unit_price": row.get("unit_price"),
                 "line_total": 0.0,
+                "is_reward": is_reward,
             }
-        acc = merged[pid]
+        acc = merged[key]
         acc["qty"] += int(row["qty"])
         acc["line_total"] += float(row["line_total"])
         acc["slices"].extend(row.get("slices") or [])
@@ -163,6 +166,18 @@ def _build_checkout_lines(db: Session, payload: PosCheckoutPayload):
                 f"Not enough FIFO stock for {product.name}",
                 "NOT_ENOUGH_STOCK",
             )
+        if line.isReward:
+            line_totals.append(
+                {
+                    "product": product,
+                    "qty": int(line.qty),
+                    "slices": slices,
+                    "unit_price": 0.0,
+                    "line_total": 0.0,
+                    "is_reward": True,
+                }
+            )
+            continue
         unit_override = line.unitPrice if line.unitPrice is not None else None
         if unit_override is not None:
             line_total = float(unit_override) * int(line.qty)
@@ -261,6 +276,8 @@ def calculate_totals_service(*, db: Session, payload: PosCheckoutPayload):
     subtotal = 0.0
     for line in payload.lines:
         product = product_map.get(line.productId)
+        if line.isReward:
+            continue
         unit_override = line.unitPrice if line.unitPrice is not None else None
         if unit_override is not None:
             subtotal += float(unit_override) * int(line.qty)

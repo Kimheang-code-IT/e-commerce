@@ -13,6 +13,7 @@ from app.api.v1 import (
     products,
     reports,
     refunds,
+    rewards,
     suppliers,
     system_roles,
     system_users,
@@ -33,6 +34,7 @@ router.include_router(system_roles.router)
 router.include_router(finance.router)
 router.include_router(reports.router)
 router.include_router(refunds.router)
+router.include_router(rewards.router)
 router.include_router(history.router)
 router.include_router(commission.router)
 router.include_router(delivery.router)

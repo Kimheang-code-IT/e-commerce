@@ -1,6 +1,7 @@
 import { computed, ref, watch } from 'vue'
 import type { Product } from '~/types'
 import { usePosApi } from '~/utils/api'
+import type { Reward } from '~/types'
 import {
   createCartLineId,
   getCatalogUnitPrice,
@@ -153,6 +154,68 @@ export function usePosCart() {
     }
   }
 
+  function rewardProductToCartProduct(item: Reward['products'][number]): Product {
+    return {
+      id: Number(item.productId),
+      image: String(item.image || ''),
+      name: String(item.name || ''),
+      category: String(item.category || ''),
+      categoryId: String(item.categoryId || ''),
+      inPrice: 0,
+      outPrice: Number(item.outPrice || 0),
+      salePrice: Number(item.salePrice ?? item.outPrice ?? 0),
+      commission: 0,
+      totalStock: 0,
+      inStock: Number(item.inStock || 0),
+      sold: 0,
+      added: 0,
+      damaged: 0,
+      status: (item.status === 'inactive' || item.status === 'out_of_stock' ? item.status : 'active'),
+      createdAt: new Date().toISOString(),
+    }
+  }
+
+  function addRewardLine(product: Product, qty: number, rewardName: string) {
+    const maxQty = Math.max(0, Number(product.inStock || 0))
+    const current = totalQtyForProduct(product.id)
+    const nextQty = current + qty
+    if (nextQty > maxQty) {
+      toast.add({
+        title: t('pages.pos.stock.limitReached'),
+        description: t('pages.pos.stock.limitReachedDesc', { name: product.name, qty: maxQty }),
+        color: 'warning',
+      })
+      return false
+    }
+    cart.value.push({
+      lineId: createCartLineId(),
+      product,
+      qty,
+      unitPrice: 0,
+      manualPrice: true,
+      isReward: true,
+      rewardName,
+    })
+    return true
+  }
+
+  async function addRewardBundle(reward: Reward) {
+    let added = 0
+    for (const item of reward.products || []) {
+      const product = rewardProductToCartProduct(item)
+      const qty = Math.max(1, Number(item.qty || 1))
+      if (addRewardLine(product, qty, reward.name)) added += 1
+    }
+    if (added > 0) {
+      await refreshTotals()
+      toast.add({
+        title: t('pages.pos.rewards.addedTitle'),
+        description: t('pages.pos.rewards.addedDesc', { name: reward.name }),
+        color: 'success',
+      })
+    }
+  }
+
   async function addItem(product: Product) {
     const maxQty = Math.max(0, Number(product.inStock || 0))
     const current = totalQtyForProduct(product.id)
@@ -203,7 +266,11 @@ export function usePosCart() {
       }
     }
     item.qty += delta
-    if (item.qty <= 0) removeItem(lineId)
+    if (item.qty <= 0) {
+      removeItem(lineId)
+      return
+    }
+    if (item.isReward) void refreshTotals()
   }
 
   function clearCart() {
@@ -257,6 +324,7 @@ export function usePosCart() {
     itemCount,
     localSubtotal,
     addItem,
+    addRewardBundle,
     removeItem,
     updateQty,
     clearCart,

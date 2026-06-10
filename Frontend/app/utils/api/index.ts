@@ -7,6 +7,7 @@ import type {
   Product,
   ReportRow,
   RefundRecord,
+  Reward,
   Supplier,
   SupplierProductItem,
   SystemRole,
@@ -124,6 +125,15 @@ export function useAuthApi() {
 
 export function useCategoryApi() {
   return makeCrudApi<Category>('/categories')
+}
+
+export function useRewardApi() {
+  const crud = makeCrudApi<Reward>('/rewards')
+  const api = useApi()
+  return {
+    ...crud,
+    listForPos: () => api.get<{ data: Reward[] }>('/rewards/pos'),
+  }
 }
 
 export function useProductApi() {

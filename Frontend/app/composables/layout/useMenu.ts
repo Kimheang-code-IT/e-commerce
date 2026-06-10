@@ -41,6 +41,13 @@ export const useMenu = () => {
       onSelect: closeNav
     },
     {
+      label: t('pages.reward.title'),
+      icon: 'i-lucide-gift',
+      to: '/reward',
+      class: 'my-2 text-md gap-2',
+      onSelect: closeNav
+    },
+    {
       label: t('pages.pos.title'),
       icon: 'i-lucide-store',
       to: '/pos',

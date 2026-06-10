@@ -24,6 +24,9 @@ export type PosCartItem = {
   unitPrice?: number
   /** True when cashier edited price on this line (kept during FIFO resync). */
   manualPrice?: boolean
+  /** Free reward line — no payment, still shown on invoice. */
+  isReward?: boolean
+  rewardName?: string
 }
 
 export function createCartLineId(): string {
@@ -70,6 +73,7 @@ export function unitPriceFromLine(line: InvoiceReopenLine, product: Product): nu
 }
 
 export function getLineUnitPrice(item: PosCartItem): number {
+  if (item.isReward) return 0
   if (item.unitPrice != null && Number.isFinite(item.unitPrice)) {
     return Number(item.unitPrice)
   }
@@ -114,36 +118,41 @@ export function buildInvoiceDisplayRows(cart: PosCartItem[]) {
       showPriceRef: duplicateName,
       priceRef,
       editedPrice,
+      isReward: Boolean(item.isReward),
+      rewardName: item.rewardName || '',
     }
   })
 }
 
 export function mapCartToApiLines(cart: PosCartItem[]) {
   const merged = new Map<
-    number,
-    { productId: number; qty: number; lineTotal: number; unitPrice?: number }
+    string,
+    { productId: number; qty: number; lineTotal: number; unitPrice?: number; isReward: boolean }
   >()
 
   for (const item of cart) {
     const productId = item.product.id
+    const isReward = Boolean(item.isReward)
+    const key = `${productId}-${isReward ? 'reward' : 'sale'}`
     const qty = Number(item.qty || 0)
     const unitPrice = getLineUnitPrice(item)
     const lineTotal = unitPrice * qty
-    const existing = merged.get(productId)
+    const existing = merged.get(key)
 
     if (!existing) {
-      merged.set(productId, {
+      merged.set(key, {
         productId,
         qty,
         lineTotal,
-        unitPrice: item.manualPrice ? unitPrice : undefined,
+        unitPrice: isReward ? 0 : item.manualPrice ? unitPrice : undefined,
+        isReward,
       })
       continue
     }
 
     existing.qty += qty
     existing.lineTotal += lineTotal
-    if (item.manualPrice || existing.unitPrice != null) {
+    if (!isReward && (item.manualPrice || existing.unitPrice != null)) {
       existing.unitPrice = existing.qty > 0 ? existing.lineTotal / existing.qty : unitPrice
     }
   }
@@ -151,7 +160,8 @@ export function mapCartToApiLines(cart: PosCartItem[]) {
   return Array.from(merged.values()).map((row) => ({
     productId: row.productId,
     qty: row.qty,
-    unitPrice: row.unitPrice,
+    unitPrice: row.isReward ? 0 : row.unitPrice,
+    isReward: row.isReward,
   }))
 }
 
@@ -166,7 +176,7 @@ export function buildCheckoutPayload(input: {
   paymentMethod: string
   deliveryStatus: string
   sellerId?: number
-  lines: Array<{ productId: number; qty: number; unitPrice?: number }>
+  lines: Array<{ productId: number; qty: number; unitPrice?: number; isReward?: boolean }>
 }) {
   return {
     customerName: input.customerName,

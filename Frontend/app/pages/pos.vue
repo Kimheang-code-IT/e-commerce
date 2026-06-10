@@ -53,6 +53,10 @@ const {
     displayDiscount,
     displayTotal,
     addToCart,
+    addRewardBundle,
+    posRewards,
+    isLoadingRewards,
+    isRewardsTab,
     updateQty,
     removeFromCart,
     setLineUnitPrice,
@@ -238,29 +242,49 @@ const previewCart = computed(() => {
                     <!-- Product Area — scrollable -->
                     <div class="flex-1 overflow-y-auto px-3 pt-2 pb-20 lg:p-3 relative">
 
-                        <!-- Empty State -->
-                        <div v-if="!isLoadingProducts && filteredProducts.length === 0"
-                            class="flex flex-col items-center justify-center h-[50vh] gap-3 text-muted-foreground">
-                            <UIcon name="i-lucide-package-search" class="size-12 opacity-30" />
-                            <p class="text-sm">{{ t('pages.pos.noProducts') }}</p>
-                        </div>
+                        <!-- Rewards tab -->
+                        <template v-if="isRewardsTab">
+                            <div v-if="isLoadingRewards" class="flex justify-center py-16">
+                                <UIcon name="i-lucide-loader-2" class="size-8 animate-spin text-muted" />
+                            </div>
+                            <div v-else-if="!posRewards.length"
+                                class="flex flex-col items-center justify-center h-[50vh] gap-3 text-muted-foreground">
+                                <UIcon name="i-lucide-gift" class="size-12 opacity-30" />
+                                <p class="text-sm">{{ t('pages.pos.rewards.empty') }}</p>
+                            </div>
+                            <div v-else class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                                <CommonAppPosRewardCard
+                                    v-for="reward in posRewards"
+                                    :key="reward.id"
+                                    :reward="reward"
+                                    @add="addRewardBundle(reward)"
+                                />
+                            </div>
+                        </template>
 
-                        <!-- ── GRID View ── -->
-                        <div
-                            v-else-if="viewMode === 'grid'"
-                            class="grid grid-cols-2 gap-3 sm:grid-cols-[repeat(auto-fill,minmax(200px,1fr))]"
-                        >
+                        <!-- Products -->
+                        <template v-else>
+                            <div v-if="!isLoadingProducts && filteredProducts.length === 0"
+                                class="flex flex-col items-center justify-center h-[50vh] gap-3 text-muted-foreground">
+                                <UIcon name="i-lucide-package-search" class="size-12 opacity-30" />
+                                <p class="text-sm">{{ t('pages.pos.noProducts') }}</p>
+                            </div>
 
-                            <CommonAppPosProductCard v-for="product in filteredProducts" :key="product.id"
-                                :product="product" :in-cart="isInCart(product.id)" :cart-qty="getCartQty(product.id)"
-                                @add="addToCart(product)" @filter-category="selectCategoryById" />
-                        </div>
-                        <div class="mt-3 flex justify-center">
-                            <UButton v-if="currentStep === 0 && filteredProducts.length >= 60" color="neutral"
-                                variant="soft" size="sm" :loading="isLoadingProducts" @click="loadMoreProducts">
-                                {{ t('pages.pos.loadMore') }}
-                            </UButton>
-                        </div>
+                            <div
+                                v-else-if="viewMode === 'grid'"
+                                class="grid grid-cols-2 gap-3 sm:grid-cols-[repeat(auto-fill,minmax(200px,1fr))]"
+                            >
+                                <CommonAppPosProductCard v-for="product in filteredProducts" :key="product.id"
+                                    :product="product" :in-cart="isInCart(product.id)" :cart-qty="getCartQty(product.id)"
+                                    @add="addToCart(product)" @filter-category="selectCategoryById" />
+                            </div>
+                            <div class="mt-3 flex justify-center">
+                                <UButton v-if="currentStep === 0 && filteredProducts.length >= 60" color="neutral"
+                                    variant="soft" size="sm" :loading="isLoadingProducts" @click="loadMoreProducts">
+                                    {{ t('pages.pos.loadMore') }}
+                                </UButton>
+                            </div>
+                        </template>
                     </div>
                 </div>
 

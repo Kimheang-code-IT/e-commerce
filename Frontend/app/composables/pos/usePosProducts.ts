@@ -2,13 +2,19 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import type { Product } from '~/types'
 import { useProductsViewApi } from '~/utils/api'
 import { useCategoryOptions } from '~/composables/data/useCategoryOptions'
+import { POS_REWARDS_TAB } from '~/composables/pos/usePosRewards'
 
 export function usePosProducts() {
+  const { t } = useI18n()
   const productsViewApi = useProductsViewApi()
   const { items: categoryOptions } = useCategoryOptions()
   const isLoadingProducts = ref(false)
   const products = ref<Product[]>([])
-  const categories = computed(() => [{ label: 'All', value: 'All' }, ...categoryOptions.value])
+  const categories = computed(() => [
+    { label: t('pages.pos.rewards.tab'), value: POS_REWARDS_TAB },
+    { label: 'All', value: 'All' },
+    ...categoryOptions.value,
+  ])
   const selectedCategoryId = ref('All')
   const searchQuery = ref('')
   const debouncedSearchQuery = ref('')
@@ -17,7 +23,13 @@ export function usePosProducts() {
   const categoryTabs = computed(() => categories.value)
   let searchDebounceTimer: ReturnType<typeof setTimeout> | null = null
 
+  const isRewardsTab = computed(() => selectedCategoryId.value === POS_REWARDS_TAB)
+
   async function loadProducts() {
+    if (isRewardsTab.value) {
+      products.value = []
+      return
+    }
     isLoadingProducts.value = true
     try {
       const query: any = {
@@ -76,8 +88,10 @@ export function usePosProducts() {
     categoryTabs,
     selectedCategoryId,
     searchQuery,
+    isRewardsTab,
     loadProducts,
     loadMoreProducts,
-    selectCategoryById
+    selectCategoryById,
+    POS_REWARDS_TAB,
   }
 }

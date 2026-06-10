@@ -8,6 +8,7 @@ import { usePosCheckout } from '~/composables/pos/usePosCheckout'
 import { usePosInvoicePreview } from '~/composables/pos/usePosInvoicePreview'
 import { usePosPrint } from '~/composables/pos/usePosPrint'
 import { usePosReopen } from '~/composables/pos/usePosReopen'
+import { usePosRewards } from '~/composables/pos/usePosRewards'
 
 export function usePos() {
   const { t } = useI18n()
@@ -17,6 +18,7 @@ export function usePos() {
   const posPerms = useModulePermissions('pos')
 
   const products = usePosProducts()
+  const rewards = usePosRewards()
   const cartState = usePosCart()
   const customer = usePosCustomer()
   const checkout = usePosCheckout()
@@ -125,6 +127,7 @@ export function usePos() {
     currentStep.value = 0
     printing.closePrintDialog()
     products.loadProducts()
+    rewards.loadRewards()
   }
 
   async function finishWithoutPrint() {
@@ -281,6 +284,9 @@ export function usePos() {
     closeCheckoutConfirm: printing.closeCheckoutConfirm,
     isFinishing: checkout.isFinishing,
     addToCart: cartState.addItem,
+    addRewardBundle: cartState.addRewardBundle,
+    posRewards: rewards.rewards,
+    isLoadingRewards: rewards.isLoadingRewards,
     updateQty: cartState.updateQty,
     removeFromCart: cartState.removeItem,
     clearCart: cartState.clearCart,

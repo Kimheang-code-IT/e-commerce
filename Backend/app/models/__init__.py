@@ -5,6 +5,7 @@ from app.models.history import History
 from app.models.invoice import CheckoutItem, Invoice
 from app.models.product import Product
 from app.models.refund import RefundRecord
+from app.models.reward import Reward, RewardProduct
 from app.models.role import Role
 from app.models.stock import ProductDamage, ProductStockAddition
 from app.models.supplier import Supplier, SupplierProduct
@@ -20,6 +21,8 @@ __all__ = [
     "Invoice",
     "Product",
     "RefundRecord",
+    "Reward",
+    "RewardProduct",
     "ProductDamage",
     "ProductStockAddition",
     "Role",

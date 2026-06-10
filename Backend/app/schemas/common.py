@@ -60,6 +60,36 @@ class CategoryUpdatePayload(BaseModel):
         return clean_text(value)
 
 
+class RewardProductItemPayload(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    productId: int = Field(ge=1)
+    qty: int = Field(default=1, ge=1)
+
+
+class RewardCreatePayload(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    name: str = Field(min_length=1, max_length=180)
+    products: list[RewardProductItemPayload] = Field(min_length=1, max_length=200)
+
+    @field_validator("name")
+    @classmethod
+    def normalize_name(cls, value: str) -> str:
+        return clean_text(value)
+
+
+class RewardUpdatePayload(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    name: str | None = Field(default=None, min_length=1, max_length=180)
+    products: list[RewardProductItemPayload] | None = Field(default=None, max_length=200)
+
+    @field_validator("name")
+    @classmethod
+    def normalize_optional_name(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        return clean_text(value)
+
+
 class ProductCreatePayload(BaseModel):
     model_config = ConfigDict(extra="forbid")
     name: str = Field(min_length=1, max_length=180)
@@ -227,6 +257,7 @@ class InvoiceLinePayload(BaseModel):
     productId: int
     qty: int = Field(default=1, ge=1)
     unitPrice: float | None = Field(default=None, ge=0)
+    isReward: bool = False
 
 
 class PosCheckoutPayload(BaseModel):

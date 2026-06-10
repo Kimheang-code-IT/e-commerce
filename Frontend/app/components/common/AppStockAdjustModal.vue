@@ -31,6 +31,13 @@ const emit = defineEmits<{
 
 const { t } = useI18n();
 
+const stockLotIdForSelect = computed({
+  get: () => stockLotId.value ?? undefined,
+  set: (value: number | undefined) => {
+    stockLotId.value = value ?? null;
+  },
+});
+
 const selectedLotRemaining = computed(() => {
   if (!stockLotId.value) return null;
   const opt = props.stockLotOptions.find((o) => o.value === stockLotId.value);
@@ -82,7 +89,7 @@ const canApply = computed(() => {
           </p>
           <UFormField :label="$t('components.stockAdjust.selectStockLot')" required>
             <USelect
-              v-model="stockLotId"
+              v-model="stockLotIdForSelect"
               :items="stockLotOptions"
               value-key="value"
               label-key="label"

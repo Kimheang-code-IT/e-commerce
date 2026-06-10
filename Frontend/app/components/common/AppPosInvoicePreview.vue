@@ -133,6 +133,9 @@ const displayAddressNote = computed(() => {
                   <td class="px-2 sm:px-3 py-2 border-[0.5px] border-slate-200">
                     <p class="font-bold text-slate-800 wrap-break-word leading-snug">
                       {{ row.item.product.name }}
+                      <span v-if="row.isReward" class="text-[10px] font-semibold text-emerald-700 ml-1">
+                        ({{ t('pages.pos.rewards.invoiceTag') }})
+                      </span>
                     </p>
                   </td>
                   <td

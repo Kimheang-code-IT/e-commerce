@@ -174,6 +174,22 @@
                 "unitPrice": "Unit Price"
             }
         },
+        "reward": {
+            "title": "Rewards",
+            "tableTitle": "Rewards",
+            "addBtn": "Add Reward",
+            "formTitleNew": "Add Reward",
+            "formTitleEdit": "Edit Reward",
+            "confirmDeleteTitle": "Delete Reward",
+            "confirmDeleteDesc": "You are about to delete this reward bundle. This action cannot be undone.",
+            "confirmEditTitle": "Update Reward",
+            "confirmEditDesc": "You updated reward \"{name}\". Click save to apply changes.",
+            "confirmAddTitle": "Create Reward",
+            "confirmAddDesc": "You are creating reward \"{name}\" with the selected products.",
+            "toastAdded": "Reward created",
+            "toastUpdated": "Reward updated",
+            "toastDeleted": "Reward deleted"
+        },
         "product": {
             "title": "Product",
             "tableTitle": "Products",
@@ -247,6 +263,15 @@
                 "sku": "SKU",
                 "addMore": "Add More",
                 "addToCart": "Add to Cart"
+            },
+            "rewards": {
+                "tab": "Rewards",
+                "free": "Free",
+                "addToCart": "Add to Cart",
+                "empty": "No rewards configured",
+                "addedTitle": "Reward added",
+                "addedDesc": "{name} products added to cart (free)",
+                "invoiceTag": "Reward"
             },
             "noProducts": "No products found",
             "loadMore": "Load more",
@@ -632,6 +657,14 @@
             "genericMessage": "An unexpected error occurred. Please try again later.",
             "backHome": "Back to home"
         }
+    },
+    "reward": {
+        "no": "No",
+        "name": "Reward Name",
+        "products": "Products",
+        "namePlaceholder": "e.g. Starter bundle",
+        "selectProducts": "Select products",
+        "selectProductsError": "Select at least one product"
     },
     "category": {
         "tableTitle": "Categories",

@@ -180,6 +180,9 @@ function catalogPrice(product: Product) {
             <div class="flex-1 min-w-0">
               <p class="text-sm font-medium text-foreground leading-tight line-clamp-2">
                 {{ item.product.name }}
+                <UBadge v-if="item.isReward" color="success" variant="subtle" size="xs" class="ml-1">
+                  {{ $t('pages.pos.rewards.invoiceTag') }}
+                </UBadge>
                 <span
                   v-if="hasDuplicateProductName(item)"
                   class="text-primary font-semibold"
@@ -264,7 +267,7 @@ function catalogPrice(product: Product) {
                 </template>
                 <template v-else>
                   <UButton
-                    v-if="isCartStep"
+                    v-if="isCartStep && !item.isReward"
                     size="xs"
                     color="neutral"
                     variant="ghost"

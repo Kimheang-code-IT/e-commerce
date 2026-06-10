@@ -99,7 +99,7 @@ export function useProduct() {
   const searchQuery = ref("");
 
   // --- Context States ---
-  const selectedEntry = ref<Product | null>(null);
+  const selectedEntry = ref<ProductFormPayload | null>(null);
   const pendingEntry = ref<Product | null>(null);
   /** New image file chosen in the form; sent as data URL on save (backend persists under `/uploads`). */
   const pendingImageFile = ref<File | null>(null);

@@ -174,6 +174,22 @@
                 "unitPrice": "តម្លៃឯកតា"
             }
         },
+        "reward": {
+            "title": "រង្វាន់",
+            "tableTitle": "បញ្ជីរង្វាន់",
+            "addBtn": "បន្ថែមរង្វាន់",
+            "formTitleNew": "បន្ថែមរង្វាន់",
+            "formTitleEdit": "កែប្រែរង្វាន់",
+            "confirmDeleteTitle": "លុបរង្វាន់",
+            "confirmDeleteDesc": "អ្នកជិតលុបរង្វាន់នេះ។ សកម្មភាពនេះមិនអាចត្រឡប់វិញបានទេ។",
+            "confirmEditTitle": "ធ្វើបច្ចុប្បន្នភាពរង្វាន់",
+            "confirmEditDesc": "អ្នកបានធ្វើបច្ចុប្បន្នភាពរង្វាន់ \"{name}\"។",
+            "confirmAddTitle": "បង្កើតរង្វាន់",
+            "confirmAddDesc": "អ្នកកំពុងបង្កើតរង្វាន់ \"{name}\" ជាមួយផលិតផលដែលបានជ្រើស។",
+            "toastAdded": "បានបង្កើតរង្វាន់",
+            "toastUpdated": "បានធ្វើបច្ចុប្បន្នភាពរង្វាន់",
+            "toastDeleted": "បានលុបរង្វាន់"
+        },
         "product": {
             "title": "ផលិតផល",
             "tableTitle": "បញ្ជីផលិតផល",
@@ -247,6 +263,15 @@
                 "sku": "SKU",
                 "addMore": "បន្ថែមទៀត",
                 "addToCart": "បន្ថែមទៅកន្ត្រក"
+            },
+            "rewards": {
+                "tab": "រង្វាន់",
+                "free": "ឥតគិតថ្លៃ",
+                "addToCart": "បន្ថែមទៅកន្ត្រក",
+                "empty": "មិនមានរង្វាន់",
+                "addedTitle": "បានបន្ថែមរង្វាន់",
+                "addedDesc": "បានបន្ថែមផលិតផល {name} ទៅកន្ត្រក (ឥតគិតថ្លៃ)",
+                "invoiceTag": "រង្វាន់"
             },
             "noProducts": "រកមិនឃើញផលិតផល",
             "loadMore": "ផ្ទុកបន្ថែម",
@@ -633,6 +658,14 @@
             "genericMessage": "មានកំហុសដែលមិនបានរំពឹងទុក។ សូមព្យាយាមម្តងទៀតនាពេលក្រោយ។",
             "backHome": "ត្រឡប់ទៅដើម"
         }
+    },
+    "reward": {
+        "no": "ល.រ",
+        "name": "ឈ្មោះរង្វាន់",
+        "products": "ផលិតផល",
+        "namePlaceholder": "ឧ. កញ្ចប់រង្វាន់",
+        "selectProducts": "ជ្រើសផលិតផល",
+        "selectProductsError": "សូមជ្រើសផលិតផលយ៉ាងហោចណាស់មួយ"
     },
     "category": {
         "tableTitle": "ប្រភេទផលិតផល",
