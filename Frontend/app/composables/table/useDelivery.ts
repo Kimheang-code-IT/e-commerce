@@ -18,11 +18,9 @@ export function useDelivery() {
   const localRows = ref<DeliveryEntry[]>([])
   const selectedAddresses = ref<string[]>([])
   const selectedDeliveryTypes = ref<string[]>([])
-  const selectedStatuses = ref<string[]>([])
   const extraQuery = computed(() => ({
     address: selectedAddresses.value.join(',') || undefined,
     deliveryType: selectedDeliveryTypes.value.join(',') || undefined,
-    deliveryStatus: selectedStatuses.value.join(',') || undefined,
   }))
   const { sorting, columnFilters, pagination, searchQuery, resource } = useServerListTable<DeliveryEntry>({
     resourceKey: 'deliveries-view',
@@ -34,11 +32,10 @@ export function useDelivery() {
 
   const { itemsFor } = useViewFilterOptions(
     (query, signal) => deliveryApi.filterOptions(query, signal),
-    ['addresses', 'deliveryTypes', 'statuses']
+    ['addresses', 'deliveryTypes']
   )
   const addressItems = itemsFor('addresses')
   const deliveryTypeItems = itemsFor('deliveryTypes')
-  const statusItems = itemsFor('statuses')
 
   const effectiveRows = computed(() => resource.rows.value)
   const filteredDeliveryRows = computed<DeliveryEntry[]>(() => effectiveRows.value)
@@ -51,7 +48,7 @@ export function useDelivery() {
     }
   })
 
-  watch([selectedAddresses, selectedDeliveryTypes, selectedStatuses], () => {
+  watch([selectedAddresses, selectedDeliveryTypes], () => {
     pagination.value.pageIndex = 0
   })
 
@@ -98,10 +95,8 @@ export function useDelivery() {
     totalRows: resource.totalRows,
     addressItems,
     deliveryTypeItems,
-    statusItems,
     selectedAddresses,
     selectedDeliveryTypes,
-    selectedStatuses,
     filteredDeliveryRows,
     columns,
     updateStatus,

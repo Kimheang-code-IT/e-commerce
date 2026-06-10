@@ -18,8 +18,6 @@ const {
   deliveryTypeItems,
   selectedAddresses,
   selectedDeliveryTypes,
-  selectedStatuses,
-  statusItems,
   filteredDeliveryRows,
   columns,
   updateStatus,
@@ -51,14 +49,11 @@ function goToInvoice(row: any) {
         v-model:column-filters="columnFilters"
         v-model:filter-value="selectedAddresses"
         v-model:filter-value-secondary="selectedDeliveryTypes"
-        v-model:filter-value-third="selectedStatuses"
         v-model:global-filter="searchQuery"
         :filter-items="addressItems"
         :filter-items-secondary="deliveryTypeItems"
-        :filter-items-third="statusItems"
         :filter-placeholder="t('pages.delivery.columns.address')"
         :filter-placeholder-secondary="t('pages.delivery.columns.deliveryType')"
-        :filter-placeholder-third="t('pages.delivery.columns.deliveryStatus')"
         :data="filteredDeliveryRows"
         :loading="isLoading"
         :total-rows="totalRows"

@@ -46,10 +46,13 @@ def invoice_field_options(
     date_to: str | None = None,
     paid_only: bool = False,
     user_id: int | None = None,
+    delivery_status: str | None = None,
 ) -> list[str]:
     q = _invoice_options_query(column, paid_only=paid_only)
     if user_id is not None:
         q = q.where(Invoice.user_id == user_id)
+    if delivery_status is not None:
+        q = q.where(Invoice.delivery_status == delivery_status)
     q = apply_created_at_range(q, date_from, date_to, Invoice.created_at)
     rows = db.execute(q.order_by(column)).all()
     return _sorted_non_empty(rows)
@@ -130,14 +133,22 @@ def delivery_filter_options(
     date_to: str | None = None,
     seller_user_id: int | None = None,
 ) -> dict[str, list[str]]:
+    pending = "pending"
     return {
         "addresses": invoice_field_options(
-            db, Invoice.customer_address, date_from=date_from, date_to=date_to, user_id=seller_user_id
+            db,
+            Invoice.customer_address,
+            date_from=date_from,
+            date_to=date_to,
+            user_id=seller_user_id,
+            delivery_status=pending,
         ),
         "deliveryTypes": invoice_field_options(
-            db, Invoice.delivery_type, date_from=date_from, date_to=date_to, user_id=seller_user_id
-        ),
-        "statuses": invoice_field_options(
-            db, Invoice.delivery_status, date_from=date_from, date_to=date_to, user_id=seller_user_id
+            db,
+            Invoice.delivery_type,
+            date_from=date_from,
+            date_to=date_to,
+            user_id=seller_user_id,
+            delivery_status=pending,
         ),
     }

@@ -31,7 +31,11 @@ def _delivery_scope_user_id(user: User) -> int | None:
 
 
 def _base_query(*, seller_user_id: int | None = None):
-    q = select(Invoice, User).join(User, Invoice.user_id == User.id)
+    q = (
+        select(Invoice, User)
+        .join(User, Invoice.user_id == User.id)
+        .where(Invoice.delivery_status == "pending")
+    )
     if seller_user_id is not None:
         q = q.where(Invoice.user_id == seller_user_id)
     return q
@@ -44,7 +48,6 @@ def list_deliveries_view(
     search: str | None = None,
     address: str | None = None,
     deliveryType: str | None = None,
-    deliveryStatus: str | None = None,
     dateFrom: str | None = None,
     dateTo: str | None = None,
     sortBy: str | None = None,
@@ -67,9 +70,6 @@ def list_deliveries_view(
     delivery_types = parse_csv(deliveryType)
     if delivery_types:
         q = q.where(Invoice.delivery_type.in_(delivery_types))
-    statuses = parse_csv(deliveryStatus)
-    if statuses:
-        q = q.where(Invoice.delivery_status.in_(statuses))
     q = apply_created_at_range(q, dateFrom, dateTo, Invoice.created_at)
     q = apply_sort(
         q,
