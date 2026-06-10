@@ -132,10 +132,39 @@ deploy_docker_stack() {
 
   if [[ "$WEBSITE_ONLY" -eq 0 ]]; then
     echo "==> Website container (website_business)"
-    local code
-    code="$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3001/ || true)"
+    local code i
+    code="000"
+    for i in $(seq 1 12); do
+      code="$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3001/ 2>/dev/null || echo 000)"
+      if [[ "$code" != "000" ]]; then
+        break
+      fi
+      sleep 5
+    done
     echo "    http://127.0.0.1:3001/ → HTTP $code"
+    if [[ "$code" == "000" ]]; then
+      echo "    website not responding — check: docker compose logs website --tail 50" >&2
+    fi
   fi
+}
+
+build_admin_image() {
+  local -a build_args=(
+    -f "$ROOT/Frontend/Dockerfile"
+    -t "$ADMIN_IMAGE_TAG"
+    --build-arg "NUXT_PUBLIC_SITE_URL=https://admin.anyamusicschool.com"
+    --build-arg "NUXT_PUBLIC_API_BASE=/api/v1"
+    --build-arg "NUXT_PUBLIC_USE_BACKEND_API=true"
+    "$ROOT/Frontend"
+  )
+
+  if docker build "${build_args[@]}"; then
+    return 0
+  fi
+
+  echo "==> Admin image export failed (often stale BuildKit cache) — pruning and retrying with --no-cache" >&2
+  docker builder prune -f >/dev/null 2>&1 || true
+  docker build --no-cache "${build_args[@]}"
 }
 
 deploy_admin_static() {
@@ -144,13 +173,7 @@ deploy_admin_static() {
   fi
 
   echo "==> Building admin (Frontend static)"
-  docker build \
-    -f "$ROOT/Frontend/Dockerfile" \
-    -t "$ADMIN_IMAGE_TAG" \
-    --build-arg NUXT_PUBLIC_SITE_URL=https://admin.anyamusicschool.com \
-    --build-arg NUXT_PUBLIC_API_BASE=/api/v1 \
-    --build-arg NUXT_PUBLIC_USE_BACKEND_API=true \
-    "$ROOT/Frontend"
+  build_admin_image
 
   local container tmp_dir
   container="$(docker create "$ADMIN_IMAGE_TAG")"

@@ -26,4 +26,6 @@ ENV NUXT_PUBLIC_USE_BACKEND_API=$NUXT_PUBLIC_USE_BACKEND_API
 
 RUN pnpm exec nuxi generate
 
-# Static files at /app/.output/public (copy into nginx or host volume as needed).
+# Small export image — only static files (build-admin.sh copies these to nginx).
+FROM alpine:3.20
+COPY --from=build /app/.output/public /app/.output/public
