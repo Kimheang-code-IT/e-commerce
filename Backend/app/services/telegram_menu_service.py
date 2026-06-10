@@ -4,8 +4,7 @@ class TelegramMenuService:
             "inline_keyboard": [
                 [{"text": "📦 Product Report", "callback_data": "main_product_report"}],
                 [{"text": "📁 Category Report", "callback_data": "main_category_price"}],
-                [{"text": "📦 Product", "callback_data": "main_product_price"}],
-                [{"text": "💳 Price by Payment", "callback_data": "main_payment_price"}],
+                [{"text": "💳 Payment Report", "callback_data": "main_payment_price"}],
                 [{"text": "👤 Commission Report", "callback_data": "main_commission_user"}],
                 [{"text": "📊 Backup Google Sheets", "callback_data": "main_google_backup"}]
             ]
@@ -37,29 +36,28 @@ class TelegramMenuService:
         return {
             "keyboard": [
                 [{"text": "📦 Product Report"}, {"text": "📁 Category"}],
-                [{"text": "📦 Product"}, {"text": "💳 Payment"}],
-                [{"text": "👤 Commission"}],
-                [{"text": "📊 Backup Google Sheets"}]
+                [{"text": "💳 Payment"}],
+                [{"text": "👤 Commission"}, {"text": "📊 Backup Google Sheets"}],
             ],
             "resize_keyboard": True,
         }
 
     def get_product_list_menu(self, products):
-        keyboard = []
+        keyboard = [[{"text": "📦 All Products", "callback_data": "prod_select_all"}]]
         for p in products:
             keyboard.append([{"text": f"📦 {p['name']}", "callback_data": f"prod_select_{p['id']}"}])
         keyboard.append([{"text": "⬅️ Back to Main Menu", "callback_data": "back_main"}])
         return {"inline_keyboard": keyboard}
 
     def get_category_list_menu(self, categories):
-        keyboard = []
+        keyboard = [[{"text": "📁 All Categories", "callback_data": "cat_select_all"}]]
         for c in categories:
             keyboard.append([{"text": f"📁 {c['name']}", "callback_data": f"cat_select_{c['id']}"}])
         keyboard.append([{"text": "⬅️ Back to Main Menu", "callback_data": "back_main"}])
         return {"inline_keyboard": keyboard}
 
     def get_payment_list_menu(self, methods):
-        keyboard = []
+        keyboard = [[{"text": "💳 All Payment Methods", "callback_data": "pay_select_all"}]]
         for m in methods:
             name = m['payment_method']
             keyboard.append([{"text": f"💳 {name}", "callback_data": f"pay_select_{name}"}])
@@ -75,7 +73,7 @@ class TelegramMenuService:
         return {"inline_keyboard": keyboard}
 
     def get_user_list_menu(self, users):
-        keyboard = []
+        keyboard = [[{"text": "👤 All Sellers", "callback_data": "usr_select_all"}]]
         for u in users:
             keyboard.append([{"text": f"👤 {u['name']}", "callback_data": f"usr_select_{u['id']}"}])
         keyboard.append([{"text": "⬅️ Back to Main Menu", "callback_data": "back_main"}])

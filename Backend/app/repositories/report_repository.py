@@ -354,7 +354,14 @@ class ReportRepository:
             for r in rows
         ]
 
-    def get_period_product_report_rows(self, db: Session, start_date=None, end_date=None):
+    def get_period_product_report_rows(
+        self,
+        db: Session,
+        start_date=None,
+        end_date=None,
+        *,
+        product_id: int | None = None,
+    ):
         """Per-product stats for Telegram period reports (sales, refunds, stock, damage)."""
         query = text("""
             WITH sold AS (
@@ -423,13 +430,20 @@ class ReportRepository:
             LEFT JOIN refunds ON refunds.product_id = p.id
             LEFT JOIN additions ON additions.product_id = p.id
             LEFT JOIN damages ON damages.product_id = p.id
-            WHERE COALESCE(sold.sold_qty, 0) > 0
-               OR COALESCE(refunds.refund_qty, 0) > 0
-               OR COALESCE(additions.added_qty, 0) > 0
-               OR COALESCE(damages.damaged_qty, 0) > 0
+            WHERE (:product_id IS NULL OR p.id = :product_id)
+              AND (
+                :product_id IS NOT NULL
+                OR COALESCE(sold.sold_qty, 0) > 0
+                OR COALESCE(refunds.refund_qty, 0) > 0
+                OR COALESCE(additions.added_qty, 0) > 0
+                OR COALESCE(damages.damaged_qty, 0) > 0
+              )
             ORDER BY sale_total DESC, name ASC
         """)
-        rows = db.execute(query, {"start_date": start_date, "end_date": end_date}).fetchall()
+        rows = db.execute(
+            query,
+            {"start_date": start_date, "end_date": end_date, "product_id": product_id},
+        ).fetchall()
         return [
             {
                 "product_id": int(r[0]),
@@ -450,7 +464,14 @@ class ReportRepository:
     def get_daily_product_report_rows(self, db: Session, start_date=None, end_date=None):
         return self.get_period_product_report_rows(db, start_date, end_date)
 
-    def get_period_category_report_rows(self, db: Session, start_date=None, end_date=None):
+    def get_period_category_report_rows(
+        self,
+        db: Session,
+        start_date=None,
+        end_date=None,
+        *,
+        category_id: int | None = None,
+    ):
         query = text("""
             WITH sold AS (
                 SELECT
@@ -464,6 +485,7 @@ class ReportRepository:
                 WHERE i.status = 'paid'
                   AND (:start_date IS NULL OR i.created_at >= :start_date)
                   AND (:end_date IS NULL OR i.created_at <= :end_date)
+                  AND (:category_id IS NULL OR p.category_id = :category_id)
                   AND ci.id NOT IN (
                       SELECT checkout_item_id FROM refund_records
                       WHERE checkout_item_id IS NOT NULL
@@ -480,6 +502,7 @@ class ReportRepository:
                 WHERE rr.product_id IS NOT NULL
                   AND (:start_date IS NULL OR rr.refunded_at >= :start_date)
                   AND (:end_date IS NULL OR rr.refunded_at <= :end_date)
+                  AND (:category_id IS NULL OR p.category_id = :category_id)
                 GROUP BY p.category_id
             )
             SELECT
@@ -496,7 +519,10 @@ class ReportRepository:
                OR COALESCE(refunds.refund_qty, 0) > 0
             ORDER BY sale_total DESC, name ASC
         """)
-        rows = db.execute(query, {"start_date": start_date, "end_date": end_date}).fetchall()
+        rows = db.execute(
+            query,
+            {"start_date": start_date, "end_date": end_date, "category_id": category_id},
+        ).fetchall()
         return [
             {
                 "name": r[0] or "Uncategorized",
@@ -509,7 +535,14 @@ class ReportRepository:
             for r in rows
         ]
 
-    def get_period_commission_report_rows(self, db: Session, start_date=None, end_date=None):
+    def get_period_commission_report_rows(
+        self,
+        db: Session,
+        start_date=None,
+        end_date=None,
+        *,
+        user_id: int | None = None,
+    ):
         query = text("""
             SELECT
                 COALESCE(NULLIF(TRIM(u.name), ''), 'Unknown') AS seller_name,
@@ -523,6 +556,7 @@ class ReportRepository:
             WHERE i.status = 'paid'
               AND (:start_date IS NULL OR i.created_at >= :start_date)
               AND (:end_date IS NULL OR i.created_at <= :end_date)
+              AND (:user_id IS NULL OR i.user_id = :user_id)
               AND ci.id NOT IN (
                   SELECT checkout_item_id FROM refund_records
                   WHERE checkout_item_id IS NOT NULL
@@ -531,13 +565,60 @@ class ReportRepository:
             HAVING COALESCE(SUM(ci.quantity), 0) > 0
             ORDER BY total_commission DESC, total_sales DESC, seller_name ASC
         """)
-        rows = db.execute(query, {"start_date": start_date, "end_date": end_date}).fetchall()
+        rows = db.execute(
+            query,
+            {"start_date": start_date, "end_date": end_date, "user_id": user_id},
+        ).fetchall()
         return [
             {
                 "seller_name": r[0] or "Unknown",
                 "total_commission": float(r[1] or 0),
                 "total_sales": float(r[2] or 0),
                 "sold_qty": int(r[3] or 0),
+            }
+            for r in rows
+        ]
+
+    def get_period_payment_report_rows(
+        self,
+        db: Session,
+        start_date=None,
+        end_date=None,
+        *,
+        payment_method: str | None = None,
+    ):
+        query = text("""
+            SELECT
+                COALESCE(i.payment_method, 'Unknown') AS payment_method,
+                COALESCE(SUM(i.subtotal), 0) AS subtotal,
+                COALESCE(SUM(i.delivery_price), 0) AS delivery_total,
+                COALESCE(SUM(i.discount), 0) AS discount_total,
+                COALESCE(SUM(i.total), 0) AS grand_total,
+                COUNT(i.id) AS total_invoices
+            FROM invoices i
+            WHERE i.status = 'paid'
+              AND (:start_date IS NULL OR i.created_at >= :start_date)
+              AND (:end_date IS NULL OR i.created_at <= :end_date)
+              AND (
+                :payment_method IS NULL
+                OR COALESCE(i.payment_method, 'Unknown') = :payment_method
+              )
+            GROUP BY i.payment_method
+            HAVING COUNT(i.id) > 0
+            ORDER BY grand_total DESC, payment_method ASC
+        """)
+        rows = db.execute(
+            query,
+            {"start_date": start_date, "end_date": end_date, "payment_method": payment_method},
+        ).fetchall()
+        return [
+            {
+                "payment_method": r[0] or "Unknown",
+                "subtotal": float(r[1] or 0),
+                "delivery_total": float(r[2] or 0),
+                "discount_total": float(r[3] or 0),
+                "grand_total": float(r[4] or 0),
+                "total_invoices": int(r[5] or 0),
             }
             for r in rows
         ]

@@ -48,9 +48,8 @@ async def prepare_bot(client: httpx.AsyncClient) -> None:
 
     commands = [
         {"command": "start", "description": "Main menu"},
-        {"command": "product_report", "description": "Product report by period"},
+        {"command": "product_report", "description": "Product report"},
         {"command": "category", "description": "Category report"},
-        {"command": "product", "description": "Product sales report"},
         {"command": "payment", "description": "Payment report"},
         {"command": "commission", "description": "Commission report"},
         {"command": "help", "description": "Help"},
