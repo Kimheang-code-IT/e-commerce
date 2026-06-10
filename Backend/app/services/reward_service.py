@@ -77,11 +77,11 @@ def list_rewards_query(
 
 
 def paginate_rewards(db: Session, q, page: int, limit: int) -> tuple[list[Reward], int]:
-    count_source = q.order_by(None).enable_eagerloads(False)
+    count_source = q.order_by(None)
     try:
         total = db.scalar(select(func.count()).select_from(count_source.subquery())) or 0
     except Exception:
-        total = db.scalar(select(func.count(Reward.id)).select_from(Reward)) or 0
+        total = db.scalar(select(func.count(Reward.id))) or 0
     rows = db.scalars(q.offset((page - 1) * limit).limit(limit)).all()
     return rows, total
 
