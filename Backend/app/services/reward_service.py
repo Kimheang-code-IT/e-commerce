@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from sqlalchemy import String, cast, or_, select
+from sqlalchemy import String, cast, func, or_, select
 from sqlalchemy.orm import Session, joinedload
 
 from app.models import Product, Reward, RewardProduct
 from app.schemas.common import RewardCreatePayload, RewardUpdatePayload
-from app.services.data_service import apply_created_at_range, apply_sort, paginate_query, to_iso
+from app.services.data_service import apply_created_at_range, apply_sort, to_iso
 
 
 def serialize_reward_product(row: RewardProduct) -> dict:
@@ -75,8 +75,13 @@ def list_rewards_query(
 
 
 def paginate_rewards(db: Session, q, page: int, limit: int) -> tuple[list[Reward], int]:
-    rows, total = paginate_query(q, db, page, limit)
-    return [row[0] if isinstance(row, tuple) else row for row in rows], total
+    count_source = q.order_by(None)
+    try:
+        total = db.scalar(select(func.count()).select_from(count_source.subquery())) or 0
+    except Exception:
+        total = db.scalar(select(func.count()).select_from(q.subquery())) or 0
+    rows = db.execute(q.offset((page - 1) * limit).limit(limit)).unique().scalars().all()
+    return rows, total
 
 
 def _sync_reward_products(db: Session, reward: Reward, items: list) -> None:
@@ -93,11 +98,19 @@ def _sync_reward_products(db: Session, reward: Reward, items: list) -> None:
 
 
 def load_reward(db: Session, reward_id: int) -> Reward | None:
-    return db.execute(
-        select(Reward)
-        .options(joinedload(Reward.products).joinedload(RewardProduct.product).joinedload(Product.category_rel))
-        .where(Reward.id == reward_id)
-    ).scalar_one_or_none()
+    return (
+        db.execute(
+            select(Reward)
+            .options(
+                joinedload(Reward.products)
+                .joinedload(RewardProduct.product)
+                .joinedload(Product.category_rel)
+            )
+            .where(Reward.id == reward_id)
+        )
+        .unique()
+        .scalar_one_or_none()
+    )
 
 
 def create_reward(db: Session, body: RewardCreatePayload) -> Reward:
