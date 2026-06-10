@@ -663,6 +663,7 @@
         "no": "ល.រ",
         "name": "ឈ្មោះរង្វាន់",
         "products": "ផលិតផល",
+        "createdAt": "កាលបរិច្ឆេទ",
         "namePlaceholder": "ឧ. កញ្ចប់រង្វាន់",
         "selectProducts": "ជ្រើសផលិតផល",
         "selectProductsError": "សូមជ្រើសផលិតផលយ៉ាងហោចណាស់មួយ"

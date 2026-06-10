@@ -45,6 +45,8 @@ app.add_middleware(RateLimitMiddleware)
 
 def init_db() -> None:
     """Create tables from SQLAlchemy models (aligned with `e-commerce.sql`)."""
+    import app.models  # noqa: F401 — register all tables on Base.metadata
+
     from app.core.stock_lot_migration import ensure_stock_lot_schema
     from app.core.product_catalog_migration import ensure_product_catalog_schema
     from app.core.search_index_migration import ensure_search_indexes

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from sqlalchemy import String, cast, func, or_, select
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session, selectinload
 
 from app.models import Product, Reward, RewardProduct
 from app.schemas.common import RewardCreatePayload, RewardUpdatePayload
@@ -47,9 +47,7 @@ def list_rewards_query(
     sort_order: str | None = None,
     active_only: bool = False,
 ):
-    q = select(Reward).options(
-        joinedload(Reward.products).joinedload(RewardProduct.product).joinedload(Product.category_rel)
-    )
+    q = select(Reward)
     if active_only:
         q = q.where(Reward.status == "active")
     if search:
@@ -71,16 +69,20 @@ def list_rewards_query(
             "createdAt": Reward.created_at,
         },
     )
-    return q
+    return q.options(
+        selectinload(Reward.products)
+        .selectinload(RewardProduct.product)
+        .selectinload(Product.category_rel)
+    )
 
 
 def paginate_rewards(db: Session, q, page: int, limit: int) -> tuple[list[Reward], int]:
-    count_source = q.order_by(None)
+    count_source = q.order_by(None).enable_eagerloads(False)
     try:
         total = db.scalar(select(func.count()).select_from(count_source.subquery())) or 0
     except Exception:
-        total = db.scalar(select(func.count()).select_from(q.subquery())) or 0
-    rows = db.execute(q.offset((page - 1) * limit).limit(limit)).unique().scalars().all()
+        total = db.scalar(select(func.count(Reward.id)).select_from(Reward)) or 0
+    rows = db.scalars(q.offset((page - 1) * limit).limit(limit)).all()
     return rows, total
 
 
@@ -98,19 +100,15 @@ def _sync_reward_products(db: Session, reward: Reward, items: list) -> None:
 
 
 def load_reward(db: Session, reward_id: int) -> Reward | None:
-    return (
-        db.execute(
-            select(Reward)
-            .options(
-                joinedload(Reward.products)
-                .joinedload(RewardProduct.product)
-                .joinedload(Product.category_rel)
-            )
-            .where(Reward.id == reward_id)
+    return db.scalars(
+        select(Reward)
+        .options(
+            selectinload(Reward.products)
+            .selectinload(RewardProduct.product)
+            .selectinload(Product.category_rel)
         )
-        .unique()
-        .scalar_one_or_none()
-    )
+        .where(Reward.id == reward_id)
+    ).first()
 
 
 def create_reward(db: Session, body: RewardCreatePayload) -> Reward:

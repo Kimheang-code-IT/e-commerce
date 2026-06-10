@@ -662,6 +662,7 @@
         "no": "No",
         "name": "Reward Name",
         "products": "Products",
+        "createdAt": "Created",
         "namePlaceholder": "e.g. Starter bundle",
         "selectProducts": "Select products",
         "selectProductsError": "Select at least one product"

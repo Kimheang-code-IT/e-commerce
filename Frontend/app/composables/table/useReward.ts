@@ -68,18 +68,12 @@ export function useReward() {
   })
 
   const columns = computed<TableColumn<Reward>[]>(() => [
-    { accessorKey: 'rowNo', header: t('reward.no') },
+    { accessorKey: 'id', header: t('reward.no') },
     { accessorKey: 'name', header: t('reward.name') },
     { accessorKey: 'productNames', header: t('reward.products') },
+    { accessorKey: 'createdAt', header: t('reward.createdAt') },
     { id: 'action', header: t('common.actions') },
   ])
-
-  const tableRows = computed(() =>
-    filteredEntries.value.map((entry, index) => ({
-      ...entry,
-      rowNo: pagination.value.pageIndex * pagination.value.pageSize + index + 1,
-    })),
-  )
 
   async function loadProducts() {
     isProductsLoading.value = true
@@ -241,7 +235,7 @@ export function useReward() {
     isConfirmOpen,
     totalRows,
     selectedEntry,
-    filteredEntries: tableRows,
+    filteredEntries,
     confirmConfig,
     isLoading,
     columns,
