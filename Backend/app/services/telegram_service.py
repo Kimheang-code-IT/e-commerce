@@ -9,6 +9,10 @@ class TelegramService:
     def __init__(self):
         self.base_url = f"https://api.telegram.org/bot{settings.telegram_bot_token}"
 
+    async def send_reply_keyboard(self, chat_id: str, text: str, reply_markup: dict) -> None:
+        """Send a message that replaces the bottom reply keyboard (e.g. after /start)."""
+        await self.send_message(chat_id, text, reply_markup)
+
     async def send_message(self, chat_id: str, text: str, reply_markup: dict | None = None):
         if not settings.telegram_bot_token:
             logger.warning("Telegram bot token is not set.")

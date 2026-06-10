@@ -246,6 +246,102 @@ class ReportService:
             f"Total Expense : ${expense_total:.2f}\n"
         )
 
+    def _period_report_header(self, title: str, start_date, end_date, escape) -> str:
+        start_label = format_report_period_date_label(start_date)
+        end_label = format_report_period_date_label(end_date)
+        return (
+            f"📊 <b>{escape(title)}</b>\n\n"
+            f"Start Date : {escape(start_label)}\n"
+            f"End Date : {escape(end_label)}\n\n"
+        )
+
+    def _format_category_block(self, row: dict, *, escape) -> str:
+        name = escape((row.get("name") or "").strip() or "—")
+        refund_label = self._format_refund_label(
+            int(row.get("refund_qty") or 0),
+            float(row.get("refund_amount") or 0),
+        )
+        return (
+            f"+ Category Name : {name}\n"
+            f"- total sale stock : {int(row.get('sold_qty') or 0)}\n"
+            f"- total product refund : {refund_label}\n"
+            f"- total price sale : ${float(row.get('sale_total') or 0):.2f}\n"
+            f"- products sold : {int(row.get('products_sold') or 0)}\n"
+        )
+
+    def _format_commission_block(self, row: dict, *, escape) -> str:
+        name = escape((row.get("seller_name") or "").strip() or "Unknown")
+        return (
+            f"+ Seller Name : {name}\n"
+            f"- total sale stock : {int(row.get('sold_qty') or 0)}\n"
+            f"- total price sale : ${float(row.get('total_sales') or 0):.2f}\n"
+            f"- total commission : ${float(row.get('total_commission') or 0):.2f}\n"
+        )
+
+    def format_category_report_messages(
+        self,
+        db: Session,
+        start_date=None,
+        end_date=None,
+    ) -> list[str]:
+        from app.services.alert_service import _escape_telegram_html
+
+        start, end = self._normalize_period_bounds(start_date, end_date)
+        categories = report_repo.get_period_category_report_rows(db, start, end)
+        totals = report_repo.get_daily_sales_totals(db, start, end)
+        expense_total = report_repo.get_daily_expense_total(db, start, end)
+
+        header = self._period_report_header("Category Report", start_date, end_date, _escape_telegram_html)
+        blocks: list[str] = []
+        if not categories:
+            blocks.append("<i>No category activity in this period.</i>\n")
+        else:
+            for row in categories:
+                blocks.append(self._format_category_block(row, escape=_escape_telegram_html))
+
+        footer = (
+            "\n-------------------------------------------\n"
+            f"Subtotal : ${float(totals.get('subtotal') or 0):.2f}\n"
+            f"Delivery total : ${float(totals.get('delivery_total') or 0):.2f}\n"
+            f"Discount Total : ${float(totals.get('discount_total') or 0):.2f}\n"
+            f"Total Income : ${float(totals.get('grand_total') or 0):.2f}\n"
+            f"Total Expense : ${expense_total:.2f}\n"
+        )
+        return self._chunk_report_lines(header, blocks, footer)
+
+    def format_commission_report_messages(
+        self,
+        db: Session,
+        start_date=None,
+        end_date=None,
+    ) -> list[str]:
+        from app.services.alert_service import _escape_telegram_html
+
+        start, end = self._normalize_period_bounds(start_date, end_date)
+        sellers = report_repo.get_period_commission_report_rows(db, start, end)
+        totals = report_repo.get_daily_sales_totals(db, start, end)
+        total_commission = sum(float(row.get("total_commission") or 0) for row in sellers)
+        total_sales = sum(float(row.get("total_sales") or 0) for row in sellers)
+
+        header = self._period_report_header("Commission Report", start_date, end_date, _escape_telegram_html)
+        blocks: list[str] = []
+        if not sellers:
+            blocks.append("<i>No commission activity in this period.</i>\n")
+        else:
+            for row in sellers:
+                blocks.append(self._format_commission_block(row, escape=_escape_telegram_html))
+
+        footer = (
+            "\n-------------------------------------------\n"
+            f"Subtotal : ${float(totals.get('subtotal') or 0):.2f}\n"
+            f"Delivery total : ${float(totals.get('delivery_total') or 0):.2f}\n"
+            f"Discount Total : ${float(totals.get('discount_total') or 0):.2f}\n"
+            f"Total Sales : ${total_sales:.2f}\n"
+            f"Total Commission : ${total_commission:.2f}\n"
+            f"Total Income : ${float(totals.get('grand_total') or 0):.2f}\n"
+        )
+        return self._chunk_report_lines(header, blocks, footer)
+
     def format_period_product_report_messages(
         self,
         db: Session,
@@ -264,13 +360,7 @@ class ReportService:
         add_price_total = sum(float(row.get("added_price") or 0) for row in products)
         damaged_price_total = sum(float(row.get("damaged_price") or 0) for row in products)
 
-        start_label = format_report_period_date_label(start_date)
-        end_label = format_report_period_date_label(end_date)
-        header = (
-            f"📊 <b>{_escape_telegram_html(title)}</b>\n\n"
-            f"Start Date : {_escape_telegram_html(start_label)}\n"
-            f"End Date : {_escape_telegram_html(end_label)}\n\n"
-        )
+        header = self._period_report_header(title, start_date, end_date, _escape_telegram_html)
 
         product_blocks: list[str] = []
         if not products:
@@ -424,12 +514,14 @@ class ReportService:
         db: Session,
         start_date=None,
         end_date=None,
+        *,
+        title: str = "Product Report",
     ) -> list[str]:
         return self.format_period_product_report_messages(
             db,
             start_date,
             end_date,
-            title="Product Report",
+            title=title,
             sold_qty_label="total sale stock",
         )
 

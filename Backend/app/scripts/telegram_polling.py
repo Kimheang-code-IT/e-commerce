@@ -53,7 +53,6 @@ async def prepare_bot(client: httpx.AsyncClient) -> None:
         {"command": "product", "description": "Product sales report"},
         {"command": "payment", "description": "Payment report"},
         {"command": "commission", "description": "Commission report"},
-        {"command": "delivery", "description": "Delivery report"},
         {"command": "help", "description": "Help"},
     ]
     await _telegram_api(client, "setMyCommands", {"commands": commands})

@@ -450,6 +450,98 @@ class ReportRepository:
     def get_daily_product_report_rows(self, db: Session, start_date=None, end_date=None):
         return self.get_period_product_report_rows(db, start_date, end_date)
 
+    def get_period_category_report_rows(self, db: Session, start_date=None, end_date=None):
+        query = text("""
+            WITH sold AS (
+                SELECT
+                    p.category_id,
+                    COALESCE(SUM(ci.quantity), 0) AS sold_qty,
+                    COALESCE(SUM(ci.total), 0) AS sale_total,
+                    COUNT(DISTINCT p.id) AS products_sold
+                FROM checkout_items ci
+                INNER JOIN invoices i ON i.id = ci.invoice_id
+                INNER JOIN products p ON p.id = ci.product_id
+                WHERE i.status = 'paid'
+                  AND (:start_date IS NULL OR i.created_at >= :start_date)
+                  AND (:end_date IS NULL OR i.created_at <= :end_date)
+                  AND ci.id NOT IN (
+                      SELECT checkout_item_id FROM refund_records
+                      WHERE checkout_item_id IS NOT NULL
+                  )
+                GROUP BY p.category_id
+            ),
+            refunds AS (
+                SELECT
+                    p.category_id,
+                    COALESCE(SUM(rr.qty), 0) AS refund_qty,
+                    COALESCE(SUM(rr.amount), 0) AS refund_amount
+                FROM refund_records rr
+                INNER JOIN products p ON p.id = rr.product_id
+                WHERE rr.product_id IS NOT NULL
+                  AND (:start_date IS NULL OR rr.refunded_at >= :start_date)
+                  AND (:end_date IS NULL OR rr.refunded_at <= :end_date)
+                GROUP BY p.category_id
+            )
+            SELECT
+                COALESCE(c.name, 'Uncategorized') AS name,
+                COALESCE(sold.sold_qty, 0) AS sold_qty,
+                COALESCE(sold.sale_total, 0) AS sale_total,
+                COALESCE(sold.products_sold, 0) AS products_sold,
+                COALESCE(refunds.refund_qty, 0) AS refund_qty,
+                COALESCE(refunds.refund_amount, 0) AS refund_amount
+            FROM sold
+            LEFT JOIN categories c ON c.id = sold.category_id
+            LEFT JOIN refunds ON refunds.category_id = sold.category_id
+            WHERE COALESCE(sold.sold_qty, 0) > 0
+               OR COALESCE(refunds.refund_qty, 0) > 0
+            ORDER BY sale_total DESC, name ASC
+        """)
+        rows = db.execute(query, {"start_date": start_date, "end_date": end_date}).fetchall()
+        return [
+            {
+                "name": r[0] or "Uncategorized",
+                "sold_qty": int(r[1] or 0),
+                "sale_total": float(r[2] or 0),
+                "products_sold": int(r[3] or 0),
+                "refund_qty": int(r[4] or 0),
+                "refund_amount": float(r[5] or 0),
+            }
+            for r in rows
+        ]
+
+    def get_period_commission_report_rows(self, db: Session, start_date=None, end_date=None):
+        query = text("""
+            SELECT
+                COALESCE(NULLIF(TRIM(u.name), ''), 'Unknown') AS seller_name,
+                COALESCE(SUM(ci.quantity * p.commission), 0) AS total_commission,
+                COALESCE(SUM(ci.total), 0) AS total_sales,
+                COALESCE(SUM(ci.quantity), 0) AS sold_qty
+            FROM checkout_items ci
+            INNER JOIN invoices i ON i.id = ci.invoice_id
+            INNER JOIN products p ON p.id = ci.product_id
+            LEFT JOIN users u ON u.id = i.user_id
+            WHERE i.status = 'paid'
+              AND (:start_date IS NULL OR i.created_at >= :start_date)
+              AND (:end_date IS NULL OR i.created_at <= :end_date)
+              AND ci.id NOT IN (
+                  SELECT checkout_item_id FROM refund_records
+                  WHERE checkout_item_id IS NOT NULL
+              )
+            GROUP BY u.name
+            HAVING COALESCE(SUM(ci.quantity), 0) > 0
+            ORDER BY total_commission DESC, total_sales DESC, seller_name ASC
+        """)
+        rows = db.execute(query, {"start_date": start_date, "end_date": end_date}).fetchall()
+        return [
+            {
+                "seller_name": r[0] or "Unknown",
+                "total_commission": float(r[1] or 0),
+                "total_sales": float(r[2] or 0),
+                "sold_qty": int(r[3] or 0),
+            }
+            for r in rows
+        ]
+
     def get_daily_expense_total(self, db: Session, start_date=None, end_date=None) -> float:
         """Cost of goods sold + commission for non-refunded sales in range."""
         query = text("""
