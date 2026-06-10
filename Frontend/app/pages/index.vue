@@ -31,7 +31,7 @@ const selectedProductItems = computed({
 
 // Keep dashboard charts large and balanced across screen sizes.
 const SECTION_HEIGHT = {
-  DASHBOARD: "clamp(560px, calc(100vh - 220px), 760px)",
+  DASHBOARD: "clamp(620px, calc(100vh - 200px), 820px)",
 };
 
 type PieDataPoint = { name: string; value: number };
@@ -96,8 +96,8 @@ const userSalePieData = computed<PieDataPoint[]>(() =>
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 items-stretch"
         :style="{ minHeight: SECTION_HEIGHT.DASHBOARD }">
         <!-- Left: Cambodia Map (Customer Buy Analytics) -->
-        <UCard class="lg:col-span-8 shadow-sm border border-default flex flex-col overflow-hidden"
-          :style="{ minHeight: SECTION_HEIGHT.DASHBOARD }" :ui="{ body: 'p-0 flex-1 min-h-0' }">
+        <UCard class="lg:col-span-8 shadow-sm border border-default flex flex-col"
+          :style="{ minHeight: SECTION_HEIGHT.DASHBOARD }" :ui="{ body: 'p-0 flex-1 min-h-0 overflow-visible' }">
           <template #header>
             <div class="flex items-center gap-2">
               <UIcon name="i-lucide-map" class="size-5 text-primary" />
@@ -106,7 +106,7 @@ const userSalePieData = computed<PieDataPoint[]>(() =>
               </h2>
             </div>
           </template>
-          <div class="w-full relative transition-all duration-300 flex-1 min-h-0" :style="{ opacity: 1 }">
+          <div class="w-full h-full relative transition-all duration-300 flex-1 min-h-[480px]" :style="{ opacity: 1 }">
             <div v-if="pending" class="absolute inset-x-0 top-10 bottom-0 flex flex-col gap-2 p-4">
               <USkeleton v-for="i in 10" :key="i" class="h-4 w-full" />
             </div>

@@ -28,10 +28,11 @@ interface StaticProvinceMeta {
     centroid: [number, number]
 }
 
-// Map dimensions for projection scaling
-const widthInt = 800
-const heightInt = 600
-const viewBox = `0 0 ${widthInt} ${heightInt}`
+// Virtual canvas used only to compute an initial fit; final viewBox is tightened to geometry.
+const CANVAS_WIDTH = 1000
+const CANVAS_HEIGHT = 900
+const MAP_FIT_PADDING = 56
+const LABEL_PADDING = { top: 28, right: 28, bottom: 40, left: 28 }
 
 // ─── GeoJSON Fetching ───────────────────────────────────────────────
 onMounted(async () => {
@@ -108,21 +109,68 @@ function getBounds(gj: any) {
 
 const projectionParams = computed(() => {
     if (!geojson.value?.features?.length) return null
-    
+
     const bounds = getBounds(geojson.value)
     const bWidth = bounds.maxX - bounds.minX
     const bHeight = bounds.maxY - bounds.minY
-    const padding = 1
-    
-    const scale = Math.min(
-        (widthInt - padding * 2) / bWidth,
-        (heightInt - padding * 2) / bHeight
-    )
-    
-    const offsetX = (widthInt - bWidth * scale) / 2 - bounds.minX * scale
-    const offsetY = (heightInt - bHeight * scale) / 2 - bounds.minY * scale
-    
+    const innerWidth = CANVAS_WIDTH - MAP_FIT_PADDING * 2
+    const innerHeight = CANVAS_HEIGHT - MAP_FIT_PADDING * 2
+
+    const scale = Math.min(innerWidth / bWidth, innerHeight / bHeight)
+
+    const offsetX =
+        MAP_FIT_PADDING + (innerWidth - bWidth * scale) / 2 - bounds.minX * scale
+    const offsetY =
+        MAP_FIT_PADDING + (innerHeight - bHeight * scale) / 2 - bounds.minY * scale
+
     return { scale, offsetX, offsetY }
+})
+
+function forEachCoordinate(geometry: any, callback: (lon: number, lat: number) => void) {
+    const walk = (coords: any): void => {
+        if (typeof coords[0] === 'number' && typeof coords[1] === 'number') {
+            callback(coords[0], coords[1])
+            return
+        }
+        if (Array.isArray(coords)) coords.forEach(walk)
+    }
+    if (geometry?.coordinates) walk(geometry.coordinates)
+}
+
+function getProjectedBounds(gj: any, params: { scale: number; offsetX: number; offsetY: number }) {
+    let minX = Infinity
+    let minY = Infinity
+    let maxX = -Infinity
+    let maxY = -Infinity
+
+    gj.features.forEach((feature: any) => {
+        forEachCoordinate(feature.geometry, (lon, lat) => {
+            const projected = mercatorProject(lon, lat)
+            const x = projected[0] * params.scale + params.offsetX
+            const y = projected[1] * params.scale + params.offsetY
+            minX = Math.min(minX, x)
+            minY = Math.min(minY, y)
+            maxX = Math.max(maxX, x)
+            maxY = Math.max(maxY, y)
+        })
+    })
+
+    return { minX, minY, maxX, maxY }
+}
+
+const viewBox = computed(() => {
+    if (!geojson.value?.features?.length || !projectionParams.value) {
+        return `0 0 ${CANVAS_WIDTH} ${CANVAS_HEIGHT}`
+    }
+
+    const bounds = getProjectedBounds(geojson.value, projectionParams.value)
+    const pad = LABEL_PADDING
+    const x = bounds.minX - pad.left
+    const y = bounds.minY - pad.top
+    const width = bounds.maxX - bounds.minX + pad.left + pad.right
+    const height = bounds.maxY - bounds.minY + pad.top + pad.bottom
+
+    return `${x} ${y} ${width} ${height}`
 })
 
 function project(lon: number, lat: number): [number, number] {
@@ -347,15 +395,15 @@ const tooltipStyle = computed(() => {
 </script>
 
 <template>
-    <div 
-        class="flex flex-col relative w-full h-full bg-transparent overflow-hidden"
+    <div
+        class="flex flex-col relative w-full h-full min-h-[420px] bg-transparent"
         :class="{ 'overflow-x-auto': width === 'w-2000' }"
         :style="mapThemeVars"
     >
-        <div 
-            ref="mapContainer" 
-            class="relative transition-all duration-300 ease-in-out h-full"
-            :style="{ 
+        <div
+            ref="mapContainer"
+            class="relative flex flex-1 min-h-0 items-center justify-center p-3 transition-all duration-300 ease-in-out"
+            :style="{
                 width: width === 'w-2000' ? '2000px' : '100%'
             }"
         >
@@ -363,7 +411,7 @@ const tooltipStyle = computed(() => {
                 v-if="isMapLoaded"
                 ref="svgRef"
                 :viewBox="viewBox"
-                class="w-full h-full drop-shadow-sm"
+                class="block w-full h-full max-h-full drop-shadow-sm"
                 preserveAspectRatio="xMidYMid meet"
             >
                 <g>
@@ -413,7 +461,7 @@ const tooltipStyle = computed(() => {
             </div>
 
             <!-- Legend Overlay -->
-            <div class="absolute bottom-2 p-1 rounded-lg bg-background/80 backdrop-blur-sm border border-accented shadow-sm select-none">
+            <div class="absolute right-3 bottom-3 p-1 rounded-lg bg-background/80 backdrop-blur-sm border border-accented shadow-sm select-none z-10">
                 <div class="flex items-center gap-1.5 mb-2">
                     <UIcon name="i-lucide-trending-up" class="size-3 text-primary" />
                     <div class="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{{ label || $t('components.scale') }}</div>
