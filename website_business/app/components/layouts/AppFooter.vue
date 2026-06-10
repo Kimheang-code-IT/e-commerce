@@ -1,11 +1,11 @@
 <script setup lang="ts">
 const { footer } = useAppConfig()
 const { t } = useI18n()
+const socialLinks = useSocialLinks()
 
 const currentYear = new Date().getFullYear()
 
 const navLinks = computed(() => footer?.nav ?? [])
-const socialLinks = computed(() => footer?.social ?? [])
 </script>
 
 <template>
@@ -24,20 +24,25 @@ const socialLinks = computed(() => footer?.social ?? [])
         </template>
       </nav>
 
-      <div class="flex items-center justify-center gap-4 overflow-x-auto whitespace-nowrap sm:justify-center sm:gap-6 lg:gap-8">
-        <div v-if="socialLinks.length" class="flex shrink-0 items-center gap-3 sm:gap-4">
-          <NuxtLink
-            v-for="(link, index) in socialLinks"
-            :key="`${link.label}-${index}`"
-            :to="link.to"
-            target="_blank"
-            rel="noopener noreferrer"
-            :aria-label="link.label"
-            class="shrink-0 text-white/80 transition-colors hover:text-white"
-          >
-            <UIcon :name="link.icon" class="size-4 sm:size-5" />
-          </NuxtLink>
-        </div>
+      <div
+        v-if="socialLinks.length"
+        class="flex items-center justify-center gap-3 overflow-x-auto whitespace-nowrap sm:gap-4"
+      >
+        <a
+          v-for="(link, index) in socialLinks"
+          :key="`${link.label}-${index}`"
+          :href="link.to"
+          target="_blank"
+          rel="noopener noreferrer"
+          :aria-label="link.label"
+          :title="link.label"
+          :class="[
+            'flex size-8 shrink-0 items-center justify-center rounded-md text-white transition-colors sm:size-9',
+            link.class ?? 'bg-white/10 hover:bg-white/20'
+          ]"
+        >
+          <UIcon :name="link.icon" class="size-4 sm:size-[1.125rem]" />
+        </a>
       </div>
 
       <p class="text-center text-[11px] leading-snug text-white/80 sm:text-sm sm:leading-relaxed">

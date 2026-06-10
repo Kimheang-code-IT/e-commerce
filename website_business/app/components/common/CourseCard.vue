@@ -20,11 +20,14 @@ export interface CourseCardItem {
 </script>
 
 <script setup lang="ts">
+import { useSocialLinks } from '~/composables/useSocialLinks'
+
 const props = defineProps<{
   course: CourseCardItem
 }>()
 
 const { t } = useI18n()
+const socialLinks = useSocialLinks()
 
 function formatPrice(price: string | number) {
   if (typeof price === 'number') {
@@ -126,6 +129,27 @@ const specRows = computed(() => [
           - {{ row.label }} : {{ row.value }}
         </li>
       </ul>
+
+      <div
+        v-if="socialLinks.length"
+        class="mt-4 flex flex-wrap items-center justify-center gap-2 border-t border-dashed border-black/30 pt-3"
+      >
+        <a
+          v-for="link in socialLinks"
+          :key="link.label"
+          :href="link.to"
+          target="_blank"
+          rel="noopener noreferrer"
+          :aria-label="link.label"
+          :title="link.label"
+          :class="[
+            'flex size-8 items-center justify-center rounded-md text-white transition-colors',
+            link.class
+          ]"
+        >
+          <UIcon :name="link.icon" class="size-4" />
+        </a>
+      </div>
     </div>
   </article>
 </template>

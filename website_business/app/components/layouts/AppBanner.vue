@@ -4,7 +4,7 @@ import { useIntervalFn } from '@vueuse/core'
 const { banner } = useAppConfig()
 const { locale, t } = useI18n()
 
-const socialLinks = computed(() => banner?.social ?? [])
+const socialLinks = useSocialLinks()
 const currentIndex = ref(0)
 
 const notifications = computed(() => {
