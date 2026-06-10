@@ -37,14 +37,18 @@ const pageKeywords = computed(() => {
 })
 
 const pageImage = computed(() => {
-  const firstWithImage = allProducts.value.find((item) => String(item.image || '').trim())
-  return resolvePageImage(firstWithImage?.image)
+  if (activeCategory.value) {
+    const firstWithImage = allProducts.value.find((item) => String(item.image || '').trim())
+    if (firstWithImage?.image) return resolvePageImage(firstWithImage.image)
+  }
+  return resolvePageImage('/image/logo.png')
 })
 
 const pageJsonLd = computed(() =>
   buildCatalogJsonLd({
     siteUrl: siteUrl.value || 'https://anyamusicschool.com',
     siteName: siteName.value,
+    description: pageDescription.value,
     products: allProducts.value,
     apiBase: apiBase.value,
     categoryName: activeCategory.value?.name,

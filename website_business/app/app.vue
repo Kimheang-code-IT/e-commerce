@@ -17,8 +17,9 @@ useHead({
     { name: 'mobile-web-app-capable', content: 'yes' }
   ],
   link: [
-    { rel: 'icon', type: 'image/png', href: '/image/logo.png' },
-    { rel: 'apple-touch-icon', href: '/image/logoapp.png' },
+    { rel: 'icon', type: 'image/png', sizes: '48x48', href: '/image/logo.png' },
+    { rel: 'icon', type: 'image/png', sizes: '192x192', href: '/image/logo.png' },
+    { rel: 'apple-touch-icon', href: '/image/logo.png' },
     { rel: 'manifest', href: '/site.webmanifest' },
     ...(siteUrl.value ? [{ rel: 'sitemap', type: 'application/xml', href: `${siteUrl.value}/sitemap.xml` }] : [])
   ],
@@ -28,8 +29,10 @@ useHead({
 })
 
 useSeoMeta({
-  title: siteName.value,
-  titleTemplate: (titleChunk) => titleChunk || siteName.value,
+  titleTemplate: (titleChunk) => {
+    if (!titleChunk || titleChunk === siteName.value) return siteName.value
+    return `${titleChunk} | ${siteName.value}`
+  },
   ogSiteName: siteName.value,
   twitterCard: 'summary_large_image',
   robots: 'index, follow, max-image-preview:large'

@@ -1,6 +1,6 @@
 import { normalizeSiteUrl } from '~/utils/seo/site'
 
-export const DEFAULT_OG_IMAGE_PATH = '/image/herolight.png'
+export const DEFAULT_OG_IMAGE_PATH = '/image/logo.png'
 
 export function defaultOgImage(siteUrl: string) {
   const base = normalizeSiteUrl(siteUrl)

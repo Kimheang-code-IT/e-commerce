@@ -3,14 +3,14 @@
     "siteName": "Anya Music School",
     "keywords": "Anya Music School, music school, guitars, musical instruments, product catalog, Cambodia, anyamusicschool",
     "categoryDescription": "Browse {category} products at Anya Music School. Compare specs, models, colors, and prices.",
-    "defaultOgImageAlt": "Anya Music School — musical instruments and product catalog",
+    "defaultOgImageAlt": "Anya Music School logo — music school and instrument store",
     "categoryOgImageAlt": "{category} products at Anya Music School",
     "productImageAlt": "{model} {name} — product photo",
     "priceLabel": "Price {price}",
     "priceWithDiscount": "Sale price {sale}, was {list}"
   },
   "home": {
-    "seoDescription": "Shop musical instruments and accessories at Anya Music School. Browse guitars and more with detailed specs, models, and prices in Cambodia."
+    "seoDescription": "សាលារៀនតន្ត្រី និងលក់ឧបករណ៍តន្ត្រី សម្រាប់អ្នកចាប់ផ្តើម អ្នកចង់ពង្រឹងជំនាញតន្ត្រី ជាមួយគ្រូមានបទពិសោធន៍ និងឧបករណ៍ទំនើប។"
   },
   "hero": {
     "productCountSuffix": "products",

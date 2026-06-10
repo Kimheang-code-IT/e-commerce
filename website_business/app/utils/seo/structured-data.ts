@@ -3,24 +3,25 @@ import { productSalePrice, resolveAbsoluteMediaUrl } from '~/utils/seo/media'
 
 type JsonLdNode = Record<string, unknown>
 
-const DEFAULT_DESCRIPTION =
-  'Anya Music School — musical instruments and accessories in Cambodia. Browse guitars and more with specs, models, and prices.'
-
 export function buildOrganizationJsonLd(
   siteUrl: string,
   siteName: string,
-  sameAs: string[] = []
+  sameAs: string[] = [],
+  description?: string
 ): JsonLdNode {
   return {
     '@type': ['Organization', 'MusicSchool'],
     '@id': `${siteUrl}/#organization`,
     name: siteName,
     url: siteUrl,
-    description: DEFAULT_DESCRIPTION,
+    description,
     logo: {
       '@type': 'ImageObject',
-      url: `${siteUrl}/image/logo.png`
+      url: `${siteUrl}/image/logo.png`,
+      width: 512,
+      height: 512
     },
+    image: `${siteUrl}/image/logo.png`,
     address: {
       '@type': 'PostalAddress',
       addressCountry: 'KH'
@@ -29,13 +30,13 @@ export function buildOrganizationJsonLd(
   }
 }
 
-export function buildWebSiteJsonLd(siteUrl: string, siteName: string): JsonLdNode {
+export function buildWebSiteJsonLd(siteUrl: string, siteName: string, description?: string): JsonLdNode {
   return {
     '@type': 'WebSite',
     '@id': `${siteUrl}/#website`,
     name: siteName,
     url: siteUrl,
-    description: DEFAULT_DESCRIPTION,
+    description,
     publisher: { '@id': `${siteUrl}/#organization` },
     inLanguage: ['en-US', 'km-KH']
   }
@@ -95,15 +96,16 @@ export function buildProductListJsonLd(
 export function buildCatalogJsonLd(options: {
   siteUrl: string
   siteName: string
+  description?: string
   products: CourseCardItem[]
   apiBase?: string
   categoryName?: string
   sameAs?: string[]
 }) {
-  const { siteUrl, siteName, products, apiBase, categoryName, sameAs = [] } = options
+  const { siteUrl, siteName, description, products, apiBase, categoryName, sameAs = [] } = options
   const graph: JsonLdNode[] = [
-    buildOrganizationJsonLd(siteUrl, siteName, sameAs),
-    buildWebSiteJsonLd(siteUrl, siteName)
+    buildOrganizationJsonLd(siteUrl, siteName, sameAs, description),
+    buildWebSiteJsonLd(siteUrl, siteName, description)
   ]
 
   if (products.length) {
