@@ -1,11 +1,17 @@
-"""Drop all tables and recreate schema. Works with PostgreSQL (Docker) and SQLite (local dev).
+"""Delete all data and recreate empty tables. PostgreSQL (Docker) or SQLite (local dev).
 
-Usage (Docker):
-  docker compose exec backend python app/scripts/reset_db.py
+Usage (Docker — from repo root):
+  docker compose exec backend python app/scripts/reset_db.py --yes
 
-After reset, create the first admin at /setup in the frontend (no auto-seed on startup).
+Local:
+  cd Backend && python app/scripts/reset_db.py --yes
+
+After reset, create the first admin at /setup in the frontend.
 """
 
+from __future__ import annotations
+
+import argparse
 import os
 import sys
 
@@ -13,6 +19,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 
 from sqlalchemy import inspect, text
 
+from app.core.config import settings
 from app.core.database import engine
 from app.main import init_db
 
@@ -37,7 +44,15 @@ def _reset_sqlite(conn) -> None:
     conn.execute(text("PRAGMA foreign_keys=ON"))
 
 
-def reset_database() -> None:
+def reset_database(*, yes: bool = False) -> None:
+    if not yes:
+        print("This will DELETE ALL DATA in the database and recreate empty tables.")
+        print(f"Database: {settings.DATABASE_URL.split('@')[-1] if '@' in settings.DATABASE_URL else settings.DATABASE_URL}")
+        answer = input("Type YES to continue: ").strip()
+        if answer != "YES":
+            print("Aborted.")
+            return
+
     dialect = _dialect_name()
     print(f"Resetting database (dialect={dialect})...")
 
@@ -56,9 +71,21 @@ def reset_database() -> None:
 
     print("Recreating tables...")
     init_db()
-    print("Database reset complete.")
-    print("Open the app at /setup to create the first administrator (if no users exist).")
+    print("Database reset complete — all data removed.")
+    print("Open the app at /setup to create the first administrator.")
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Delete all database data and recreate schema.")
+    parser.add_argument(
+        "--yes",
+        "-y",
+        action="store_true",
+        help="Skip confirmation prompt (required for scripts/CI).",
+    )
+    args = parser.parse_args()
+    reset_database(yes=args.yes)
 
 
 if __name__ == "__main__":
-    reset_database()
+    main()

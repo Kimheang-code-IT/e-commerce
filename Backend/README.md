@@ -29,6 +29,18 @@ python Backend/app/scripts/check_env_docker.py   # Docker hosts + Settings() loa
 
 ## Utilities (`app/scripts/`)
 
+**Delete all data** (drops every table, recreates empty schema):
+
+```bash
+# From repo root (Docker)
+./reset-database.sh
+
+# Or directly
+docker compose exec backend python app/scripts/reset_db.py --yes
+```
+
+Interactive (asks you to type `YES`):
+
 ```bash
 docker compose exec backend python app/scripts/reset_db.py
 ```
