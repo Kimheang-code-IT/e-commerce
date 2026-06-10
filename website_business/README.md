@@ -49,13 +49,19 @@ You should see `Allow: /`, `Sitemap: https://anyamusicschool.com/sitemap.xml`, a
 NUXT_PUBLIC_GOOGLE_SITE_VERIFICATION=abc123xyz
 ```
 
-6. Rebuild and deploy:
+6. Rebuild and deploy (required — meta tags are baked in at Docker **build** time):
 
 ```bash
 ./build-admin.sh --website-only
 ```
 
-7. Click **Verify** in Search Console
+7. Confirm tags are live:
+
+```bash
+curl -s https://anyamusicschool.com/ | grep -E 'google-site-verification|msvalidate'
+```
+
+8. Click **Verify** in Search Console
 8. Go to **Sitemaps** → submit: `https://anyamusicschool.com/sitemap.xml`
 9. Use **URL inspection** on the homepage → **Request indexing**
 

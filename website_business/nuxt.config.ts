@@ -3,6 +3,17 @@ import { defineNuxtConfig } from 'nuxt/config'
 
 const apiBase = process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8000/api/v1'
 const siteUrl = process.env.NUXT_PUBLIC_SITE_URL || 'https://anyamusicschool.com'
+const googleSiteVerification =
+  process.env.NUXT_PUBLIC_GOOGLE_SITE_VERIFICATION || '5BNRjT7h8ONl_lUjaoiXOK6LM8gIpF0dHmd-8ltN63A'
+const bingSiteVerification =
+  process.env.NUXT_PUBLIC_BING_SITE_VERIFICATION || '3E6BA499AB5B23085685831BC87434D3'
+
+const verificationMeta = [
+  ...(googleSiteVerification
+    ? [{ name: 'google-site-verification', content: googleSiteVerification }]
+    : []),
+  ...(bingSiteVerification ? [{ name: 'msvalidate.01', content: bingSiteVerification }] : [])
+]
 
 function hostnameFromUrl(value: string) {
   try {
@@ -69,7 +80,8 @@ export default defineNuxtConfig({
   app: {
     head: {
       charset: 'utf-8',
-      viewport: 'width=device-width, initial-scale=1'
+      viewport: 'width=device-width, initial-scale=1',
+      meta: verificationMeta
     }
   },
 
@@ -147,8 +159,8 @@ export default defineNuxtConfig({
     public: {
       siteUrl,
       apiBase,
-      googleSiteVerification: process.env.NUXT_PUBLIC_GOOGLE_SITE_VERIFICATION || '',
-      bingSiteVerification: process.env.NUXT_PUBLIC_BING_SITE_VERIFICATION || ''
+      googleSiteVerification,
+      bingSiteVerification
     }
   }
 })
