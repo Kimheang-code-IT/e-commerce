@@ -84,17 +84,10 @@ git_pull() {
     return
   fi
 
-  echo "==> Git pull ($GIT_BRANCH)"
+  echo "==> Git sync ($GIT_BRANCH)"
   git fetch origin "$GIT_BRANCH"
-  if ! git pull --ff-only origin "$GIT_BRANCH"; then
-    echo ""
-    echo "Git pull failed (local changes or diverged branch)." >&2
-    echo "Fix on server, then re-run:" >&2
-    echo "  git status" >&2
-    echo "  git stash && ./build-admin.sh" >&2
-    echo "  # or: git reset --hard origin/$GIT_BRANCH && ./build-admin.sh" >&2
-    exit 1
-  fi
+  # Deploy server must mirror the repo (no local edits / chmod drift). Discard working-tree changes.
+  git reset --hard "origin/$GIT_BRANCH"
   echo "    at $(git log -1 --oneline)"
 }
 
