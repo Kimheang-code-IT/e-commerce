@@ -246,7 +246,8 @@ def serialize_finance_view(row_f: Finance, row_p: Product) -> dict[str, Any]:
 
 def serialize_commission_row(ci: CheckoutItem, inv: Invoice, seller: User | None, product: Product | None) -> dict[str, Any]:
     unit_commission = float(product.commission or 0) if product else 0.0
-    commission_amt = unit_commission * int(ci.quantity or 0)
+    qty = int(ci.quantity or 0)
+    commission_amt = unit_commission * qty
     return {
         "id": ci.id,
         "seller": seller.name if seller else "",
@@ -256,6 +257,7 @@ def serialize_commission_row(ci: CheckoutItem, inv: Invoice, seller: User | None
         "date": to_iso(inv.created_at),
         "amount": float(ci.total),
         "commission": commission_amt,
+        "qty": qty,
     }
 
 

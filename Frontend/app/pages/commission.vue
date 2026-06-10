@@ -3,9 +3,14 @@ import { useCommission } from '~/composables/table/useCommission'
 import { formatCurrency } from '~/utils/format/currency'
 import { formatDate } from '~/utils/format/date'
 import { useCommissionApi } from '~/utils/api'
+import { aggregateCommissionTableRow } from '~/utils/commission/aggregates'
 
 const { data, columns, groupingOptions, grouping, isAdmin, isLoading, sorting, searchQuery, columnFilters, pagination, totalRows, productItems, selectedProducts, canExport } = useCommission()
 const { t } = useI18n()
+
+function groupRowStats(row: Parameters<typeof aggregateCommissionTableRow>[0]) {
+  return aggregateCommissionTableRow(row)
+}
 const isExportOpen = ref(false)
 const commissionApi = useCommissionApi()
 
@@ -52,7 +57,7 @@ async function fetchCommissionExportData(args: { startDate?: string; endDate?: s
         }"
       >
         <template #seller-cell="{ row }">
-          <div v-if="row.getIsGrouped()" class="flex items-center gap-2 py-1">
+          <div v-if="row.getIsGrouped()" class="flex flex-wrap items-center gap-x-2 gap-y-1 py-1">
             <span class="inline-block" :style="{ width: `calc(${row.depth} * 1rem)` }" />
             <UButton
               color="neutral"
@@ -64,12 +69,26 @@ async function fetchCommissionExportData(args: { startDate?: string; endDate?: s
             <span class="font-medium text-foreground">
               {{ String(row.groupingColumnId || '').replace('_key', '').toUpperCase() }}:
               {{ row.getValue(row.groupingColumnId || '') }}
-              <span class="text-muted-foreground">({{ row.subRows?.length || 0 }} {{ t('common.items') }})</span>
+            </span>
+            <span class="text-xs text-muted-foreground">
+              {{
+                t('pages.commission.groupSummary', {
+                  products: groupRowStats(row).productCount,
+                  commission: formatCurrency(groupRowStats(row).commissionTotal, 'USD'),
+                })
+              }}
             </span>
           </div>
           <span v-else class="font-medium">
             {{ row.getValue('seller') }}
           </span>
+        </template>
+
+        <template #product-cell="{ row }">
+          <span v-if="row.getIsGrouped()" class="text-sm font-semibold text-foreground">
+            {{ t('pages.commission.footer.productCount', { count: groupRowStats(row).productCount }) }}
+          </span>
+          <span v-else>{{ row.getValue('product') }}</span>
         </template>
 
         <template #date-cell="{ row }">
@@ -83,7 +102,22 @@ async function fetchCommissionExportData(args: { startDate?: string; endDate?: s
         </template>
 
         <template #commission-cell="{ row }">
-          <UBadge color="primary" variant="soft" class="font-normal">{{ formatCurrency(Number(row.getValue('commission')), 'USD') }}</UBadge>
+          <UBadge
+            v-if="row.getIsGrouped()"
+            color="primary"
+            variant="solid"
+            class="font-semibold"
+          >
+            {{ formatCurrency(groupRowStats(row).commissionTotal, 'USD') }}
+          </UBadge>
+          <UBadge
+            v-else
+            color="primary"
+            variant="soft"
+            class="font-normal"
+          >
+            {{ formatCurrency(Number(row.getValue('commission')), 'USD') }}
+          </UBadge>
         </template>
       </TableApptable>
       <CommonAppExport v-model:open="isExportOpen" :data="data" :fetch-export-data="fetchCommissionExportData"

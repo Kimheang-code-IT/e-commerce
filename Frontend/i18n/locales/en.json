@@ -466,6 +466,10 @@
             "title": "Commission",
             "tableTitle": "Commission",
             "filterSource": "Source",
+            "groupSummary": "{products} products · {commission} commission",
+            "footer": {
+                "productCount": "Products: {count}"
+            },
             "columns": {
                 "seller": "Seller",
                 "product": "Product",
@@ -513,6 +517,10 @@
         "refund": {
             "title": "Refund",
             "recordsTitle": "Refund Records",
+            "actions": {
+                "unrefund": "Unrefund",
+                "viewReport": "View on report"
+            },
             "previewSelected": "Preview Selected",
             "deleteSuccess": "Refund records for this invoice were removed.",
             "confirmDeleteTitle": "Delete Refund Records",

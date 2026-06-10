@@ -467,6 +467,10 @@
             "title": "កម្រៃជើងសា",
             "tableTitle": "កម្រៃជើងសា",
             "filterSource": "ប្រភព",
+            "groupSummary": "{products} ផលិតផល · {commission} កម្រៃជើងសា",
+            "footer": {
+                "productCount": "ផលិតផល: {count}"
+            },
             "columns": {
                 "seller": "អ្នកលក់",
                 "product": "ផលិតផល",
@@ -514,6 +518,10 @@
         "refund": {
             "title": "ការសងប្រាក់",
             "recordsTitle": "កំណត់ត្រាសងប្រាក់",
+            "actions": {
+                "unrefund": "មិនសងប្រាក់",
+                "viewReport": "មើលក្នុងរបាយការណ៍"
+            },
             "previewSelected": "មើលដែលបានជ្រើស",
             "deleteSuccess": "បានលុបកំណត់ត្រាសងប្រាក់សម្រាប់វិក្កយបត្រនេះ។",
             "confirmDeleteTitle": "លុបកំណត់ត្រាសងប្រាក់",

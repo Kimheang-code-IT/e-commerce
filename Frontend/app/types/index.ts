@@ -147,6 +147,8 @@ export interface CommissionEntry {
   date: string
   amount: number
   commission: number
+  /** Units sold on this line (checkout item quantity). */
+  qty?: number
   saleCount?: number
 }
 

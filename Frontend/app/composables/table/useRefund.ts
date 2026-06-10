@@ -9,6 +9,7 @@ import { useAuthStore } from '~/stores/auth'
 
 export type RefundRowActionHandlers = {
   onPreview?: (row: RefundRecord) => void
+  onGoToReport?: (row: RefundRecord) => void
 }
 
 export type UseRefundOptions = RefundRowActionHandlers & {
@@ -163,17 +164,37 @@ export function useRefund(options?: UseRefundOptions) {
   ])
 
   function getDropdownActions(row: RefundRecord): DropdownMenuItem[][] {
-    if (!handlers?.onPreview) return []
-    if (!auth.hasPermission('pos:view') && !auth.hasPermission('pos:checkout')) return []
-    return [
-      [
-        {
-          label: t('pages.report.actions.preview'),
-          icon: 'i-lucide-eye',
-          onSelect: () => handlers.onPreview!(row),
-        },
-      ],
-    ]
+    const items: DropdownMenuItem[] = []
+
+    if (perms.canDelete.value) {
+      items.push({
+        label: t('pages.refund.actions.unrefund'),
+        icon: 'i-lucide-undo-2',
+        color: 'error',
+        onSelect: () => requestDeleteRefund(row),
+      })
+    }
+
+    if (handlers?.onGoToReport && auth.hasPermission('report:view')) {
+      items.push({
+        label: t('pages.refund.actions.viewReport'),
+        icon: 'i-lucide-file-bar-chart',
+        onSelect: () => handlers.onGoToReport!(row),
+      })
+    }
+
+    if (
+      handlers?.onPreview
+      && (auth.hasPermission('pos:view') || auth.hasPermission('pos:checkout'))
+    ) {
+      items.push({
+        label: t('pages.report.actions.preview'),
+        icon: 'i-lucide-eye',
+        onSelect: () => handlers.onPreview!(row),
+      })
+    }
+
+    return items.length ? [items] : []
   }
 
   function openRefundDialog(row: ReportRow) {

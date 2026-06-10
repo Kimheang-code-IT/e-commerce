@@ -66,7 +66,11 @@
       <!-- Action Cell Implementation -->
       <template #action-cell="{ row }">
         <slot name="action-cell" :row="row">
-          <UDropdownMenu v-if="getRowActions" :items="getRowActions(row.original)" :content="{ align: 'end' }">
+          <UDropdownMenu
+            v-if="getRowActions?.(row.original)?.some((group) => group.length > 0)"
+            :items="getRowActions(row.original)"
+            :content="{ align: 'end' }"
+          >
             <UButton icon="i-lucide-ellipsis-vertical" color="neutral" variant="ghost" class="rounded-md" size="sm" />
           </UDropdownMenu>
         </slot>

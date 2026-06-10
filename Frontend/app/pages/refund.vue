@@ -14,6 +14,13 @@ function goToPreview(row: RefundRecord) {
   })
 }
 
+function goToReport(row: RefundRecord) {
+  router.push({
+    path: '/report',
+    query: { search: row.invoiceNo },
+  })
+}
+
 function goToSelectedInvoices() {
   if (!selectedRefundRows.value.length) return
   const invoiceNos = [...new Set(selectedRefundRows.value.map((r) => r.invoiceNo))]
@@ -47,9 +54,8 @@ const {
   confirmConfig,
   requestDeleteRefund,
   finalizeDeleteRefund,
-  canDelete,
   canView,
-} = useRefund({ onPreview: goToPreview })
+} = useRefund({ onPreview: goToPreview, onGoToReport: goToReport })
 
 const { canView: canViewPos, canCheckout: canCheckoutPos } = useModulePermissions('pos')
 
@@ -122,10 +128,6 @@ const isExportOpen = ref(false)
           </template>
           <template #refundReason-cell="{ row }">
             <span class="line-clamp-2">{{ row.original.refundReason || 'N/A' }}</span>
-          </template>
-          <template #action-cell="{ row }">
-            <UButton v-if="canDelete" icon="i-lucide-trash" color="error" variant="ghost" size="xs"
-              @click="requestDeleteRefund(row.original)" />
           </template>
         </TableApptable>
       </div>

@@ -6,7 +6,9 @@ import { useReportApi } from '~/utils/api'
 import type { ReportRow } from '~/types'
 
 const router = useRouter()
+const route = useRoute()
 const { t } = useI18n()
+const auth = useAuthStore()
 
 function goToPreview(row: ReportRow) {
   router.push({
@@ -49,7 +51,6 @@ const {
   selectedProducts,
   selectedProvinces,
   columns,
-  canRefund,
   getDropdownActions,
   isLoading,
   refresh: refreshReports
@@ -67,9 +68,21 @@ const { canView: canViewPos, canCheckout: canCheckoutPos } = useModulePermission
 async function onConfirmRefund() {
   await confirmRefund(async () => {
     await refreshReports()
-    await router.push('/refund')
+    if (auth.hasPermission('refund:view')) {
+      await router.push('/refund')
+    }
   })
 }
+
+watch(
+  () => route.query.search,
+  (value) => {
+    if (typeof value === 'string' && value.trim()) {
+      searchQuery.value = value.trim()
+    }
+  },
+  { immediate: true },
+)
 
 async function goToSelectedInvoices() {
   if (!selectedReportRows.value.length) return
@@ -147,34 +160,6 @@ async function fetchReportExportData(args: { startDate?: string; endDate?: strin
         </template>
         <template #invoiceNo-cell="{ row }">
           <span class="text-sm font-medium">{{ row.original.invoiceNo }}</span>
-        </template>
-
-        <template #action-cell="{ row }">
-          <div class="flex items-center gap-1">
-            <UButton
-              v-if="canRefund"
-              icon="i-lucide-rotate-ccw"
-              color="warning"
-              variant="soft"
-              size="xs"
-              @click="openRefundDialog(row.original)"
-            >
-              <span class="hidden sm:inline">{{ t('pages.report.actions.refund') }}</span>
-            </UButton>
-            <UDropdownMenu
-              v-if="getDropdownActions(row.original).length"
-              :items="getDropdownActions(row.original)"
-              :content="{ align: 'end' }"
-            >
-              <UButton
-                icon="i-lucide-ellipsis-vertical"
-                color="neutral"
-                variant="ghost"
-                class="rounded-md"
-                size="sm"
-              />
-            </UDropdownMenu>
-          </div>
         </template>
       </TableApptable>
       <CommonAppExport v-model:open="isExportOpen" :data="filteredReportRows" :fetch-export-data="fetchReportExportData"

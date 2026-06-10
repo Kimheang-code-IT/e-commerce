@@ -133,11 +133,12 @@ export function useReport(handlers?: ReportRowActionHandlers) {
   function getDropdownActions(row: ReportRow): DropdownMenuItem[][] {
     if (!handlers) return []
     const items: DropdownMenuItem[] = []
-    if (handlers.onPreview && (auth.hasPermission('pos:view') || auth.hasPermission('pos:checkout'))) {
+    if (canRefund.value) {
       items.push({
-        label: t('pages.report.actions.preview'),
-        icon: 'i-lucide-eye',
-        onSelect: () => handlers.onPreview!(row),
+        label: t('pages.report.actions.refund'),
+        icon: 'i-lucide-rotate-ccw',
+        color: 'warning',
+        onSelect: () => handlers.onRefund(row),
       })
     }
     if (auth.hasPermission('pos:checkout')) {
@@ -145,6 +146,13 @@ export function useReport(handlers?: ReportRowActionHandlers) {
         label: t('pages.report.actions.checkout'),
         icon: 'i-lucide-shopping-cart',
         onSelect: () => handlers.onCheckout(row),
+      })
+    }
+    if (handlers.onPreview && (auth.hasPermission('pos:view') || auth.hasPermission('pos:checkout'))) {
+      items.push({
+        label: t('pages.report.actions.preview'),
+        icon: 'i-lucide-eye',
+        onSelect: () => handlers.onPreview!(row),
       })
     }
     return items.length ? [items] : []
@@ -169,7 +177,6 @@ export function useReport(handlers?: ReportRowActionHandlers) {
     someFilteredSelected,
     toggleSelectAllFiltered,
     columns,
-    canRefund,
     getDropdownActions,
     totalRows: resource.totalRows,
     refresh: () => resource.refresh()
