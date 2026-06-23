@@ -17,11 +17,11 @@ export function buildOrganizationJsonLd(
     description,
     logo: {
       '@type': 'ImageObject',
-      url: `${siteUrl}/image/logo.png`,
-      width: 512,
-      height: 512
+      url: `${siteUrl}/image/favicon-192.png`,
+      width: 192,
+      height: 192
     },
-    image: `${siteUrl}/image/logo.png`,
+    image: `${siteUrl}/image/favicon-192.png`,
     address: {
       '@type': 'PostalAddress',
       addressCountry: 'KH'

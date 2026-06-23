@@ -17,10 +17,11 @@ useHead({
     { name: 'mobile-web-app-capable', content: 'yes' }
   ],
   link: [
-    { rel: 'shortcut icon', type: 'image/png', href: '/image/logo.png' },
-    { rel: 'icon', type: 'image/png', sizes: '48x48', href: '/image/logo.png' },
-    { rel: 'icon', type: 'image/png', sizes: '192x192', href: '/image/logo.png' },
-    { rel: 'apple-touch-icon', href: '/image/logo.png' },
+    { rel: 'icon', href: '/favicon.ico', sizes: '48x48' },
+    { rel: 'icon', type: 'image/png', sizes: '48x48', href: '/image/favicon-48.png' },
+    { rel: 'icon', type: 'image/png', sizes: '96x96', href: '/image/favicon-96.png' },
+    { rel: 'icon', type: 'image/png', sizes: '192x192', href: '/image/favicon-192.png' },
+    { rel: 'apple-touch-icon', sizes: '192x192', href: '/image/favicon-192.png' },
     { rel: 'manifest', href: '/site.webmanifest' },
     ...(siteUrl.value ? [{ rel: 'sitemap', type: 'application/xml', href: `${siteUrl.value}/sitemap.xml` }] : [])
   ],

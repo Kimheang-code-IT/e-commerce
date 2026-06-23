@@ -41,7 +41,7 @@ const pageImage = computed(() => {
     const firstWithImage = allProducts.value.find((item) => String(item.image || '').trim())
     if (firstWithImage?.image) return resolvePageImage(firstWithImage.image)
   }
-  return resolvePageImage('/image/logo.png')
+  return resolvePageImage('/image/favicon-192.png')
 })
 
 const pageJsonLd = computed(() =>

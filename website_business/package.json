@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "nuxt build",
+    "build": "node scripts/generate-favicons.mjs && nuxt build",
     "dev": "nuxt dev",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
@@ -31,6 +31,7 @@
   "devDependencies": {
     "@nuxt/eslint": "^1.15.2",
     "eslint": "^10.4.0",
+    "sharp": "^0.35.2",
     "typescript": "^6.0.3",
     "vue-tsc": "^3.3.0"
   },

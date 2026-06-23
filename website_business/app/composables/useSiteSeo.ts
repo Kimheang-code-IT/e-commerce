@@ -71,7 +71,7 @@ export function useSiteSeo() {
     const keywords = options?.keywords || t('seo.keywords')
     const image = resolvePageImage(options?.image)
     const imageAlt = options?.imageAlt || t('seo.defaultOgImageAlt')
-    const isBrandLogo = image.includes('/image/logo.png')
+    const isBrandLogo = image.includes('/image/favicon-') || image.includes('/image/logo.png')
     const robots = options?.noindex ? 'noindex, nofollow' : 'index, follow, max-image-preview:large'
 
     useSeoMeta({
@@ -85,8 +85,8 @@ export function useSiteSeo() {
       ogSiteName: siteName.value,
       ogImage: image,
       ogImageAlt: imageAlt,
-      ogImageWidth: isBrandLogo ? 512 : 1200,
-      ogImageHeight: isBrandLogo ? 512 : 630,
+      ogImageWidth: isBrandLogo ? 192 : 1200,
+      ogImageHeight: isBrandLogo ? 192 : 630,
       ogLocale: localeOgTag.value,
       twitterCard: 'summary_large_image',
       twitterTitle: title,
